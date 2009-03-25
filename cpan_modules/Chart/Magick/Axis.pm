@@ -11,6 +11,24 @@ private  properties     => my %properties;
 private  plotOptions    => my %plotOptions;
 private  im             => my %magick;
 
+=head1 NAME
+
+Chart::Magick::Axis - Base class for coordinate systems to draw charts on.
+
+=head1 SYNOPSIS
+
+my $axis = Chart::Magick::Axis->new();
+
+=head1 DESCRIPTION
+
+The chart modules within the Chart::Magick system draw onto Axis objects, which derive from this base class.
+
+=head1 METHODS
+
+These methods are available from this class:
+
+=cut
+
 #----------------------------------------------
 sub _buildObject {
     my $class       = shift;
@@ -28,6 +46,13 @@ sub _buildObject {
 
     return $self;
 }
+
+=head2 im ( )
+
+Returns the Image::Magick object that is used for drawing. Will automatically create a new Image::Magick object if
+this object has not been associated with one.
+
+=cut
 
 sub im {
     my $self = shift;
@@ -49,7 +74,11 @@ sub im {
 #----------------------------------------------
 =head2 new ( [ properties ] )
 
-Contructor for this axis.
+Constructor for this class.
+
+=head3 properties
+
+Properties to initially configure the object. For available properties, see C<definition()>
 
 =cut
 
@@ -90,6 +119,56 @@ sub addChart {
 }
 
 #---------------------------------------------
+
+=head2 definition ( )
+
+Chart::Magick::Axis define their properties and default values in this this method. Returns a hash ref.
+
+The following properties can be set:
+
+=over 4
+
+=item width
+
+The width of the coordinate system in pixels.
+
+=item height
+
+The height of the coordinate system in pixels.
+
+=item marginLeft
+=item marginTop
+=item marginRight
+=item marginBottom
+
+The width of the left, top, right and bottom margin in pixels respectively.
+
+=item title
+
+The title of the chart.
+
+=item titleFont
+
+The font in which the chart title should be rendered.
+
+=item titleFontSize
+
+The font size of the chart title.
+
+=item titleColor
+
+The font title color.
+
+=item labelFont
+=item labelFontSize
+=item labelColor
+
+The font, font size and color in which the axis labels should be rendered.
+
+=back
+
+=cut 
+
 sub definition {
     my $self = shift;
 
@@ -216,9 +295,12 @@ sub plotOption {
     my $option  = shift;
     my $value   = shift;
 
-    $self->{ _plotOptions }->{ $option } = $value if ( defined $value );
-
-    die "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
+    if ( defined $value ) {
+        $self->{ _plotOptions }->{ $option } = $value;
+    }
+    else {
+        die "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
+    }
 
     return $self->{ _plotOptions }->{ $option };
 }
