@@ -16,7 +16,7 @@ sub definition {
     push @{ $definition }, {
         name        => 'Bar',
         className   => 'WebGUI::Chart::Bar',
-        chartClass  => 'Chart::Magick::Bar',
+        chartClass  => 'Chart::Magick::Chart::Bar',
         properties  => \%options,
     };
 

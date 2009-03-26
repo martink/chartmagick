@@ -2,9 +2,9 @@ use strict;
 
 use Chart::Magick::Axis::Lin;
 use Chart::Magick::Axis::LinLog;
-use Chart::Magick::Line;
-use Chart::Magick::Bar;
-use Chart::Magick::Pie;
+use Chart::Magick::Chart::Line;
+use Chart::Magick::Chart::Bar;
+use Chart::Magick::Chart::Pie;
 use Chart::Magick;
 use Image::Magick;
 use Data::Dumper;
@@ -26,7 +26,7 @@ $axis->set('xLabelUnits', pi);
 $axis->set('xTickWidth', pi / 4);
 
 
-my $chart2  = Chart::Magick::Line->new();
+my $chart2  = Chart::Magick::Chart::Line->new();
 $chart2->dataset->addDataset( $dsx, $dsy );
 #$chart2->set('plotMarkers', 1);
 

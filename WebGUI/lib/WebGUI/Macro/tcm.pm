@@ -11,7 +11,7 @@ sub process {
     my $y = [ 3, 5, -2, 10];
 
     my $chart = WebGUI::Chart::Line->new( $session );
-    return Dumper( $chart->get );
+    return Dumper( $chart->session );
 
 }
 

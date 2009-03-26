@@ -3,7 +3,7 @@ package WebGUI::Chart::Line;
 use strict;
 
 use Tie::IxHash;
-use Chart::Magick::Line;
+use Chart::Magick::Chart::Line;
 
 use base qw{ WebGUI::Chart::ChartMagickLin };
 
@@ -25,7 +25,7 @@ sub definition {
         name        => 'Line chart',
         properties  => \%chartOptions,
         className   => 'WebGUI::Chart::Line',
-        chartClass  => 'Chart::Magick::Line',
+        chartClass  => 'Chart::Magick::Chart::Line',
     );
     push @{ $definition }, \%properties;
 

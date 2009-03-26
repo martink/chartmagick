@@ -2,9 +2,9 @@ use strict;
 
 use Chart::Magick::Axis::Lin;
 use Chart::Magick::Axis::LinLog;
-use Chart::Magick::Line;
-use Chart::Magick::Bar;
-use Chart::Magick::Pie;
+use Chart::Magick::Chart::Line;
+use Chart::Magick::Chart::Bar;
+use Chart::Magick::Chart::Pie;
 use Chart::Magick;
 use Chart::Magick::Data;
 
@@ -57,7 +57,7 @@ $axis->set('yTickWidth',    2);
 #$axis->set('xChartOffset', 40);
 #$axis->set('xLabelUnits', pi);
 
-my $chart   = Chart::Magick::Bar->new( );
+my $chart   = Chart::Magick::Chart::Bar->new( );
 #$chart->addDataset( $ds1 );
 #$chart->addDataset( $ds2 );
 #$chart->addDataset( $ds3 );

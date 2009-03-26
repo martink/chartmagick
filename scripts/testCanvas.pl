@@ -2,9 +2,9 @@ use strict;
 
 use Chart::Magick::Axis::Lin;
 use Chart::Magick::Axis::LinLog;
-use Chart::Magick::Line;
-use Chart::Magick::Bar;
-use Chart::Magick::Pie;
+use Chart::Magick::Chart::Line;
+use Chart::Magick::Chart::Bar;
+use Chart::Magick::Chart::Pie;
 use Chart::Magick;
 use Image::Magick;
 use Data::Dumper;
@@ -27,12 +27,12 @@ my @ds4 = (
 );
 
 # Set up chart objects
-my $pieChart = Chart::Magick::Pie->new();
+my $pieChart = Chart::Magick::Chart::Pie->new();
 $pieChart->dataset->addDataset( @ds1 );
 $pieChart->set('tiltAngle', 80);
 $pieChart->set('stickLength', 30);
 
-my $barChart = Chart::Magick::Bar->new( );
+my $barChart = Chart::Magick::Chart::Bar->new( );
 $barChart->dataset->addDataset( @ds1 );
 $barChart->dataset->addDataset( @ds3 );
 $barChart->dataset->addDataset( @ds4 );
@@ -40,10 +40,10 @@ $barChart->set('barWidth',     10);
 $barChart->set('barSpacing',   3);
 #$barChart->set('drawMode',     'stacked');
 
-my $logChart = Chart::Magick::Line->new( );
+my $logChart = Chart::Magick::Chart::Line->new( );
 $logChart->dataset->addDataset( @ds2 );
 
-my $lineChart = Chart::Magick::Line->new();
+my $lineChart = Chart::Magick::Chart::Line->new();
 $lineChart->dataset->addDataset( @ds4 );
 $lineChart->dataset->addDataset( @ds3 );
 
