@@ -196,6 +196,12 @@ sub definition {
 }
 
 #---------------------------------------------
+=head2 draw ( )
+
+Draws the axis and all charts that are put onto it.
+
+=cut
+
 sub draw {
     my $self    = shift;
     my $charts  = $charts{ id $self };
@@ -221,6 +227,18 @@ sub draw {
 
 
 #---------------------------------------------
+
+=head2 get ( [ property ] )
+
+Returns a hash ref of all properties in the Axis object. If a specific property is passed only the value belong to
+that property is returned.
+
+=head3 property
+
+The property, whose value should be returned.
+
+=cut 
+
 sub get {
     my $self        = shift;
     my $key         = shift;
@@ -237,6 +255,16 @@ sub get {
 }
 
 #---------------------------------------------
+
+=head2 plotFirst ( )
+
+This method is executed in the first phase of the drawing procedure. Extend it if you need to draw stuff in this
+phase.
+
+You'll probably never call this method by yourself.
+
+=cut
+
 sub plotFirst {
     my $self    = shift;
 
@@ -246,6 +274,16 @@ sub plotFirst {
 }
 
 #---------------------------------------------
+
+=head2 plotLast ( )
+
+This method is called in the last phase of the drawing procedure. Extend it if you need to draw stuff in this
+phase.
+
+You'll probably never call this method by yourself.
+
+=cut
+
 sub plotLast {
     my $self = shift;
 
@@ -262,6 +300,14 @@ sub plotLast {
 };
 
 #---------------------------------------------
+
+=head2 preprocessData ( )
+
+This method is used to massage data and plotting properties into something plottable. It is automatically called
+prior to drawing the axis. Extend this method if your module needs some data massaging too.
+
+=cut
+
 sub preprocessData {
     my $self = shift;
     
@@ -276,6 +322,17 @@ sub preprocessData {
 }
 
 #---------------------------------------------
+
+=head2 set ( properties )
+
+Applies the passed properties to this object.
+
+head3 properties
+
+Either a hash or a hash ref containing the property names as keys and intended values as values.
+
+=cut
+
 sub set {
     my $self    = shift;
     my %update  = ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
@@ -290,6 +347,22 @@ sub set {
 }
 
 #---------------------------------------------
+
+=head2 plotOption ( key, value )
+
+Plot options are values and numbers that are used for plotting the graphand are automatically calculated by the
+Axis plugins.
+
+=head3 key
+
+Plot option name.
+
+=head3 value
+
+Plot option value.
+
+=cut
+
 sub plotOption {
     my $self    = shift;
     my $option  = shift;
@@ -306,6 +379,21 @@ sub plotOption {
 }
 
 #---------------------------------------------
+
+=head2 transformToPixels ( x, y )
+
+Maps graph coordinates to pixel coordinates on the Axis and returns them as a list.
+
+=head3 x
+
+X coordinate
+
+=head3 y
+
+Y coordinate
+
+=cut
+
 sub transformToPixels {
     my $self    = shift;
     my $x       = shift;
