@@ -107,7 +107,7 @@ sub definition {
         marginTop => {
             fieldType       => 'integer',
             label           => 'Margin',
-            defaultValue    => 0,
+            defaultValue    => 50,
             category        => 'axis',
         },
         title => {

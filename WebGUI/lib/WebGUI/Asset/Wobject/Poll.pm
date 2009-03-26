@@ -27,6 +27,7 @@ our @ISA = qw(WebGUI::Asset::Wobject);
 
 #-------------------------------------------------------------------
 sub _hasVoted {
+#return 0;
 	my $self = shift;
 	my ($hasVoted) = $self->session->db->quickArray("select count(*) from Poll_answer 
 		where assetId=".$self->session->db->quote($self->getId)." and ((userId=".$self->session->db->quote($self->session->user->userId)."
@@ -462,9 +463,10 @@ sub view {
 		my $config = $self->getGraphConfig;
         if ($config) {
             my $chart = WebGUI::Chart->newByConfiguration( $self->session, $config );
-#            $chart->addDataset( \@dataset );
-#            $chart->setLabels( \@labels );
-
+            $chart->addDataset( \@dataset );
+            #$chart->setLabels( \@labels );
+            $chart->axis->set( { xTickCount => scalar @dataset } );
+            
             $var{chart_html} = $chart->toHtml;
             $var{hasImageGraph} = 1;
         } else {
