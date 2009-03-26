@@ -6,7 +6,29 @@ use base qw{ Chart::Magick::Axis };
 use List::Util qw{ min max reduce };
 use POSIX qw{ floor ceil };
 
+=head1 NAME
+
+Chart::Magick::Axis::Lin - A 2d coordinates system with linear axes.
+
+=head1 SYNOPSIS
+
+
+=head1 DESCRIPTION
+
+An Axis plugin for the Chart::Margick class of modules, providing a coordinate system for xy type graphs.
+
+The following methods are available from this class:
+
+=cut
+
 #---------------------------------------------
+
+=head2 definition ( )
+
+Defines additional properties for this class:
+
+=cut
+
 sub definition {
     my $self = shift;
     my %options = (
@@ -78,6 +100,13 @@ sub definition {
 }
 
 #---------------------------------------------
+#TODO: move to superclass?
+=getChartWidth ( )
+
+Returns the width of charts on the Axis in pixels.
+
+=cut
+
 sub getChartWidth { 
     my $self = shift;
 
@@ -85,6 +114,13 @@ sub getChartWidth {
 }
 
 #---------------------------------------------
+#TODO: move to superclass?
+=getChartHeight ( )
+
+Returns the height of charts on the Axis in pixels.
+
+=cut
+
 sub getChartHeight {
     my $self = shift;
 
@@ -93,6 +129,11 @@ sub getChartHeight {
 
 #### TODO: Dit anders noemen...
 #---------------------------------------------
+
+=head2 autoRangeMargins ( )
+
+=cut
+
 sub autoRangeMargins {
     my $self = shift;
    
@@ -128,7 +169,6 @@ sub autoRangeMargins {
         $self->plotOption( 'axisWidth' ) - $axisMarginLeft - $axisMarginRight
     );
     
-
     my $xTitleHeight = ($self->im->QueryFontMetrics(
         text        => $self->get('xTitle'),
         font        => $self->get('xTitleFont'),
@@ -146,6 +186,26 @@ sub autoRangeMargins {
 }
 
 #---------------------------------------------
+
+=head2 generateTicks ( from, to, width )
+
+Generates tick locations spaced at a certain width. Tick will be generated in such a way that they are aligned with
+value zero. This could lead to from and to values that are different from those passed as arguments.
+
+=head3 from
+
+The highest value at which ticks can start.
+
+=head3 to
+
+The lowest value at which the ticks can stop.
+
+=head3 width
+
+The spacing between two subsequent ticks.
+
+=cut
+
 sub generateTicks {
     my $self    = shift;
     my $from    = shift;
@@ -164,6 +224,28 @@ sub generateTicks {
 
     return $ticks;
 }
+
+#---------------------------------------------
+
+=head2 calcTckWidth ( from, to, [ count ] )
+
+Returns the tick spacing for a given number of ticks within a given interval. If the number of ticks is omitted the
+tick spacing will be calculated in such way that the tick spacing is of an order less that the range of the
+interval.
+
+=head3 from
+
+The lower bound of the interval.
+
+=head3 to
+
+The upper bound of the interval.
+
+=head3 count
+
+Optional. Desired number of ticks within the interval.
+
+=cut 
 
 sub calcTickWidth {
     my $self    = shift;
@@ -184,11 +266,16 @@ sub calcTickWidth {
     return $tickWidth;
 }
 
-
-
-
-
 #---------------------------------------------
+
+=head2 preprocessData ( )
+
+Does the calculations and data massaging required for rendering the graph.
+
+You'll probably never need to call this method manually.
+
+=cut
+
 sub preprocessData {
     my $self = shift;
 
@@ -244,7 +331,7 @@ sub preprocessData {
     $self->plotOption( yPxPerUnit => $yPxPerUnit );
 
     # Calculate the pixels per unit on the x axis.
-    my $xDataWidth  = $self->transformX( $maxX ) - $self->transformX( $minX );
+    my $xDataWidth  = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
     my $indent      = $self->get('xTickOffset') * $xTickWidth;
     my $xPxPerUnit  = $self->plotOption( 'chartWidth' ) / ( 2 * $indent + $xDataWidth );
     $self->plotOption( xPxPerUnit   => $xPxPerUnit );
@@ -263,26 +350,36 @@ sub preprocessData {
 }
 
 #---------------------------------------------
-sub genTicks {
-    my $self        = shift;
-    my $from        = shift;
-    my $to          = shift;
-    my $tickCount   = shift;
 
-    return [] unless $tickCount && $tickCount =~ m{^\d+$};
+=head2 getXTicks ( ) 
 
-    my $tickSize    = ( $to - $from ) / ( $tickCount - 1);
-    my @ticks       = map { $from + $_ * $tickSize } ( 0 .. $tickCount - 1 );
+Returns the locations of the ticks on the x axis in chart x coordinates.
 
-    return \@ticks;
-}
+=cut
 
-#---------------------------------------------
 sub getXTicks {
     my $self = shift;
    
     return $self->get('xTicks');
 }
+
+#---------------------------------------------
+
+=head2 generateSubTicks ( ticks, count )
+
+Returns an array ref containing the locations of subticks for a given series of tick locations and a number of
+subtick per tick interval.
+
+=head3 ticks
+
+Array ref containing the values of the ticks between which the subticks should be placed. The tick values should be
+ordered.
+
+=head3 count
+
+The number of subtick per tick interval.
+
+=cut
 
 sub generateSubticks {
     my $self    = shift;
@@ -306,8 +403,14 @@ sub generateSubticks {
     return \@subticks;
 }
 
-
 #---------------------------------------------
+
+=head2 getXSubticks ( )
+
+Returns an array ref containing the locations of the subticks on the x axis in chart x coordinates.
+
+=cut
+
 sub getXSubticks {
     my $self = shift;
 
@@ -315,6 +418,13 @@ sub getXSubticks {
 }
 
 #---------------------------------------------
+
+=head2 getYTicks ( )
+
+Returns an array ref containing the locations of the ticks on the y axis in chart y coordinates.
+
+=cut
+
 sub getYTicks {
     my $self = shift;
    
@@ -322,6 +432,13 @@ sub getYTicks {
 }
 
 #---------------------------------------------
+
+=head2 getYSubticks ( )
+
+Returns an array ref containing the locations of the subticks on the y axis in chart y coordinates.
+
+=cut
+
 sub getYSubticks {
     my $self = shift;
 
@@ -329,6 +446,15 @@ sub getYSubticks {
 }
 
 #---------------------------------------------
+
+=head2 plotAxes ( )
+
+Draws the axes.
+
+You'll probably never need to call this method manually.
+
+=cut
+
 sub plotAxes {
     my $self = shift;
     
@@ -379,6 +505,15 @@ sub plotAxes {
 }
 
 #---------------------------------------------
+
+=head2 plotRulers ( )
+
+Draws the rulers.
+
+You'll probably never need to call this method manually.
+
+=cut
+
 sub plotRulers {
     my $self = shift;
 
@@ -411,6 +546,15 @@ sub plotRulers {
 }
 
 #---------------------------------------------
+
+=head2 plotTicks ( )
+
+Draws the ticks and subticks.
+
+You'll probably never need to call this method manually.
+
+=cut
+
 sub plotTicks {
     my $self = shift;
 
@@ -508,6 +652,15 @@ sub plotTicks {
 }
 
 #---------------------------------------------
+
+=head2 plotFirst ( )
+
+Makes sure that the rulers are drawn beneath the chat data.
+
+See Chart::Magick::Axis for more info.
+
+=cut
+
 sub plotFirst {
     my $self = shift;
 
@@ -517,6 +670,15 @@ sub plotFirst {
 }
 
 #---------------------------------------------
+
+=head2 plotLast ( )
+
+Makes sure that axes and ticks are drawn on top of everything else.
+
+See Chart::Magick::Axis for more info.
+
+=cut
+
 sub plotLast {
     my $self = shift;
 
@@ -528,12 +690,21 @@ sub plotLast {
     $self->plotAxes;
 }
 
+# TODO: Remove type method?
 #---------------------------------------------
 sub type {
     return 'XY';
 }
 
 #---------------------------------------------
+
+=head2 getExtremeValues ( )
+
+Returns an array containing the minimum X, maximum X, minimum Y and maximum Y value of all the datasets included by
+the charts put on this Axis object.
+
+=cut
+
 sub getExtremeValues {
     my $self = shift;
     my (@minX,@maxX,@minY,@maxY);
@@ -548,6 +719,14 @@ sub getExtremeValues {
 }
 
 #---------------------------------------------
+
+=head2 getPxPerXUnit ( )
+
+Returns the number of pixels in a single unit in x coordinates. In this module this returns the number of pixel per
+1 x.
+
+=cut
+
 sub getPxPerXUnit {
     my $self = shift;
 
@@ -558,6 +737,14 @@ sub getPxPerXUnit {
 }
 
 #---------------------------------------------
+
+=head2 getPxPerYUnit ( )
+
+Returns the number of pixels in a single unit in y coordinates. In this module this returns the number of pixel per
+1 y.
+
+=cut
+
 sub getPxPerYUnit {
     my $self = shift;
 
@@ -568,6 +755,17 @@ sub getPxPerYUnit {
 }
 
 #---------------------------------------------
+
+=head2 transformX ( x )
+
+Transforms the given x value to the units used by the coordinate system of this axis and returns the transformed coordinate.
+
+=head3 x
+
+The value to be transformed.
+
+=cut
+
 sub transformX {
     my $self    = shift;
     my $x       = shift;
@@ -576,11 +774,32 @@ sub transformX {
 }
 
 #---------------------------------------------
+
+=head2 transformY ( y )
+
+Transforms the given y value to the y units used by the coordinate system of this axis and returns the transformed coordinate.
+
+=head3 y
+
+The value to be transformed.
+
+=cut
+
 sub transformY {
     return $_[1];
 }
 
+
+# TODO: combine toPxX and toPxY so that polar coordinates are also viable.
+
 #---------------------------------------------
+
+=head2 toPxX ( x )
+
+Transform an x coordinate to pixel coordinates.
+
+=cut
+
 sub toPxX {
     my $self    = shift;
     my $coord   = shift;
@@ -592,6 +811,13 @@ sub toPxX {
 }
 
 #---------------------------------------------
+
+=head2 toPxY ( y )
+
+Transform an y coordinate to pixel coordinates.
+
+=cut
+
 sub toPxY {
     my $self    = shift;
     my $coord   = shift;
