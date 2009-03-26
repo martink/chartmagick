@@ -208,7 +208,7 @@ sub draw {
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->preprocessData;
+        $chart->preprocessData( $self );
     }
 
     # Preprocess data

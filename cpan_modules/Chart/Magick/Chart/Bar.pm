@@ -68,13 +68,26 @@ sub plot {
 #-------------------------------------------------------------------
 sub preprocessData {
     my $self = shift;
+    my $axis = shift;
 
     my $maxY = 0;
     my $minY = 0;
+
+    my $barWidth    = $self->get('barWidth');
+    my $barSpacing  = $self->get('barSpacing');
+    my $dsCount     = $self->dataset->datasetCount;
+    my $indent = 0;
+
     if ( $self->get( 'drawMode' ) eq 'stacked' ) {
+        $indent = $barWidth / 2;
         $self->set('maxY', $maxY);
         $self->set('minY', $minY);
     }
+    else {
+        $indent = ( ($barWidth + $barSpacing) * ($dsCount - 1) + $barWidth ) / 2;
+    }
+
+    $axis->set( 'xTickOffset', $indent) if $axis->get( 'xTickOffset' ) < $indent;
 }
 
 #-------------------------------------------------------------------

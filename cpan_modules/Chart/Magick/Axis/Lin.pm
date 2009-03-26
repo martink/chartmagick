@@ -332,10 +332,10 @@ sub preprocessData {
 
     # Calculate the pixels per unit on the x axis.
     my $xDataWidth  = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-    my $indent      = $self->get('xTickOffset') * $xTickWidth;
-    my $xPxPerUnit  = $self->plotOption( 'chartWidth' ) / ( 2 * $indent + $xDataWidth );
+    my $indent      = $self->get('xTickOffset'); #* $xTickWidth;
+    my $xPxPerUnit  = ($self->plotOption( 'chartWidth' ) - 2 * $indent) / $xDataWidth ;
     $self->plotOption( xPxPerUnit   => $xPxPerUnit );
-    $self->plotOption( xTickOffset  => $indent * $xPxPerUnit);
+    $self->plotOption( xTickOffset  => $indent );#* $xPxPerUnit);
 
     # Determine to location of (0,0)
     my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );

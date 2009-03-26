@@ -55,7 +55,7 @@ $canvas->matrix( 2, 2, { 1 => 'Chart::Magick::Axis::LinLog', 3 => 'Chart::Magick
 my $axis = $canvas->getAxis( 0 );
 $axis->addChart( $barChart );
 $axis->set('xSubtickCount', 0);
-$axis->set('xTickOffset', 0.25);
+#$axis->set('xTickOffset', 50);
 $axis->set('title', 'Bars');
 my $config = $axis->get;
 
