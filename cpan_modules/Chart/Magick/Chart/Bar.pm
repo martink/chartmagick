@@ -1,4 +1,4 @@
-package Chart::Magick::Bar;
+package Chart::Magick::Chart::Bar;
 
 use strict;
 use List::Util qw{ sum };

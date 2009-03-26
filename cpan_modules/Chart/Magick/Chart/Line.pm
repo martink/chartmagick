@@ -1,4 +1,4 @@
-package Chart::Magick::Line;
+package Chart::Magick::Chart::Line;
 
 use strict;
 use List::Util qw{ min max };

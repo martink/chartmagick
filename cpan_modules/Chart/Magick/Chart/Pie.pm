@@ -1,4 +1,4 @@
-package Chart::Magick::Pie;
+package Chart::Magick::Chart::Pie;
 
 use strict;
 use constant pi => 3.14159265358979;
