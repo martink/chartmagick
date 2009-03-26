@@ -6,6 +6,24 @@ use POSIX qw{ floor ceil };
 
 use base qw{ Chart::Magick::Axis::Lin };
 
+=head1 NAME
+
+Chart::Magick::Axis::LinLog - A lin-log coordinate system for the Chart::Magick class of modules.
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+The following methods are available from this class:
+
+#---------------------------------------------
+
+=head2 draw ( )
+
+Draws the graph. See Chart::Magick::Axis for documentation.
+
+=cut
+
 sub draw {
     my $self = shift;
 
@@ -24,11 +42,25 @@ sub draw {
 }
 
 #---------------------------------------------
+
+=head2 generateLogTicks ( from, to )
+
+Generates ticks on a logarithmic scale that envelope the interval given by from and to.
+
+=head3 from
+
+The maximum value at which the ticks start.
+
+=head to
+
+The minimum value at which the ticks stop.
+
+=cut
+
 sub generateLogTicks {
     my $self        = shift;
     my $from        = shift;
     my $to          = shift;
-    my $tickCount   = shift;
 
     my $fromOrder   = floor $self->transformX($from);
     my $toOrder     = ceil  $self->transformX($to);
@@ -53,6 +85,13 @@ sub getXTicks {
 
 
 #---------------------------------------------
+
+=head2 transformX ( x )
+
+Returns the value of x transformed to a logarithmic coordinate system.
+
+=cut
+
 sub transformX {
     my $self    = shift;
     my $x       = shift;
@@ -60,14 +99,6 @@ sub transformX {
     my $logx = log( $x ) / log(10);
 
     return $logx;
-}
-
-#---------------------------------------------
-sub transformY {
-    my $self    = shift;
-    my $y       = shift;
-
-    return $y;
 }
 
 1;
