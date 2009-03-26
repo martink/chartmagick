@@ -5,11 +5,36 @@ use Class::InsideOut qw{ :std };
 use Data::Dumper;
 
 readonly data           => my %data;
+readonly labels         => my %labels;
 readonly coordCount     => my %coordCount;
 readonly datasetCount   => my %datasetCount;
 readonly datasetIndex   => my %datasetIndex;
 readonly datasetData    => my %datasetData;
 readonly globalData     => my %globalData;
+
+=head1 NAME
+
+Chart::Magick::Data - Dataset abstraction for use with the Chart::Magick class charting modules.
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+This module is used by the Chart::Magick modules to pass data into graphs. It is coordinate system agnostic
+supports N dimensional coordinates and M dimensional values, with N and M both 1 or larger. It is up to each
+individual charting plugin to decide how to handle these coordinates and values.
+
+The following methods are available from this class:
+
+=cut
+
+#---------------------------------------------------------------
+
+=head2 new ( )
+
+Consructor.
+
+=cut 
 
 sub new {
     my $class   = shift;
@@ -28,6 +53,26 @@ sub new {
 
     return $self;
 }
+
+#---------------------------------------------------------------
+
+=head2 addDataPoint ( coord, value, [ dataset ] )
+
+Adds a datapoint at C<coord> with value C<value> to dataset C<dataset>
+
+=head3 coord
+
+The coordinate of the data. Pass as an array ref. If the coordinate is 1-dimensional you can also pass a scalar.
+
+=head3 value 
+
+The value that belong to the coordinate
+
+=head3 dataset
+
+The index of the dataset the data point should be added to. If omitted the current dataset will be used.
+
+=cut
 
 sub addDataPoint {
     my $self    = shift;
