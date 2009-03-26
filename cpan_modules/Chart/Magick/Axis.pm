@@ -235,7 +235,7 @@ that property is returned.
 
 =head3 property
 
-The property, whose value should be returned.
+The property whose value should be returned.
 
 =cut 
 
