@@ -50,8 +50,9 @@ sub _applyConfiguration {
     my $font = WebGUI::Image::Font->new( $session, $self->get('font') );
     my $fontFile = $font->getFile;
     $self->axis->set({
-        xTitleFont   => $fontFile,
-        yTitleFont   => $fontFile,
+        xTitleFont      => $fontFile,
+        yTitleFont      => $fontFile,
+        xSubtickCount   => 0,
     });
     
 }

@@ -8,7 +8,7 @@ use JSON qw{ to_json };
 use Data::Dumper;
 
 readonly datasets   => my %datasets;
-private  session    => my %session;
+readonly session    => my %session;
 private  options    => my %options;
 
 sub addDataset {
@@ -30,17 +30,6 @@ sub definition {
     my $definition  = shift || [ ];
 
     return $definition;
-}
-
-sub session {
-    my $self = shift;
-
-    return $session{ id $self };
-}
-
-sub _buildObj {
-
-
 }
 
 sub new {

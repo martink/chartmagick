@@ -19,7 +19,7 @@ readonly chartProperties    => my %chartProperties;
 #---------------------------------------------------------------------
 sub _applyConfiguration {
     my $self    = shift;
-    my $session = $self->session || die "Hier gaat het mis!";
+    my $session = $self->session;
 
 $session->log->warn( $self->axisProperties );
 
@@ -107,6 +107,7 @@ sub definition {
         marginTop => {
             fieldType       => 'integer',
             label           => 'Margin',
+            defaultValue    => 0,
             category        => 'axis',
         },
         title => {
