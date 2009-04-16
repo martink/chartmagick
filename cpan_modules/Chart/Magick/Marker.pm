@@ -4,16 +4,16 @@ use strict;
 
 sub new {
     my $class   = shift;
+    my $axis    = shift;
     my $size    = shift;
 
-    bless { size => $size };
+    bless { size => $size, axis => $axis };
 }
 
 sub draw {
     my $self    = shift;
     my $x       = shift;
     my $y       = shift;
-    my $im      = shift;
     my $color   = shift || 'lightgray';
 
     my $size    = $self->{ size };
@@ -39,7 +39,7 @@ sub draw {
     my $translateX = int( $x - 0.5*$size + 0.5 );
     my $translateY = int( $y - 0.5*$size + 0.5 );
 
-    $im->Draw(
+    $self->{ axis }->im->Draw(
        primitive    => 'Path',
        stroke       => $color,
        strokewidth  => 1,

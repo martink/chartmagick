@@ -20,7 +20,6 @@ sub setData {
     $dataset{ id $self } = $dataset;
 }
 
-
 #sub addDataset {
 #    my $self    = shift;
 #    my $dataset = shift || return;

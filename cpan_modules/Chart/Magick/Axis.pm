@@ -350,7 +350,7 @@ sub set {
 
 =head2 plotOption ( key, value )
 
-Plot options are values and numbers that are used for plotting the graphand are automatically calculated by the
+Plot options are values and numbers that are used for plotting the graph and are automatically calculated by the
 Axis plugins.
 
 =head3 key
@@ -379,7 +379,7 @@ sub plotOption {
 }
 
 #---------------------------------------------
-
+#### TODO: Dit moet worden geabstraheerd
 =head2 transformToPixels ( x, y )
 
 Maps graph coordinates to pixel coordinates on the Axis and returns them as a list.
@@ -495,7 +495,6 @@ sub text {
 #        undercolor  => 'red',
 	);
 }
-
 
 1;
 

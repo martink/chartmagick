@@ -27,9 +27,9 @@ sub plot {
     my $axis = shift;
 
     my $datasetCount =  $self->dataset->datasetCount;
-    my $yCache;
+    my $previousCoord;
 
-    my $marker = Chart::Magick::Marker->new( 3 );
+    my $marker = Chart::Magick::Marker->new( $axis, 3 );
 
     foreach my $x ($self->dataset->getCoords) {
         $self->getPalette->paletteIndex( 1 );
@@ -40,10 +40,13 @@ sub plot {
 
             next unless defined $y;
 
-            if ( defined $yCache->[ $ds ] ) {
+            if ( $previousCoord->[ $ds ] ) {
+                my @from = @{ $previousCoord->[ $ds ] };
+                my @to   = ( $x, $y );
+
                 my $path = 
-                    "M " . $axis->toPxX( $yCache->[ $ds ]->[ 0 ] ) . "," . $axis->toPxY( $yCache->[ $ds ]->[ 1 ] )
-                   ."L " . $axis->toPxX( $x )                      . "," . $axis->toPxY( $y )
+                    "M " . $axis->pim( @from )
+                   ."L " . $axis->pim( @to   )
                 ;
 
 	            $axis->im->Draw(
@@ -52,13 +55,15 @@ sub plot {
                   	points		=> $path,
               	    fill		=> 'none',
                 );
-
-                if ( $self->get('plotMarkers') ) {
-                    $marker->draw( $axis->toPxX( $x ), $axis->toPxY( $y ), $axis->im, $color->getStrokeColor );
-                }
             }
 
-            $yCache->[ $ds ] = [ $x, $y ];
+            # Draw markers
+            if ( $self->get('plotMarkers') ) {
+                $marker->draw( $axis->project($x, $y ), $color->getStrokeColor );
+            }
+
+            # Store the current position of this dataset
+            $previousCoord->[ $ds ] = [ $x, $y ];
         }
     }
 }

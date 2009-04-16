@@ -827,5 +827,36 @@ sub toPxY {
     return $y;
 }
 
+
+=head2 project ( x, y )
+
+Projects a coord/value pair onto the canvas and returns the x/y pixel values of the projection.
+
+=cut
+
+sub project {
+    my $self    = shift;
+    my $coords  = shift;
+    my $values  = shift;
+
+    return ( 
+        $self->toPxX( $coords ), 
+        $self->toPxY( $values ) 
+    );
+}
+
+=head2 pim ( x, y )
+
+Shorthand method that calls the project method and returns the x and y value joined by a comma as scalar. This
+string can be directly used in ImageMagick path definitions.
+
+=cut
+
+sub pim {
+    my $self    = shift;
+    
+    return join ",", $self->project( @_ );
+}
+
 1;
 

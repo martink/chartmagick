@@ -14,7 +14,7 @@ readonly globalData     => my %globalData;
 
 =head1 NAME
 
-Chart::Magick::Data - Dataset abstraction for use with the Chart::Magick class charting modules.
+Chart::Magick::Data - Dataset abstraction layer for use with the Chart::Magick class charting modules.
 
 =head1 SYNOPSIS
 
