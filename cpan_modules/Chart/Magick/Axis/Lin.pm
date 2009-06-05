@@ -127,6 +127,16 @@ sub getChartHeight {
     return $self->plotOption( 'chartHeight' );
 }
 
+#---------------------------------------------
+sub getCoordDimension {
+    return 1;
+}
+
+#---------------------------------------------
+sub getValueDimension {
+    return 1;
+}
+
 #### TODO: Dit anders noemen...
 #---------------------------------------------
 
@@ -226,6 +236,20 @@ sub generateTicks {
 }
 
 #---------------------------------------------
+sub getXUnitRange {
+    my $self    = shift;
+    my $x       = shift;
+
+    
+
+#    my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
+#    my $xAddUnit    = $self->get('xTickOffset');
+#    my $xPxPerUnit  = $self->plotOption( 'chartWidth' ) / ( $xUnits + $xAddUnit );
+#
+
+}
+
+#---------------------------------------------
 
 =head2 calcTckWidth ( from, to, [ count ] )
 
@@ -281,13 +305,10 @@ sub preprocessData {
 
     $self->SUPER::preprocessData;
 
-    # Autoranging
-    my ($minX, $maxX, $minY, $maxY) = $self->getExtremeValues;
-    #$minX=0;
+    # Get the extreme values of the data, so we can determine what values the axis should at leat span.
+    my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
 
-    # y stuff
-
-    # The treshold variable is used to determine when the y=0 axis should be include in teh chart
+    # The treshold variable is used to determine when the y=0 axis should be include in the chart
     my $treshold = 0.1;
     
     # Figure out whether we want to let the y axis include 0.
@@ -303,11 +324,16 @@ sub preprocessData {
         }
     }
 
+    # Handle case when y equal zero for all coords. 
     $maxY = 1 if ($minY == 0 && $maxY == 0);
+
 ###############################
+
+    # Figure out the spacing between the ticks.
     my $yTickWidth = $self->get('yTickWidth') || $self->calcTickWidth( $minY, $maxY, $self->get('yTickCount') );
     my $xTickWidth = $self->get('xTickWidth') || $self->calcTickWidth( $minX, $maxX, $self->get('xTickCount') );
 
+    # Adjust the tick width so that they align with the 0 axes if desired.
     if ( $self->get('alignAxesWithTicks') ) {
         $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
         $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
@@ -315,6 +341,7 @@ sub preprocessData {
         $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
     }
 
+    # Store the calulated values in the object and generate the tick locations based on the tick width.
     $self->set( 'yStop',    $maxY );
     $self->set( 'yStart',   $minY );
     $self->set( 'yTicks',   $self->generateTicks( $minY, $maxY, $yTickWidth ) );
@@ -325,23 +352,29 @@ sub preprocessData {
 
 ###############################
 
+    # Determine the space occupied by margin stuff like labels and the like. This als sets the chart width and
+    # height in terms of pixels that can be used to draw charts on.
     $self->autoRangeMargins;
+
     # Calculate the pixels per unit in the y axis.
+    # TODO: Calc ppu like is done for the x axis right below.
     my $yPxPerUnit = $self->plotOption( 'chartHeight' ) / ( $maxY - $minY );
     $self->plotOption( yPxPerUnit => $yPxPerUnit );
 
     # Calculate the pixels per unit on the x axis.
-    my $xDataWidth  = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-    my $indent      = $self->get('xTickOffset'); #* $xTickWidth;
-    my $xPxPerUnit  = ($self->plotOption( 'chartWidth' ) - 2 * $indent) / $xDataWidth ;
-    $self->plotOption( xPxPerUnit   => $xPxPerUnit );
-    $self->plotOption( xTickOffset  => $indent );#* $xPxPerUnit);
+    my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
+    my $xAddUnit    = $self->get('xTickOffset');
+    my $xPxPerUnit  = $self->plotOption( 'chartWidth' ) / ( $xUnits + $xAddUnit );
 
-    # Determine to location of (0,0)
-    my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );
-    $originX       -= $self->get( 'xStart' ) * $self->getPxPerXUnit if $self->get( 'xStart' ) < 0;
-    my $originY     = $self->plotOption( 'axisMarginTop'  ) + $self->get( 'marginTop'  );
-    $originY       += $self->get( 'yStop' )  * $self->getPxPerYUnit;
+    $self->plotOption( xPxPerUnit   => $xPxPerUnit );
+    $self->plotOption( xTickOffset  => $xAddUnit / 2 * $xPxPerUnit);
+
+
+    # Determine the pixel location of (0,0) within the canvas.
+    my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );           # left border of axis
+    $originX       -= $self->get( 'xStart' ) * $self->getPxPerXUnit if $self->get( 'xStart' ) < 0;  # x position origin
+    my $originY     = $self->plotOption( 'axisMarginTop'  ) + $self->get( 'marginTop'  );           # bottom border of axis
+    $originY       += $self->get( 'yStop' )  * $self->getPxPerYUnit;                                # 
 
     $self->plotOption( originX      => $originX );
     $self->plotOption( originY      => $originY );
@@ -532,7 +565,7 @@ sub plotRulers {
     }
 
     for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
-        my $x   = int $self->toPxX( $tick ); # + $self->plotOption( 'xTickOffset' );
+        my $x   = int $self->toPxX( $tick );
         my $y1  = int $self->toPxY( $self->get('yStop' ) );
         my $y2  = int $self->toPxY( $self->get('yStart') );
 
@@ -608,7 +641,7 @@ sub plotTicks {
 
     # X main ticks
     foreach my $tick ( @{ $self->getXTicks } ) {
-        my $x = int $self->toPxX( $tick ); # + $self->plotOption( 'xTickOffset' );
+        my $x = int $self->toPxX( $tick );
 
         my $inset   = $yOffset - $self->get('xTickInset');
         my $outset  = $yOffset + $self->get('xTickOutset');
@@ -637,7 +670,7 @@ sub plotTicks {
 
     # X sub ticks
     foreach my $tick ( @{ $self->getXSubticks } ) {
-        my $x = int $self->toPxX( $tick ); # + $self->plotOption( 'xTickOffset' );
+        my $x = int $self->toPxX( $tick );
 
         my $inset   = $yOffset - $self->get('xSubtickInset');
         my $outset  = $yOffset + $self->get('xSubtickOutset');
@@ -688,34 +721,6 @@ sub plotLast {
 
     $self->plotTicks;
     $self->plotAxes;
-}
-
-# TODO: Remove type method?
-#---------------------------------------------
-sub type {
-    return 'XY';
-}
-
-#---------------------------------------------
-
-=head2 getExtremeValues ( )
-
-Returns an array containing the minimum X, maximum X, minimum Y and maximum Y value of all the datasets included by
-the charts put on this Axis object.
-
-=cut
-
-sub getExtremeValues {
-    my $self = shift;
-    my (@minX,@maxX,@minY,@maxY);
-    foreach my $chart ( @{ $self->charts } ) {
-        push @minX, $chart->dataset->globalData->{ minCoords }->[0];
-        push @maxX, $chart->dataset->globalData->{ maxCoords }->[0];
-        push @minY, $chart->dataset->globalData->{ minValue  };
-        push @maxY, $chart->dataset->globalData->{ maxValue  };
-    }
-
-    return ( min( @minX ), max( @maxX ), min( @minY ), max( @maxY ) );
 }
 
 #---------------------------------------------
@@ -840,19 +845,19 @@ sub project {
     my $values  = shift;
 
     return ( 
-        $self->toPxX( $coords ), 
-        $self->toPxY( $values ) 
+        $self->toPxX( $coords->[0] ), 
+        $self->toPxY( $values->[0] ) 
     );
 }
 
-=head2 pim ( x, y )
+=head2 toPx ( x, y )
 
 Shorthand method that calls the project method and returns the x and y value joined by a comma as scalar. This
 string can be directly used in ImageMagick path definitions.
 
 =cut
 
-sub pim {
+sub toPx {
     my $self    = shift;
     
     return join ",", $self->project( @_ );

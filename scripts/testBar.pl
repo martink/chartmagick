@@ -37,22 +37,22 @@ $ds->addDataset(
 
 
 
-$ds->addDataset(
-    [ qw( 1 2 3 4 5 ) ],
-    [ qw( 7 -4 6 1 9 ) ],
-);
-$ds->addDataset(
-    [ qw( 1 2 3 4 5 ) ],
-    [ qw( 0.5 5 1 4 2 ) ],
-);
+#$ds->addDataset(
+#    [ qw( 1 2 3 4 5 ) ],
+#    [ qw( 7 -4 6 1 9 ) ],
+#);
+#$ds->addDataset(
+#    [ qw( 1 2 3 4 5 ) ],
+#    [ qw( 0.5 5 1 4 2 ) ],
+#);
 
-my $axis    = Chart::Magick::Axis::Lin->new( {
+my $axis    = Chart::Magick::Axis::LinLog->new( {
     width   => 1000,
     height  => 600,
 } );
 $axis->set('xSubtickCount',  0);
 $axis->set('yChartOffset',  40);
-$axis->set('xTickOffset',   0.5);
+$axis->set('xTickOffset',   1);
 $axis->set('yTickWidth',    2);
 #$axis->set('xChartOffset', 40);
 #$axis->set('xLabelUnits', pi);
@@ -86,6 +86,6 @@ for (0 .. 1000/20) {
 $axis->im->Write('out.png');
 
 
-print $ds->dumpData;
+#print $ds->dumpData;
 
 #print join "\n" , $canvas->im->QueryFont;

@@ -27,7 +27,7 @@ Draws the graph. See Chart::Magick::Axis for documentation.
 sub draw {
     my $self = shift;
 
-    my ($minX, $maxX, $minY, $maxY) = $self->getExtremeValues;
+    my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
 
     $self->set('xStart', $minX); #floor $self->transformX( $minX ) );
     $self->set('xStop',  $maxX); #ceil  $self->transformX( $maxX ) );

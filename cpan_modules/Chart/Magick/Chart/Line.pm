@@ -37,16 +37,19 @@ sub plot {
         for my $ds ( 0 .. $datasetCount - 1) {
             my $color = $self->getPalette->getNextColor;
             my $y = $self->dataset->getDataPoint( $x, $ds );
+#print "Found value ". join(',',@$y)." for coord ".join(',',@$x)." in dataset $ds\n";
 
             next unless defined $y;
 
             if ( $previousCoord->[ $ds ] ) {
                 my @from = @{ $previousCoord->[ $ds ] };
                 my @to   = ( $x, $y );
+#print "FROM: ". Dumper( \@from );
+#print "TO: "  . Dumper( \@to   );
 
                 my $path = 
-                    "M " . $axis->pim( @from )
-                   ."L " . $axis->pim( @to   )
+                    "M " . $axis->toPx( @from   )
+                   ."L " . $axis->toPx( @to     )
                 ;
 
 	            $axis->im->Draw(
@@ -57,9 +60,10 @@ sub plot {
                 );
             }
 
+#print "[$x],[$y]\n";
             # Draw markers
             if ( $self->get('plotMarkers') ) {
-                $marker->draw( $axis->project($x, $y ), $color->getStrokeColor );
+                $marker->draw( $axis->project( $x, $y ), $color->getStrokeColor );
             }
 
             # Store the current position of this dataset

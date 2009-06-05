@@ -1,7 +1,7 @@
 package Chart::Magick::Chart::Bar;
 
 use strict;
-use List::Util qw{ sum };
+use List::Util qw{ sum reduce };
 #use POSIX;
 
 use base qw{ Chart::Magick::Chart };
@@ -20,104 +20,193 @@ sub definition {
 }
 
 
-#-------------------------------------------------------------------
-sub plot {
-    my $self    = shift;
-    my $axis    = shift;
-    
-
-    my $barWidth    = $self->get('barWidth');
-    my $barSpacing  = $self->get('barSpacing');
-#    my $groupWidth  = ( $datasetCount - 1 ) * ( $barWidth + $barSpacing ); #+ $barWidth;
-
-    my $yCache = {};
-
-    my $dsCount = $self->dataset->datasetCount;
-
-    foreach my $x ( $self->dataset->getCoords ) {
-        if ( $self->get('drawMode') eq 'sideBySide' ) {
-            my $offset = -1 * ($dsCount - 1) / 2 * ( $barSpacing + $barWidth );
-           
-            $self->getPalette->paletteIndex( 1 );
-            for my $dsi (0 .. $dsCount - 1) {
-                my $color   = $self->getPalette->getNextColor;
-                my $length  = $self->dataset->getDataPoint( $x, $dsi ); #$self->{_ds2}->{$x}->{ $dsi };
-
-                $self->drawBar( $axis, $length * $axis->getPxPerYUnit, $color, $axis->toPxX( $x ) + $offset, $axis->toPxY( 0 ) );
-
-                $offset += $barWidth + $barSpacing;
-            }
-
-        }
-        else { #if ( $self->get('stacked') ) {
-            $self->getPalette->paletteIndex( 1 );
-            my $yBot = 0;
-            for my $dsi (0 .. $dsCount - 1) {
-                my $color   = $self->getPalette->getNextColor;
-                my $length  = $self->dataset->getDataPoint( $x, $dsi ); #$self->{_ds2}->{$x}->{ $dsi };
-                
-                $self->drawBar( $axis, $length * $axis->getPxPerYUnit, $color, $axis->toPxX( $x ), $axis->toPxY( $yBot ) );
-
-                $yBot += $length;
-            }
-            
-        }
-    }
-}
-
-#-------------------------------------------------------------------
-sub preprocessData {
-    my $self = shift;
-    my $axis = shift;
-
-    my $maxY = 0;
-    my $minY = 0;
-
-    my $barWidth    = $self->get('barWidth');
-    my $barSpacing  = $self->get('barSpacing');
-    my $dsCount     = $self->dataset->datasetCount;
-    my $indent = 0;
-
-    if ( $self->get( 'drawMode' ) eq 'stacked' ) {
-        $indent = $barWidth / 2;
-        $self->set('maxY', $maxY);
-        $self->set('minY', $minY);
-    }
-    else {
-        $indent = ( ($barWidth + $barSpacing) * ($dsCount - 1) + $barWidth ) / 2;
-    }
-
-    $axis->set( 'xTickOffset', $indent) if $axis->get( 'xTickOffset' ) < $indent;
-}
-
-#-------------------------------------------------------------------
 sub drawBar {
-	my $self    = shift;
-    my $axis    = shift;
-    my $length  = shift;
-	my $color   = shift;
-    my $x       = shift;
-    my $y       = shift;
+    my $self            = shift;
+    my $axis            = shift;
 
-    my $width   = $self->get('barWidth');
+    my $color           = shift;
+    my $width           = shift;
+    my $length          = shift;
+    my $coord           = shift;        # x-location of center of bar group
+    my $coordOffset     = shift || 0;   # offset of bar center wrt. $coord 
+    my $bottom          = shift || 0;   # y-location of bar bottom wrt. 0 axis
 
-    my $xLeft   = int( $x - $width / 2  );
-    my $xRight  = int( $xLeft + $width  );
-    my $yTop    = int( $y - $length     );
-    my $yBottom = int( $y               );
+    my $left    = $coord - $width / 2 + $coordOffset;   # x-location of left bar edge
+    my $right   = $left + $width;                       # x-location of right bar edge
+    my $top     = $bottom + $length;
+
+    my @botLeft  = $axis->toPx( [ $left  ], [ $bottom ] );
+    my @topLeft  = $axis->toPx( [ $left  ], [ $top    ] );
+    my @topRight = $axis->toPx( [ $right ], [ $top    ] );
+    my @botRight = $axis->toPx( [ $right ], [ $bottom ] );
 
 	$axis->im->Draw(
 		primitive	=> 'Path',
-		stroke		=> $color->getStrokeColor, #$bar->{strokeColor},
+		stroke		=> $color->getStrokeColor,
+		fill		=> $color->getFillColor,
 		points		=> 
-			  " M $xLeft,$yBottom "
-			. " L $xLeft,$yTop "
-            . " L $xRight,$yTop "
-			. " L $xRight,$yBottom",
-		fill		=> $color->getFillColor, #$bar->{fillColor},
-#   affine      => $axis->getChartTransform,
+			  " M " . $axis->toPx( [ $left  ], [ $bottom ] )
+			. " L " . $axis->toPx( [ $left  ], [ $top    ] )
+            . " L " . $axis->toPx( [ $right ], [ $top    ] )
+			. " L " . $axis->toPx( [ $right ], [ $bottom ] ),
 	);
+    
 }
+
+
+sub plot {
+    my $self = shift;
+    my $axis = shift;
+
+    my $barCount    = $self->dataset->datasetCount;
+    my $groupCount = 5;
+
+    my $minSpacing;
+    my $p;
+    foreach ( $self->dataset->getCoords ) {
+        next unless defined $p;
+        $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
+           
+        $p = $_->[0];
+    }
+
+    my $dataRange       = 5;
+    my $groupWidth      = $minSpacing; #$dataRange / $groupCount;
+    my $groupSpacing    = $groupWidth * 0.1;
+    my $barSpacing      = $groupWidth * 0.05;
+
+    my $barWidth        = ( $groupWidth  - $groupSpacing ) / $barCount - $barSpacing ;
+    $barWidth *= 0.5;
+
+    foreach my $coord ( $self->dataset->getCoords ) {
+        $self->getPalette->paletteIndex( 1 );
+        for my $dataset ( 0..$barCount - 1 ) {
+            my $color       = $self->getPalette->getNextColor;
+            my $offset      = $dataset * ( $barWidth + $barSpacing) - ($barSpacing + $barWidth ) * ( $barCount - 1 ) / 2;
+    #        $offset         = 
+            my $barLength   = $self->dataset->getDataPoint( $coord, $dataset )->[0];
+
+print "[". join( '][', $barWidth, $barLength, $coord->[ 0 ], $offset), "]\n";
+
+            $self->drawBar( $axis, $color, $barWidth, $barLength, $coord->[ 0 ], $offset );
+        }
+    }
+}
+
+
+sub preprocessData {
+
+
+}
+
+
+
+
+
+
+
+
+#
+#
+#
+#
+##-------------------------------------------------------------------
+#sub plot {
+#    my $self    = shift;
+#    my $axis    = shift;
+#    
+#
+#    my $barWidth    = $self->get('barWidth');
+#    my $barSpacing  = $self->get('barSpacing');
+##    my $groupWidth  = ( $datasetCount - 1 ) * ( $barWidth + $barSpacing ); #+ $barWidth;
+#
+#    my $yCache = {};
+#
+#    my $dsCount = $self->dataset->datasetCount;
+#
+#    foreach my $x ( $self->dataset->getCoords ) {
+#        if ( $self->get('drawMode') eq 'sideBySide' ) {
+#            my $offset = -1 * ($dsCount - 1) / 2 * ( $barSpacing + $barWidth );
+#           
+#            $self->getPalette->paletteIndex( 1 );
+#            for my $dsi (0 .. $dsCount - 1) {
+#                my $color   = $self->getPalette->getNextColor;
+#                my $length  = $self->dataset->getDataPoint( $x, $dsi ); #$self->{_ds2}->{$x}->{ $dsi };
+#
+##                $self->drawBar( $axis, $length * $axis->getPxPerYUnit, $color, $axis->toPxX( $x ) + $offset, $axis->toPxY( 0 ) );
+#                $offset += $barWidth + $barSpacing;
+#            }
+#
+#        }
+#        else { #if ( $self->get('stacked') ) {
+#            $self->getPalette->paletteIndex( 1 );
+#            my $yBot = 0;
+#            for my $dsi (0 .. $dsCount - 1) {
+#                my $color   = $self->getPalette->getNextColor;
+#                my $length  = $self->dataset->getDataPoint( $x, $dsi ); #$self->{_ds2}->{$x}->{ $dsi };
+#                
+#                $self->drawBar( $axis, $length * $axis->getPxPerYUnit, $color, $axis->toPxX( $x ), $axis->toPxY( $yBot ) );
+#
+#                $yBot += $length;
+#            }
+#            
+#        }
+#    }
+#}
+#
+##-------------------------------------------------------------------
+#sub preprocessData {
+#    my $self = shift;
+#    my $axis = shift;
+#
+#    my $maxY = 0;
+#    my $minY = 0;
+#
+#    my $barWidth    = $self->get('barWidth');
+#    my $barSpacing  = $self->get('barSpacing');
+#    my $dsCount     = $self->dataset->datasetCount;
+#    my $indent = 0;
+#
+#    if ( $self->get( 'drawMode' ) eq 'stacked' ) {
+#        $indent = $barWidth / 2;
+#        $self->set('maxY', $maxY);
+#        $self->set('minY', $minY);
+#    }
+#    else {
+#        $indent = ( ($barWidth + $barSpacing) * ($dsCount - 1) + $barWidth ) / 2;
+#    }
+#
+#    $axis->set( 'xTickOffset', $indent) if $axis->get( 'xTickOffset' ) < $indent;
+#}
+#
+##-------------------------------------------------------------------
+#sub drawBar {
+#	my $self    = shift;
+#    my $axis    = shift;
+#    my $length  = shift;
+#	my $color   = shift;
+#    my $x       = shift;
+#    my $y       = shift;
+#
+#    my $width   = $self->get('barWidth');
+#
+#    my $xLeft   = int( $x - $width / 2  );
+#    my $xRight  = int( $xLeft + $width  );
+#    my $yTop    = int( $y - $length     );
+#    my $yBottom = int( $y               );
+#
+#	$axis->im->Draw(
+#		primitive	=> 'Path',
+#		stroke		=> $color->getStrokeColor, #$bar->{strokeColor},
+#		points		=> 
+#			  " M $xLeft,$yBottom "
+#			. " L $xLeft,$yTop "
+#            . " L $xRight,$yTop "
+#			. " L $xRight,$yBottom",
+#		fill		=> $color->getFillColor, #$bar->{fillColor},
+##   affine      => $axis->getChartTransform,
+#	);
+#}
 
 1;
 

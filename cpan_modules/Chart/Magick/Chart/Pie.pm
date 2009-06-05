@@ -824,13 +824,14 @@ Takes the dataset and takes the necesarry steps for the pie to be drawn.
 sub processDataset {
 	my $self    = shift;
 
-	my $total = $self->dataset->datasetData->[0]->{ total } || 1;
+	my $total = $self->dataset->datasetData->[0]->{ total }->[ 0 ] || 1;
 
     my $divisor     = $self->dataset->datasetData->[0]->{ coordCount }; # avoid division by zero
 	my $stepsize    = ( $self->get('topHeight') + $self->get('bottomHeight') ) / $divisor;
 
-	for my $x ( $self->dataset->getCoords ) {
-        my $y = $self->dataset->getDataPoint( $x, 0 );
+	for my $coord ( $self->dataset->getCoords ) {
+        my $x = $coord->[0];
+        my $y = $self->dataset->getDataPoint( $coord, 0 )->[0];
 
         # Skip undef or negative values
         next unless $y >= 0;

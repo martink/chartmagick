@@ -44,6 +44,7 @@ my $axis    = Chart::Magick::Axis::LinLog->new( {
     height  => 600,
 } );
 $axis->set('xSubtickCount',  5);
+$axis->set('xTickOffset', 1);
 $axis->set('title', 'Logarithmic plot');
 #$axis->set('yChartOffset',  40);
 #$axis->set('xTickOffset',   0.5);

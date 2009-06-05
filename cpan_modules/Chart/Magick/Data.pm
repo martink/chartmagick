@@ -2,6 +2,7 @@ package Chart::Magick::Data;
 
 use strict;
 use Class::InsideOut qw{ :std };
+use Carp;
 use Data::Dumper;
 
 readonly data           => my %data;
@@ -44,7 +45,7 @@ sub new {
     register    $self;
 
     my $id = id $self;
-    $data{ $id }            = {};
+    $data{ $id }            = [];
     $datasetCount{ $id }    = 0;
     $coordCount{ $id }      = 0;
     $datasetIndex{ $id }    = 0;
@@ -87,23 +88,21 @@ sub addDataPoint {
     unless ( ref $coords eq 'ARRAY' ) {
         $coords = [ $coords ];
     }
+    unless ( ref $value  eq 'ARRAY' ) {
+        $value  = [ $value  ];
+    }
 
-    die "Cannot add data with ". @$coords ." coords to a dataset with ". $coordCount{ id $self }. " coords." 
+    croak "Cannot add data with " . @$coords ." dimensional coords to a dataset with ". $coordCount{ id $self }. " dimensional coords." 
         unless $self->checkCoords( $coords );
-
-    my $lastCoord = pop @{ $coords };
 
     # Goto the location of the coords in the data hashref
     my $data = $data{ id $self };
-    foreach ( @{ $coords } ) {
-        $data = \%{ $data->{ $_ } };
-    }
 
-    # Add value to coords in dataset
-    $data->{ $lastCoord }->{ data }->[ $dataset ] = $value;
+    my $key = join '_', @{ $coords };
+    $data->[ $dataset  ]->{ $key } = $value;
 
     # Set min, max, total, etc.
-    $self->updateStats( $data->{ $lastCoord }, [ @$coords, $lastCoord ], $value, $dataset );
+    $self->updateStats( $coords, $value, $dataset )
 }
 
 sub addDataset {
@@ -111,11 +110,10 @@ sub addDataset {
     my $coords  = shift;
     my $values  = shift;
 
-    die "Number of coordinates and values doesn't match" unless scalar @{ $coords } eq scalar @{ $values };
+    croak "Number of coordinates and values doesn't match" unless scalar @{ $coords } eq scalar @{ $values };
 
     # $datsetIndex starts at 0 for the first dataset.
     my $datasetIndex = $datasetCount{ id $self }++;
-#    $datasetCount{ id $self }++;
 
     for my $index ( 0 .. scalar @{ $coords } - 1 ) {
         $self->addDataPoint( $coords->[ $index ], $values->[ $index ], $datasetIndex );
@@ -151,6 +149,9 @@ sub dumpData {
 sub getCoords {
     my $self = shift;
 
+    #return map { [ split /_/, $_ ] } keys %{ $data{ id $self } };
+
+    return sort { $a->[0] <=> $b->[0] } map { [ split /_/, $_ ] } keys %{ $data{ id $self } };
     return sort { $a <=> $b } keys %{ $data{ id $self } };
 }
 
@@ -158,64 +159,47 @@ sub getDataPoint {
     my $self    = shift;
     my $coords  = shift;
     my $dataset = shift || $self->datasetIndex;
-    my $data    = $data{ id $self };
+    my $data    = $data{ id $self }->[ $dataset ];
 
-    # Handle single coord systems quickly
-    return $data->{ $coords }->{ data }->[ $dataset ] if ($self->coordCount == 1);
-
-    # Other wise search for the right hash entry
-    my $lastCoord = pop @{ $coords };
-
-    # Goto the location of the coords in the data hashref
-    my $data = $data{ id $self };
-    foreach ( @{ $coords } ) {
-        $data = \%{ $data->{ $_ } };
-    }
-
-    # Add value to coords in dataset
-    return $data->{ $lastCoord }->{ data }->[ $dataset ];
-
+    my $key = join '_', @{ $coords };
+    return exists $data->{ $key } ? $data->{ $key } : undef;
 }
 
 sub updateStats {
     my $self        = shift;
-    my $destination = shift;
+#   my $destination = shift;
     my $coords      = shift;
     my $value       = shift;
     my $dataset     = shift;
     my $id          = id $self;
 
-#    unless (ref $value eq 'ARRAY') {
-#        $value = [ $value ];
-#    };
-#
-#    for my $i ( 0 .. scalar @{ $value } - 1) {
-#        my $subVal = $value->[ $i ];
-#            $min->[ $i ]    = $subVal if $subVal < $min->[ $i ] || !defined $min->[ $i ];
-#            $max->[ $i ]    = $subVal if $subVal > $max->[ $i ] || !defined $max->[ $i ];
-#            $total->[ $i ]  += $subVal;
-#        }
-#    }
-
     # process value
-    for my $data ( $destination, $datasetData{ $id }->[ $dataset ], $globalData{ $id } ) {
+#    for my $data ( $destination, $datasetData{ $id }->[ $dataset ], $globalData{ $id } ) {
+     # Update stats per dataset and globally.
+     for my $data ( $datasetData{ $id }->[ $dataset ], $globalData{ $id } ) {
         # process value
-        $data->{ minValue   } = $value if !defined $data->{ minValue } || $value < $data->{ minValue };
-        $data->{ maxValue   } = $value if !defined $data->{ maxValue } || $value > $data->{ maxValue };
-        $data->{ total      } += $value;
-        $data->{ absTotal   } += abs $value;
+        my $i = 0;
+        foreach ( @{ $value } ) {
+            $data->{ minValue   }->[ $i ]  = $_ if !defined $data->{ minValue }->[ $i ] || $_ < $data->{ minValue }->[ $i ]; 
+            $data->{ maxValue   }->[ $i ]  = $_ if !defined $data->{ maxValue }->[ $i ] || $_ > $data->{ maxValue }->[ $i ];
+            $data->{ total      }->[ $i ] += $_;
+            $data->{ absTotal   }->[ $i ] += abs $_;
+
+            $i++;
+        }
 
         # Don't process coords for $desitination;
-        next if $data eq $destination;
+#        next if $data eq $destination;
 
         $data->{ coordCount }++;
 
         # process coords
-        for my $i ( 0 .. scalar @{ $coords } - 1 ) {
-            $data->{ minCoords }->[ $i ] = $coords->[ $i ] if $coords->[ $i ] < $data->{ minCoords }->[ $i ] 
-                || !defined $data->{ minCoords }->[ $i ];
-            $data->{ maxCoords }->[ $i ] = $coords->[ $i ] if $coords->[ $i ] > $data->{ maxCoords }->[ $i ] 
-                || !defined $data->{ maxCoords }->[ $i ];
+        $i = 0;
+        foreach ( @{ $coords } ) {
+            $data->{ minCoord }->[ $i ] = $_ if $_ < $data->{ minCoord }->[ $i ] 
+                || !defined $data->{ minCoord }->[ $i ];
+            $data->{ maxCoord }->[ $i ] = $_ if $_ > $data->{ maxCoord }->[ $i ] 
+                || !defined $data->{ maxCoord }->[ $i ];
         }
     }
 }

@@ -3,6 +3,8 @@ package Chart::Magick::Axis;
 use strict;
 use Class::InsideOut qw{ :std };
 use Image::Magick;
+use List::Util qw{ min max };
+use Carp;
 
 use constant pi => 3.14159265358979;
 
@@ -60,8 +62,8 @@ sub im {
     my $im = $magick{ id $self };
     return $im if $im;
 
-    my $width   = $self->get('width')   || die "no height";
-    my $height  = $self->get('height')  || die "no width";
+    my $width   = $self->get('width')   || croak "no height";
+    my $height  = $self->get('height')  || croak "no width";
     my $magick  = Image::Magick->new(
         size        => $width.'x'.$height,
     );
@@ -86,8 +88,8 @@ sub new {
     my $class       = shift;
     my $properties  = shift || {};
     
-#    my $width   = $properties->{ width  } || die "no height";
-#    my $height  = $properties->{ height } || die "no width";
+#    my $width   = $properties->{ width  } || croak "no height";
+#    my $height  = $properties->{ height } || croak "no width";
 #    my $magick  = Image::Magick->new(
 #        size        => $width.'x'.$height,
 #    );
@@ -245,13 +247,32 @@ sub get {
     my $properties  = $properties{ id $self };
 
     if ($key) {
-        #### TODO: handle error and don't die?
-        die "invalid key: [$key]" unless exists $properties->{ $key };
+        #### TODO: handle error and don't croak?
+        croak "invalid key: [$key]" unless exists $properties->{ $key };
         return $properties->{ $key };
     }
     else {
         return { %{ $properties } };
     }
+}
+
+#---------------------------------------------
+sub getDataRange {
+    my $self = shift;
+    my ( @minCoord, @maxCoord, @minValue, @maxValue );
+
+    my @charts = @{ $self->charts };
+
+    for my $i ( 0 .. $self->getCoordDimension - 1 ) {
+        push @minCoord, min map { $_->dataset->globalData->{ minCoord }->[ $i ] } @charts;
+        push @maxCoord, max map { $_->dataset->globalData->{ maxCoord }->[ $i ] } @charts;
+    }
+    for my $i ( 0 .. $self->getValueDimension - 1 ) {
+        push @minValue, min map { $_->dataset->globalData->{ minValue }->[ $i ] } @charts;
+        push @maxValue, max map { $_->dataset->globalData->{ maxValue }->[ $i ] } @charts;
+    }
+
+    return ( \@minCoord, \@maxCoord, \@minValue, \@maxValue );
 }
 
 #---------------------------------------------
@@ -372,7 +393,7 @@ sub plotOption {
         $self->{ _plotOptions }->{ $option } = $value;
     }
     else {
-        die "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
+        croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
     }
 
     return $self->{ _plotOptions }->{ $option };
