@@ -490,21 +490,21 @@ You'll probably never need to call this method manually.
 
 sub plotAxes {
     my $self = shift;
-    
-    my $ticksOutside = $self->get('axesOutside');
-    
-    my $xStart  = int $self->plotOption('chartAnchorX'); #int $self->toPxX( $ticksOutside ? $self->get('xStart') : 0 );
+
+    my $xStart  = int $self->plotOption('chartAnchorX');
     my $xStop   = $xStart + $self->getChartWidth; 
-    my $yStart  = int $self->plotOption('chartAnchorY'); #int $self->toPxY( $ticksOutside ? $self->get('yStart') : 0 );
+    my $yStart  = int $self->plotOption('chartAnchorY');
     my $yStop   = $yStart + $self->getChartHeight;
+    my $originX = int $self->plotOption('originX');
+    my $originY = int $self->plotOption('originY');
 
     # Main axes
     $self->im->Draw(
         primitive   => 'Path',
         stroke      => 'black', #$self->getAxisColor,
         points      =>
-              " M $xStart,$yStop L $xStart,$yStart "
-            . " M $xStop,$yStop L $xStart,$yStop ",
+              " M $xStart,$originY L $xStop,$originY"
+            . " M $originX,$yStart L $originX,$yStop",
         fill        => 'none',
         gravity     => 'Center',
     );
@@ -593,8 +593,8 @@ sub plotTicks {
 
     my $ticksOutside = $self->get('axesOutside');
 
-    my $xOffset = $ticksOutside ? $self->plotOption('chartAnchorX') : int $self->toPxX( 0 );
-    my $yOffset = int $self->toPxY( $ticksOutside ? $self->get('yStart') : 0 );
+    my $xOffset = $ticksOutside ? int $self->plotOption('chartAnchorX') : int $self->plotOption('originX');
+    my $yOffset = $ticksOutside ? int $self->plotOption('chartAnchorY') + $self->plotOption('chartHeight') : int $self->plotOption('originY');
 
     # Y Ticks
     foreach my $tick ( @{ $self->getYTicks } ) {
