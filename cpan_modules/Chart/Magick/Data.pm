@@ -4,6 +4,7 @@ use strict;
 use Class::InsideOut qw{ :std };
 use Carp;
 use Data::Dumper;
+use Devel::Size qw{ total_size };
 
 readonly data           => my %data;
 readonly labels         => my %labels;
@@ -99,12 +100,14 @@ sub addDataPoint {
     my $data = $data{ id $self };
 
     my $key = join '_', @{ $coords };
+##########    $data->[ $dataset  ]->{ $key }->{ value } = $value;
     $data->[ $dataset  ]->{ $key } = $value;
 
     # Set min, max, total, etc.
     $self->updateStats( $coords, $value, $dataset )
 }
 
+#---------------------------------------------------------------
 sub addDataset {
     my $self    = shift;
     my $coords  = shift;
@@ -120,6 +123,7 @@ sub addDataset {
     }
 }
 
+#---------------------------------------------------------------
 sub checkCoords {
     my $self    = shift;
     my $coords  = shift;
@@ -134,11 +138,12 @@ sub checkCoords {
     return 1;
 }
 
+#---------------------------------------------------------------
 sub dumpData {
     my $self = shift;
 
     return 
-        "------------- DATA --------------------------\n"
+         "\n------------- DATA --------------------------\n"
         . Dumper( $data{ id $self } )
         ."\n------------- PERDATASET --------------------\n"
         . Dumper( $datasetData{ id $self } )
@@ -146,15 +151,31 @@ sub dumpData {
         . Dumper( $globalData{ id $self } );
 }
 
+#---------------------------------------------------------------
+sub memUsage {
+    return 
+         "\n------------- MEMORY USAGE ------------------\n"
+        . "Data set     : " . total_size( \%data )       . "\n"
+        . "Global stats : " . total_size( \%globalData ) . "\n"
+        . "DS stats     : " . total_size( \%datasetData ). "\n";
+
+}
+#---------------------------------------------------------------
 sub getCoords {
     my $self = shift;
 
     #return map { [ split /_/, $_ ] } keys %{ $data{ id $self } };
 
-    return sort { $a->[0] <=> $b->[0] } map { [ split /_/, $_ ] } keys %{ $data{ id $self } };
-    return sort { $a <=> $b } keys %{ $data{ id $self } };
+    return 
+        sort    { $a->[0] <=> $b->[0] }         # !!!only sorts on first coord, needs something more advanced
+        map     { [ split /_/, $_ ] }           # decode the keys to actual coords
+        keys    %{ $data{ id $self } };         # coords are encoded in the keys of the data hash
+
+
+#    return sort { $a <=> $b } keys %{ $data{ id $self } };
 }
 
+#---------------------------------------------------------------
 sub getDataPoint {
     my $self    = shift;
     my $coords  = shift;
@@ -163,8 +184,11 @@ sub getDataPoint {
 
     my $key = join '_', @{ $coords };
     return exists $data->{ $key } ? $data->{ $key } : undef;
+##########
+    return exists $data->{ $key } ? $data->{ $key }->{ value } : undef;
 }
 
+#---------------------------------------------------------------
 sub updateStats {
     my $self        = shift;
 #   my $destination = shift;

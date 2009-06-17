@@ -60,6 +60,14 @@ sub get {
     return $properties{ id $self }->{ $key };
 }
 
+sub getDataRange {
+    my $self    = shift;
+    my $global  = $self->dataset->globalData;
+
+    return ( $global->{ minCoord }, $global->{ maxCoord }, $global->{ minValue }, $global->{ maxValue } );
+
+}
+
 #-------------------------------------------------------------------
 sub getPalette {
     my $self = shift;

@@ -53,6 +53,17 @@ sub drawBar {
     
 }
 
+sub getDataRange {
+    my $self = shift;
+
+    return $self->SUPER::getDataRange( @_ ) unless $self->get('drawMode') eq 'cumulative';
+
+    my $global = $self->dataset->globalData;
+
+    return ( $global->{ minCoord }, $global->{ maxCoord }, [ 0 ], $global->{ total } );
+
+
+}
 
 sub plot {
     my $self = shift;
@@ -64,8 +75,9 @@ sub plot {
     my $minSpacing;
     my $p;
     foreach ( $self->dataset->getCoords ) {
-        next unless defined $p;
-        $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
+        if ( defined $p ) {
+            $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
+        }
            
         $p = $_->[0];
     }
@@ -80,15 +92,24 @@ sub plot {
 
     foreach my $coord ( $self->dataset->getCoords ) {
         $self->getPalette->paletteIndex( 1 );
-        for my $dataset ( 0..$barCount - 1 ) {
+
+        my $verticalOffset = 0;
+        for my $dataset ( 0 .. $barCount - 1 ) {
             my $color       = $self->getPalette->getNextColor;
-            my $offset      = $dataset * ( $barWidth + $barSpacing) - ($barSpacing + $barWidth ) * ( $barCount - 1 ) / 2;
-    #        $offset         = 
             my $barLength   = $self->dataset->getDataPoint( $coord, $dataset )->[0];
 
-print "[". join( '][', $barWidth, $barLength, $coord->[ 0 ], $offset), "]\n";
+            if ( $self->get('drawMode') eq 'cumulative' ) {
+                # Draw bars on top of each other.
+                $self->drawBar( $axis, $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
 
-            $self->drawBar( $axis, $color, $barWidth, $barLength, $coord->[ 0 ], $offset );
+                $verticalOffset += $barLength;
+            }
+            else {
+                # Default to sideBySide draw mode
+                my $offset      = $dataset * ( $barWidth + $barSpacing) - ($barSpacing + $barWidth ) * ( $barCount - 1 ) / 2;
+
+                $self->drawBar( $axis, $color, $barWidth, $barLength, $coord->[ 0 ], $offset, 0  );
+            }
         }
     }
 }

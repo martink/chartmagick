@@ -261,16 +261,29 @@ sub getDataRange {
     my $self = shift;
     my ( @minCoord, @maxCoord, @minValue, @maxValue );
 
-    my @charts = @{ $self->charts };
+    my @extremes = map { [ $_->getDataRange ] } @{ $self->charts };
 
     for my $i ( 0 .. $self->getCoordDimension - 1 ) {
-        push @minCoord, min map { $_->dataset->globalData->{ minCoord }->[ $i ] } @charts;
-        push @maxCoord, max map { $_->dataset->globalData->{ maxCoord }->[ $i ] } @charts;
+        push @minCoord, min map { $_->[ 0 ]->[ $i ] } @extremes;
+        push @maxCoord, max map { $_->[ 1 ]->[ $i ] } @extremes;
     }
     for my $i ( 0 .. $self->getValueDimension - 1 ) {
-        push @minValue, min map { $_->dataset->globalData->{ minValue }->[ $i ] } @charts;
-        push @maxValue, max map { $_->dataset->globalData->{ maxValue }->[ $i ] } @charts;
+        push @minValue, min map { $_->[ 2 ]->[ $i ] } @extremes;
+        push @maxValue, max map { $_->[ 3 ]->[ $i ] } @extremes;
     }
+     
+
+
+#    my @charts = @{ $self->charts };
+#
+#    for my $i ( 0 .. $self->getCoordDimension - 1 ) {
+#        push @minCoord, min map { $_->dataset->globalData->{ minCoord }->[ $i ] } @charts;
+#        push @maxCoord, max map { $_->dataset->globalData->{ maxCoord }->[ $i ] } @charts;
+#    }
+#    for my $i ( 0 .. $self->getValueDimension - 1 ) {
+#        push @minValue, min map { $_->dataset->globalData->{ minValue }->[ $i ] } @charts;
+#        push @maxValue, max map { $_->dataset->globalData->{ maxValue }->[ $i ] } @charts;
+#    }
 
     return ( \@minCoord, \@maxCoord, \@minValue, \@maxValue );
 }
@@ -399,32 +412,32 @@ sub plotOption {
     return $self->{ _plotOptions }->{ $option };
 }
 
-#---------------------------------------------
-#### TODO: Dit moet worden geabstraheerd
-=head2 transformToPixels ( x, y )
-
-Maps graph coordinates to pixel coordinates on the Axis and returns them as a list.
-
-=head3 x
-
-X coordinate
-
-=head3 y
-
-Y coordinate
-
-=cut
-
-sub transformToPixels {
-    my $self    = shift;
-    my $x       = shift;
-    my $y       = shift;
-
-    return (
-        int( $self->transformX( $x ) * $self->getPxPerXUnit ), 
-        int( $self->transformY( $y ) * $self->getPxPerYUnit ),
-    );
-}
+#####---------------------------------------------
+######## TODO: Dit moet worden geabstraheerd
+####=head2 transformToPixels ( x, y )
+####
+####Maps graph coordinates to pixel coordinates on the Axis and returns them as a list.
+####
+####=head3 x
+####
+####X coordinate
+####
+####=head3 y
+####
+####Y coordinate
+####
+####=cut
+####
+####sub transformToPixels {
+####    my $self    = shift;
+####    my $x       = shift;
+####    my $y       = shift;
+####
+####    return (
+####        int( $self->transformX( $x ) * $self->getPxPerXUnit ), 
+####        int( $self->transformY( $y ) * $self->getPxPerYUnit ),
+####    );
+####}
 
 #-------------------------------------------------------------------
 
