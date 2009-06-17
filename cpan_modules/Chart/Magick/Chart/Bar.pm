@@ -59,10 +59,21 @@ sub getDataRange {
     return $self->SUPER::getDataRange( @_ ) unless $self->get('drawMode') eq 'cumulative';
 
     my $global = $self->dataset->globalData;
+    my $maxNeg = 0;
+    my $maxPos = 0;
 
-    return ( $global->{ minCoord }, $global->{ maxCoord }, [ 0 ], $global->{ total } );
+    # Doing it this way is wrong b/c it should prolly be don in Data. However it works for now.
+    foreach my $coord ( $self->dataset->getCoords ) {
+        my @values = map { $self->dataset->getDataPoint( $coord, $_ ) } (0 .. $self->dataset->datasetCount - 1);
 
+        my $negSum = sum grep { $_ < 0 } map { $_ ? $_->[0] : 0 } @values;
+        my $posSum = sum grep { $_ > 0 } map { $_ ? $_->[0] : 0 } @values;
 
+        $maxNeg = $negSum if $negSum < $maxNeg;
+        $maxPos = $posSum if $posSum > $maxPos;
+    }
+
+    return ( $global->{ minCoord }, $global->{ maxCoord }, [ $maxNeg ], [ $maxPos ] );
 }
 
 sub plot {
@@ -70,7 +81,11 @@ sub plot {
     my $axis = shift;
 
     my $barCount    = $self->dataset->datasetCount;
-    my $groupCount = 5;
+    my $groupCount  = $self->get('drawMode') eq 'cumulative' 
+                    ? 1
+                    : $barCount
+                    ;
+
 
     my $minSpacing;
     my $p;
@@ -87,18 +102,29 @@ sub plot {
     my $groupSpacing    = $groupWidth * 0.1;
     my $barSpacing      = $groupWidth * 0.05;
 
-    my $barWidth        = ( $groupWidth  - $groupSpacing ) / $barCount - $barSpacing ;
+    my $barWidth        = ( $groupWidth  - $groupSpacing ) / $groupCount - $barSpacing ;
     $barWidth *= 0.5;
 
     foreach my $coord ( $self->dataset->getCoords ) {
         $self->getPalette->paletteIndex( 1 );
 
-        my $verticalOffset = 0;
+        my $positiveVerticalOffset = 0;
+        my $negativeVerticalOffset = 0;
         for my $dataset ( 0 .. $barCount - 1 ) {
             my $color       = $self->getPalette->getNextColor;
             my $barLength   = $self->dataset->getDataPoint( $coord, $dataset )->[0];
 
             if ( $self->get('drawMode') eq 'cumulative' ) {
+                my $verticalOffset;
+                if ( $barLength >= 0 ) {
+                    $verticalOffset          = $positiveVerticalOffset;
+                    $positiveVerticalOffset += $barLength;
+                }
+                else {
+                    $verticalOffset          = $negativeVerticalOffset;
+                    $negativeVerticalOffset += $barLength;
+                }
+
                 # Draw bars on top of each other.
                 $self->drawBar( $axis, $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
 
