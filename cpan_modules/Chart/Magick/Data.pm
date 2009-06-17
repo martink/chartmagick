@@ -206,6 +206,8 @@ sub updateStats {
         foreach ( @{ $value } ) {
             $data->{ minValue   }->[ $i ]  = $_ if !defined $data->{ minValue }->[ $i ] || $_ < $data->{ minValue }->[ $i ]; 
             $data->{ maxValue   }->[ $i ]  = $_ if !defined $data->{ maxValue }->[ $i ] || $_ > $data->{ maxValue }->[ $i ];
+            $data->{ posTotal   }->[ $i ] += $_ if $_ > 0;
+            $data->{ negTotal   }->[ $i ] += $_ if $_ < 0;
             $data->{ total      }->[ $i ] += $_;
             $data->{ absTotal   }->[ $i ] += abs $_;
 
