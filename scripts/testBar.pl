@@ -42,8 +42,8 @@ $ds->addDataset(
     [ qw( 7 -4 6 1 9 ) ],
 );
 $ds->addDataset(
-    [ qw( 1 2 3 4 5 ) ],
-    [ qw( 0.5 5 1 4 2 ) ],
+    [ qw( 1 2 3 4 5 6 ) ],
+    [ qw( 0.5 5 1 4 2 -2) ],
 );
 
 for ( 1 .. -1 ) {
@@ -79,8 +79,8 @@ $axis->addChart( $chart );
 $axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr', 5 => 'mei' } );
 $axis->draw;
 
-print Dumper( $axis->get );
-print Dumper( $axis->{_plotOptions} );
+#print Dumper( $axis->get );
+#print Dumper( $axis->{_plotOptions} );
 
 
 for (0 .. 1000/20) {
@@ -95,6 +95,6 @@ for (0 .. 1000/20) {
 $axis->im->Write('out.png');
 
 
-print $ds->dumpData;
+#print $ds->dumpData;
 
 #print join "\n" , $canvas->im->QueryFont;
