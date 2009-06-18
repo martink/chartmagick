@@ -33,7 +33,10 @@ sub draw {
         [ 'Z'               ],
     ];
 
-    my $path = join(' ', map { $_->[0] .' '.  $size*$_->[1] .','. $size*$_->[2] } @$marker2);
+    my $path = join(' ', map { 
+        $_->[0] .' '
+        . ( $_->[1] ? $size*$_->[1].','. $size*$_->[2] : '' )
+    } @$marker2);
 
 
     my $translateX = int( $x - 0.5*$size + 0.5 );
