@@ -162,14 +162,22 @@ sub memUsage {
 }
 #---------------------------------------------------------------
 sub getCoords {
-    my $self = shift;
+    my $self    = shift;
+    my $dataset = shift;
+
+    my $data    = $data{ id $self };
+
+    my $coords  = defined $dataset 
+                ? $data->[ $dataset ]
+                : { map { %{$_} } @{$data} }
+                ;
 
     #return map { [ split /_/, $_ ] } keys %{ $data{ id $self } };
 
     return 
         sort    { $a->[0] <=> $b->[0] }         # !!!only sorts on first coord, needs something more advanced
         map     { [ split /_/, $_ ] }           # decode the keys to actual coords
-        keys    %{ $data{ id $self } };         # coords are encoded in the keys of the data hash
+        keys    %$coords                        # coords are encoded in the keys of the data hash
 
 
 #    return sort { $a <=> $b } keys %{ $data{ id $self } };
@@ -222,10 +230,8 @@ sub updateStats {
         # process coords
         $i = 0;
         foreach ( @{ $coords } ) {
-            $data->{ minCoord }->[ $i ] = $_ if $_ < $data->{ minCoord }->[ $i ] 
-                || !defined $data->{ minCoord }->[ $i ];
-            $data->{ maxCoord }->[ $i ] = $_ if $_ > $data->{ maxCoord }->[ $i ] 
-                || !defined $data->{ maxCoord }->[ $i ];
+            $data->{ minCoord }->[ $i ] = $_ if !defined $data->{ minCoord }->[ $i ] || $_ < $data->{ minCoord }->[ $i ]; 
+            $data->{ maxCoord }->[ $i ] = $_ if !defined $data->{ maxCoord }->[ $i ] || $_ > $data->{ maxCoord }->[ $i ];
         }
     }
 }
