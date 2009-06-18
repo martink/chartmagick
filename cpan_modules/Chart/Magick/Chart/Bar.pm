@@ -111,8 +111,12 @@ sub plot {
         my $positiveVerticalOffset = 0;
         my $negativeVerticalOffset = 0;
         for my $dataset ( 0 .. $barCount - 1 ) {
-            my $color       = $self->getPalette->getNextColor;
-            my $barLength   = $self->dataset->getDataPoint( $coord, $dataset )->[0];
+            my $color   = $self->getPalette->getNextColor;
+            my $value   = $self->dataset->getDataPoint( $coord, $dataset );
+            
+            next unless $value;
+
+            my $barLength = $value->[0];
 
             if ( $self->get('drawMode') eq 'cumulative' ) {
                 my $verticalOffset;
