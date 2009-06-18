@@ -37,16 +37,23 @@ $ds->addDataset(
 
 
 
-#$ds->addDataset(
-#    [ qw( 1 2 3 4 5 ) ],
-#    [ qw( 7 -4 6 1 9 ) ],
-#);
-#$ds->addDataset(
-#    [ qw( 1 2 3 4 5 ) ],
-#    [ qw( 0.5 5 1 4 2 ) ],
-#);
+$ds->addDataset(
+    [ qw( 1 2 3 4 5 ) ],
+    [ qw( 7 -4 6 1 9 ) ],
+);
+$ds->addDataset(
+    [ qw( 1 2 3 4 5 ) ],
+    [ qw( 0.5 5 1 4 2 ) ],
+);
 
-my $axis    = Chart::Magick::Axis::LinLog->new( {
+for ( 1 .. -1 ) {
+    $ds->addDataset(
+        [ 1..5 ],
+        [ map { rand( 10) - 5} 1..5 ],
+    );
+}
+
+my $axis    = Chart::Magick::Axis::Lin->new( {
     width   => 1000,
     height  => 600,
 } );
@@ -54,6 +61,7 @@ $axis->set('xSubtickCount',  0);
 $axis->set('yChartOffset',  40);
 $axis->set('xTickOffset',   1);
 $axis->set('yTickWidth',    2);
+$axis->set('axesOutside',   0);
 #$axis->set('xChartOffset', 40);
 #$axis->set('xLabelUnits', pi);
 
@@ -65,9 +73,10 @@ my $chart   = Chart::Magick::Chart::Bar->new( );
 $chart->setData( $ds );
 $chart->set('barWidth',     10);
 $chart->set('barSpacing',   3);
-$chart->set('drawMode',     'sideBySide');
+#$chart->set('drawMode',     'cumulative');
 
 $axis->addChart( $chart );
+$axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr', 5 => 'mei' } );
 $axis->draw;
 
 print Dumper( $axis->get );
@@ -86,6 +95,6 @@ for (0 .. 1000/20) {
 $axis->im->Write('out.png');
 
 
-#print $ds->dumpData;
+print $ds->dumpData;
 
 #print join "\n" , $canvas->im->QueryFont;

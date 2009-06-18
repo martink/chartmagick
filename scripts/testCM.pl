@@ -3,7 +3,7 @@ use strict;
 use Chart::Magick::Axis::Lin;
 use Chart::Magick::Axis::LinLog;
 use Chart::Magick::Chart::Line;
-#use Chart::Magick::Chart::Bar;
+use Chart::Magick::Chart::Bar;
 #use Chart::Magick::Chart::Pie;
 use Chart::Magick;
 use Image::Magick;
@@ -53,4 +53,5 @@ $axis->im->Write('out.png');
 my $runtime = tv_interval( $time );
 
 print "___>$runtime<___\n";
+print $chart2->dataset->memUsage;
 #print join "\n" , $canvas->im->QueryFont;

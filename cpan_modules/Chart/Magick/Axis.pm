@@ -5,6 +5,7 @@ use Class::InsideOut qw{ :std };
 use Image::Magick;
 use List::Util qw{ min max };
 use Carp;
+use Data::Dumper;
 
 use constant pi => 3.14159265358979;
 
@@ -12,6 +13,7 @@ readonly charts         => my %charts;
 private  properties     => my %properties;
 private  plotOptions    => my %plotOptions;
 private  im             => my %magick;
+private  axisLabels     => my %axisLabels;
 
 =head1 NAME
 
@@ -43,10 +45,38 @@ sub _buildObject {
 
     my $id = id $self;
 
-    $charts{ $id }  = [];
-    $properties{ $id } = { %{ $self->definition }, %{ $properties } } || {};
+    $charts{ $id }      = [];
+    $properties{ $id }  = { %{ $self->definition }, %{ $properties } } || {};
+    $axisLabels{ $id }  = [ ];
 
     return $self;
+}
+
+sub addLabels {
+    my $self        = shift;
+    my $newLabels   = shift;
+    my $index       = shift || 0;
+
+    my $currentLabels = $axisLabels{ id $self }->[ $index ] || {};
+
+    $axisLabels{ id $self }->[ $index ] = {
+        %{ $currentLabels   },
+        %{ $newLabels       },
+    };
+
+    print "Set labels: ". Dumper( $axisLabels{ id $self } );
+}
+
+sub getLabels {
+    my $self    = shift;
+    my $index   = shift || 0;
+    my $coord   = shift;
+
+    my $labels  = $axisLabels{ id $self }->[ $index ];
+
+    return { %{ $labels } }     unless defined $coord;
+    return $labels->{ $coord }  if exists $labels->{ $coord };
+    return undef;
 }
 
 =head2 im ( )

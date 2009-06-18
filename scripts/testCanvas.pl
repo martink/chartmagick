@@ -26,6 +26,17 @@ my @ds4 = (
     [ qw( 0.5 5 1 4 2 ) ],
 );
 
+use constant pi => 3.14159265358979;
+
+my $pxCount = 1000;
+my $dsx = [ map { pi / $pxCount * $_          } (0..$pxCount) ];
+my $dsy = [ map { 1.1 + sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
+my @ds5 = (
+    $dsx,
+    $dsy,
+);
+    
+
 # Set up chart objects
 my $pieChart = Chart::Magick::Chart::Pie->new();
 $pieChart->dataset->addDataset( @ds1 );
@@ -47,17 +58,19 @@ my $lineChart = Chart::Magick::Chart::Line->new();
 $lineChart->dataset->addDataset( @ds4 );
 $lineChart->dataset->addDataset( @ds3 );
 
+my $lineChart1 = Chart::Magick::Chart::Line->new();
+$lineChart1->dataset->addDataset( @ds5 );
 
 my $canvas = Chart::Magick->new( 800, 600 );
 $canvas->matrix( 2, 2, { 1 => 'Chart::Magick::Axis::LinLog', 3 => 'Chart::Magick::Axis' } );
 
 # First chart
 my $axis = $canvas->getAxis( 0 );
-$axis->addChart( $barChart );
+$axis->addChart( $lineChart1 );
 $axis->set('xSubtickCount', 0);
-$axis->set('xTickOffset', 1);
 $axis->set('title', 'Bars');
 my $config = $axis->get;
+$axis->set('xLabelUnits', pi);
 
 # Second chart
 $axis = $canvas->getAxis( 1 );
@@ -76,6 +89,7 @@ $axis->set( $config );
 # Fourth chart
 $axis = $canvas->getAxis( 3 );
 $axis->addChart( $pieChart );
+$axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
 $axis->set('xSubtickCount', 0);
 $axis->set('yChartOffset', 40);
 $axis->set('xChartOffset', 40);

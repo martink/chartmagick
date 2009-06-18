@@ -276,6 +276,10 @@ sub calcTickWidth {
     my $from    = shift;
     my $to      = shift;
     my $count   = shift;
+    my $unit    = shift || 1;
+
+    $from   /= $unit;
+    $to     /= $unit;
 
     if (defined $count) {
         return ($to - $from) if $count <= 1;
@@ -287,7 +291,7 @@ sub calcTickWidth {
     my $order       = int( log( $range ) / log(10) + 0.6 );
     my $tickWidth   = 10 ** ( $order - 1 );
 
-    return $tickWidth;
+    return $tickWidth * $unit;
 }
 
 #---------------------------------------------
@@ -330,8 +334,8 @@ sub preprocessData {
 ###############################
 
     # Figure out the spacing between the ticks.
-    my $yTickWidth = $self->get('yTickWidth') || $self->calcTickWidth( $minY, $maxY, $self->get('yTickCount') );
-    my $xTickWidth = $self->get('xTickWidth') || $self->calcTickWidth( $minX, $maxX, $self->get('xTickCount') );
+    my $yTickWidth = $self->get('yTickWidth') || $self->calcTickWidth( $minY, $maxY, $self->get('yTickCount'), $self->get('yLabelUnits') );
+    my $xTickWidth = $self->get('xTickWidth') || $self->calcTickWidth( $minX, $maxX, $self->get('xTickCount'), $self->get('xLabelUnits') );
 
     # Adjust the tick width so that they align with the 0 axes if desired.
     if ( $self->get('alignAxesWithTicks') ) {
@@ -609,10 +613,11 @@ sub plotTicks {
             fill        => 'none',
         );
 
-        my $x = $outset - $self->get('yLabelTickOffset');
+        my $x       = $outset - $self->get('yLabelTickOffset');
 
+        my $value   = sprintf( $self->get('yLabelFormat'), $tick / $self->get('yLabelUnits') );
         $self->text(
-            text        =>  sprintf( $self->get('yLabelFormat'), $tick / $self->get('yLabelUnits') ),
+            text        => $self->getLabels( 1, $value ) || $value,     #sprintf( $self->get('yLabelFormat'), $tick / $self->get('yLabelUnits') ),
             halign      => 'right',
             valign      => 'center',
             align       => 'Right',
@@ -654,8 +659,9 @@ sub plotTicks {
         );
 
         my $y = $outset + $self->get('xLabelTickOffset');
+        my $value = sprintf( $self->get('xLabelFormat'), $tick / $self->get('xLabelUnits') );
         $self->text(
-            text        => sprintf( $self->get('xLabelFormat'), $tick / $self->get('xLabelUnits') ),
+            text        => $self->getLabels( 0, $value ) || $value,
             font        => $self->get('labelFont'),
             halign      => 'center',
             valign      => 'top',

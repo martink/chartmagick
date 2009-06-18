@@ -838,7 +838,7 @@ sub processDataset {
 
 		$self->addSlice( {
 			percentage	=> $y / $total, 
-			label		=> $x,
+			label		=> $self->{ axis }->getLabels( 0, $x ) || $x,
 			color		=> $self->getPalette->getNextColor,
 		} );
 		
