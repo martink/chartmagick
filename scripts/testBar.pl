@@ -1,6 +1,7 @@
 use strict;
 
 use Chart::Magick::Axis::Lin;
+use Chart::Magick::Axis::Polar;
 use Chart::Magick::Axis::LinLog;
 use Chart::Magick::Chart::Line;
 use Chart::Magick::Chart::Bar;

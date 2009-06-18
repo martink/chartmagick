@@ -1,5 +1,6 @@
 use strict;
 
+use Chart::Magick::Axis::Polar;
 use Chart::Magick::Axis::Lin;
 use Chart::Magick::Axis::LinLog;
 use Chart::Magick::Chart::Line;
@@ -17,7 +18,7 @@ my $pxCount = 1000;
 my $dsx = [ map { pi / $pxCount * $_          } (0..$pxCount) ];
 my $dsy = [ map { 1.1 + sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
 
-my $axis    = Chart::Magick::Axis::Lin->new( {
+my $axis    = Chart::Magick::Axis::Polar->new( {
     width   => 1000,
     height  => 600,
 } );

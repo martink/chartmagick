@@ -99,6 +99,20 @@ sub addLabels {
 
 #----------------------------------------------
 
+sub checkFont {
+    my $self = shift;
+    my $font = shift;
+   
+    # We don't know wheter the font is a direct path or a font name, so first let's see if it is an existing file.
+    return 1 if -e $font;
+
+    # It's not a file so maybe it's a font name, let's ask IM and see if it resolves the font to an existing file.
+    return -e $self->im->QueryFont( $font );
+}
+
+
+#----------------------------------------------
+
 =head2 getLabels ( [ axisIndex, value ] )
 
 Returns either a hashref of all labels tied to an axis or the label at a specific value of the selected axis.
@@ -255,12 +269,12 @@ sub definition {
         marginRight     => 20,
         marginBottom    => 20,
 
-        title           => '',
-        titleFont       => '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
+        title           => 'Ze Title',
+        titleFont       => 'Courier', #'/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
         titleFontSize   => 20,
         titleColor      => 'purple',
 
-        labelFont       => '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
+        labelFont       => 'DejaVuSans', #'/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
         labelFontSize   => 10,
         labelColor      => 'black',
         
@@ -408,6 +422,14 @@ prior to drawing the axis. Extend this method if your module needs some data mas
 
 sub preprocessData {
     my $self = shift;
+
+    # Check if the fonts are actually findable. If not IM slows down incredibly and will not draw labels so bail
+    # out in that case.
+    for ( qw{ titleFont labelFont } ) { 
+        my $font = $self->get( $_ );
+        croak "Font $font (property $_) does not exist or is defined incorrect in the ImageMagick configuration file." 
+            unless $self->checkFont( $font );
+    }
     
     # global
     my $axisWidth  = $self->get('width') - $self->get('marginLeft') - $self->get('marginRight');
