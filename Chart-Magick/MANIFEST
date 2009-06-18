@@ -1,0 +1,9 @@
+Build.PL
+Changes
+MANIFEST
+README
+lib/Chart/Magick.pm
+lib/Chart/Magick/Axis.pm
+t/00-load.t
+t/pod-coverage.t
+t/pod.t
