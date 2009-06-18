@@ -52,6 +52,38 @@ sub _buildObject {
     return $self;
 }
 
+#----------------------------------------------
+=head2 addLabels ( labels, [ axisIndex ] )
+
+Adds labels for an axis identified by axisIndex. Labels are passed as a hashref in which the keys indicate the
+location on the axis of the label which is passed as the value.
+
+Which axis is tied to which value of axisIndex is defined by each Axis plugin. See the docs of the plugin you're
+using. In general, though, the axisIndex is ordered logically. eg for a xy coordinate system it's logical to have
+x = 0 and y = 1.
+
+=over 4
+
+=item labels
+
+A hashref containing the labels belonging to axis values. Use the form:
+
+    {
+        value   => label,
+        value   => label,
+        ...
+        value   => label,
+    }
+
+=item axisIndex
+
+Defines which axis you are adding labels for. See documentation of the Axis plugin you are using which axis is tied
+to which axisIndex. Default to 0.
+
+=back
+
+=cut
+
 sub addLabels {
     my $self        = shift;
     my $newLabels   = shift;
@@ -63,9 +95,29 @@ sub addLabels {
         %{ $currentLabels   },
         %{ $newLabels       },
     };
-
-    print "Set labels: ". Dumper( $axisLabels{ id $self } );
 }
+
+#----------------------------------------------
+
+=head2 getLabels ( [ axisIndex, value ] )
+
+Returns either a hashref of all labels tied to an axis or the label at a specific value of the selected axis.
+
+=over 4
+
+=item axisIndex
+
+The axis you are retrieving labels for. See the documentation of the Axis plugin you're using to see to what index
+each axis is mapped. Defaults to 0.
+
+=item value
+
+If passed the label at this value for the selected axis is returned. If no label is defined at this point, undef is
+returned. If omitted, a hashref containing all value/label pairs on the selected axis is returned.
+
+=back
+
+=cut
 
 sub getLabels {
     my $self    = shift;
@@ -79,6 +131,7 @@ sub getLabels {
     return undef;
 }
 
+#----------------------------------------------
 =head2 im ( )
 
 Returns the Image::Magick object that is used for drawing. Will automatically create a new Image::Magick object if
@@ -118,14 +171,6 @@ sub new {
     my $class       = shift;
     my $properties  = shift || {};
     
-#    my $width   = $properties->{ width  } || croak "no height";
-#    my $height  = $properties->{ height } || croak "no width";
-#    my $magick  = Image::Magick->new(
-#        size        => $width.'x'.$height,
-#    );
-#    $magick->Read('xc:white');
-#
-#    return $class->_buildObject( $properties, $magick );
     return $class->_buildObject( $properties );
 }
 
@@ -144,10 +189,7 @@ sub addChart {
     my $self    = shift;
     my $chart   = shift;
 
-#    if ( $chart->axisType eq $self->type ) {
-        push @{ $charts{ id $self } }, $chart;
-#    }
-    
+    push @{ $charts{ id $self } }, $chart;
 }
 
 #---------------------------------------------
@@ -287,6 +329,15 @@ sub get {
 }
 
 #---------------------------------------------
+
+=head2 getDataRange ( )
+
+Returns an array ref containing the lower and upper bounds of the coordinates and values the charts require. Note
+that these four array elements are all arrayref containing data for each dimension in the coordinate and value
+spaces.
+
+=cut
+
 sub getDataRange {
     my $self = shift;
     my ( @minCoord, @maxCoord, @minValue, @maxValue );
@@ -302,19 +353,6 @@ sub getDataRange {
         push @maxValue, max map { $_->[ 3 ]->[ $i ] } @extremes;
     }
      
-
-
-#    my @charts = @{ $self->charts };
-#
-#    for my $i ( 0 .. $self->getCoordDimension - 1 ) {
-#        push @minCoord, min map { $_->dataset->globalData->{ minCoord }->[ $i ] } @charts;
-#        push @maxCoord, max map { $_->dataset->globalData->{ maxCoord }->[ $i ] } @charts;
-#    }
-#    for my $i ( 0 .. $self->getValueDimension - 1 ) {
-#        push @minValue, min map { $_->dataset->globalData->{ minValue }->[ $i ] } @charts;
-#        push @maxValue, max map { $_->dataset->globalData->{ maxValue }->[ $i ] } @charts;
-#    }
-
     return ( \@minCoord, \@maxCoord, \@minValue, \@maxValue );
 }
 
@@ -331,10 +369,6 @@ You'll probably never call this method by yourself.
 
 sub plotFirst {
     my $self    = shift;
-
-#    foreach my $chart ( @{ $self->charts } ) {
-#        $chart->plot( $self );
-#    }
 }
 
 #---------------------------------------------
@@ -441,33 +475,6 @@ sub plotOption {
 
     return $self->{ _plotOptions }->{ $option };
 }
-
-#####---------------------------------------------
-######## TODO: Dit moet worden geabstraheerd
-####=head2 transformToPixels ( x, y )
-####
-####Maps graph coordinates to pixel coordinates on the Axis and returns them as a list.
-####
-####=head3 x
-####
-####X coordinate
-####
-####=head3 y
-####
-####Y coordinate
-####
-####=cut
-####
-####sub transformToPixels {
-####    my $self    = shift;
-####    my $x       = shift;
-####    my $y       = shift;
-####
-####    return (
-####        int( $self->transformX( $x ) * $self->getPxPerXUnit ), 
-####        int( $self->transformY( $y ) * $self->getPxPerYUnit ),
-####    );
-####}
 
 #-------------------------------------------------------------------
 
