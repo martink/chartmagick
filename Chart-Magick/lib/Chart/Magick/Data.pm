@@ -8,7 +8,7 @@ use Devel::Size qw{ total_size };
 
 readonly data           => my %data;
 readonly labels         => my %labels;
-readonly coordCount     => my %coordCount;
+readonly coordDim       => my %coordDim;
 readonly datasetCount   => my %datasetCount;
 readonly datasetIndex   => my %datasetIndex;
 readonly datasetData    => my %datasetData;
@@ -48,7 +48,7 @@ sub new {
     my $id = id $self;
     $data{ $id }            = [];
     $datasetCount{ $id }    = 0;
-    $coordCount{ $id }      = 0;
+    $coordDim{ $id }      = 0;
     $datasetIndex{ $id }    = 0;
     $datasetData{ $id }     = [];
     $globalData{ $id }      = {};
@@ -93,7 +93,7 @@ sub addDataPoint {
         $value  = [ $value  ];
     }
 
-    croak "Cannot add data with " . @$coords ." dimensional coords to a dataset with ". $coordCount{ id $self }. " dimensional coords." 
+    croak "Cannot add data with " . @$coords ." dimensional coords to a dataset with ". $coordDim{ id $self }. " dimensional coords." 
         unless $self->checkCoords( $coords );
 
     # Goto the location of the coords in the data hashref
@@ -128,12 +128,12 @@ sub checkCoords {
     my $self    = shift;
     my $coords  = shift;
 
-    if ( $self->coordCount ) {
-        return 1 if $self->coordCount == scalar @{ $coords };
+    if ( $self->coordDim ) {
+        return 1 if $self->coordDim == scalar @{ $coords };
         return 0;
     }
     
-    $coordCount{ id $self } = scalar @{ $coords };
+    $coordDim{ id $self } = scalar @{ $coords };
 
     return 1;
 }
@@ -189,6 +189,8 @@ sub getDataPoint {
     my $coords  = shift;
     my $dataset = shift || $self->datasetIndex;
     my $data    = $data{ id $self }->[ $dataset ];
+
+    $coords = [ $coords ] if ( ref $coords ne 'ARRAY' );
 
     my $key = join '_', @{ $coords };
     return exists $data->{ $key } ? $data->{ $key } : undef;
