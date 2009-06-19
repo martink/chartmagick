@@ -45,36 +45,61 @@ sub im {
 
 sub matrix {
     my $self    = shift;
-    my $xc      = shift;
-    my $yc      = shift;
-    my $types   = shift;
+    my @layout  = @_;
+
+#    my $xc      = shift;
+#    my $yc      = shift;
+#    my $types   = shift;
     my $m   = 20;
 
-    my $axisWidth   = ( $self->{ options }->{ width } - $m - $m - ($xc - 1) * $m ) / $xc;
-    my $axisHeight  = ( $self->{ options }->{ height } - $m - $m - ($yc - 1) * $m ) / $yc;
-    
+    my $yCount = scalar @layout;
 
+    my $axisHeight  = ( $self->{ options }->{ height } - $m - $m - ($yCount - 1) * $m ) / $yCount;
+    my $y = 0;
+    foreach my $row (@layout) {
+        my $xCount = scalar @$row;
 
-    for my $y ( 0 .. $yc-1 ) {
-        for my $x ( 0 .. $xc -1 ) {
-            my $class;
-            if ( exists $types->{ $y * $xc + $x } ) {
-                $class = $types->{ $y * $xc + $x };
-                eval { "require $class" };
-            }
-            else {
-                $class = 'Chart::Magick::Axis::Lin';
-            }
+        my $axisWidth   = ( $self->{ options }->{ width } - ( ( 1 + $xCount ) * $m ) ) / $xCount;
+print "[$axisWidth]\n";
 
+        my $x = 0;
+
+        foreach my $type ( @$row ) {
+            my $class = "Chart::Magick::Axis::$type";
             eval { "require $class" };
+
             $self->addAxis(
                 $class->new( { width => $axisWidth, height => $axisHeight } ),
-#                Chart::Magick::Axis::Lin->new( { width => $axisWidth, height => $axisHeight } ),
-                $x * ( $axisWidth + $m ) + $m,
+                $x * ( $axisWidth +  $m ) + $m,
                 $y * ( $axisHeight + $m ) + $m,
             );
+            $x++;
         }
+
+        $y++;
     }
+
+
+#    for my $y ( 0 .. $yc-1 ) {
+#        for my $x ( 0 .. $xc -1 ) {
+#            my $class;
+#            if ( exists $types->{ $y * $xc + $x } ) {
+#                $class = $types->{ $y * $xc + $x };
+#                eval { "require $class" };
+#            }
+#            else {
+#                $class = 'Chart::Magick::Axis::Lin';
+#            }
+#
+#            eval { "require $class" };
+#            $self->addAxis(
+#                $class->new( { width => $axisWidth, height => $axisHeight } ),
+##                Chart::Magick::Axis::Lin->new( { width => $axisWidth, height => $axisHeight } ),
+#                $x * ( $axisWidth + $m ) + $m,
+#                $y * ( $axisHeight + $m ) + $m,
+#            );
+#        }
+#    }
 }
 
     

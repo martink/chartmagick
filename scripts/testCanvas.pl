@@ -6,6 +6,7 @@ use Chart::Magick::Axis::LinLog;
 use Chart::Magick::Chart::Line;
 use Chart::Magick::Chart::Bar;
 use Chart::Magick::Chart::Pie;
+use Chart::Magick::Chart::Gauge;
 use Chart::Magick;
 use Image::Magick;
 use Data::Dumper;
@@ -44,6 +45,10 @@ $pieChart->dataset->addDataset( @ds1 );
 $pieChart->set('tiltAngle', 80);
 $pieChart->set('stickLength', 30);
 
+my $gauge = Chart::Magick::Chart::Gauge->new();
+$gauge->dataset->addDataset( @ds1 );
+
+
 my $barChart = Chart::Magick::Chart::Bar->new( );
 $barChart->dataset->addDataset( @ds1 );
 $barChart->dataset->addDataset( @ds3 );
@@ -62,8 +67,9 @@ $lineChart->dataset->addDataset( @ds3 );
 my $lineChart1 = Chart::Magick::Chart::Line->new();
 $lineChart1->dataset->addDataset( @ds5 );
 
-my $canvas = Chart::Magick->new( 800, 600 );
-$canvas->matrix( 2, 2, { 1 => 'Chart::Magick::Axis::LinLog', 3 => 'Chart::Magick::Axis::None' } );
+my $canvas = Chart::Magick->new( 800, 750 );
+#$canvas->matrix( 2, 2, { 1 => 'Chart::Magick::Axis::LinLog', 3 => 'Chart::Magick::Axis::None' } );
+$canvas->matrix( [ 'Lin' ], [ 'Lin', 'LinLog' ], [ 'None', 'None' ] );
 
 # First chart
 my $axis = $canvas->getAxis( 0 );
@@ -74,18 +80,20 @@ my $config = $axis->get;
 $axis->set('xLabelUnits', pi);
 
 # Second chart
-$axis = $canvas->getAxis( 1 );
+$axis = $canvas->getAxis( 2 );
 $axis->addChart( $logChart );
 $axis->set('ySubtickCount', 2);
 $axis->set('title', 'Logarithmic plot');
 
 # Third chart
-$axis = $canvas->getAxis( 2 );
+$axis = $canvas->getAxis( 1 );
 $axis->addChart( $barChart );
 $axis->addChart( $lineChart );
-$axis->set('xTickOffset', 1);
 #$axis->set('title', 'Multiple chart types on one axis');
-$axis->set( $config );
+#$axis->set( $config );
+$axis->set('xTickOffset', 1);
+$axis->set('xSubtickCount', 0);
+$axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4', 5 => 'overall' } );
 
 # Fourth chart
 $axis = $canvas->getAxis( 3 );
@@ -95,6 +103,15 @@ $axis->set('xSubtickCount', 0);
 $axis->set('yChartOffset', 40);
 $axis->set('xChartOffset', 40);
 $axis->set('title', 'Pie!');
+
+$axis = $canvas->getAxis( 4 );
+$axis->addChart( $gauge );
+$axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
+$axis->set('xSubtickCount', 0);
+$axis->set('yChartOffset', 40);
+$axis->set('xChartOffset', 40);
+$axis->set('title', 'Gauge');
+
 
 #$canvas->addAxis( $axis, 100, 100 );
 $canvas->draw;
@@ -116,6 +133,6 @@ $canvas->draw;
 
 $canvas->im->Write('canvas.png');
 
-print $barChart->dataset->dumpData;
+#print $barChart->dataset->dumpData;
 
 #print join "\n" , $canvas->im->QueryFont;
