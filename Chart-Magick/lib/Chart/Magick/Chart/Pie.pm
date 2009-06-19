@@ -9,12 +9,14 @@ use base qw{ Chart::Magick::Chart };
 sub getXOffset {
     my $self = shift;
 
+    return $self->{ axis }->getChartWidth / 2 + $self->{ axis }->get('marginLeft');
     return $self->{ axis }->plotOption( 'axisWidth' ) / 2 + $self->{ axis }->get('marginLeft');
 }
 
 sub getYOffset {
     my $self = shift;
 
+    return $self->{ axis }->getChartHeight / 2 + $self->{ axis }->get('marginTop');
     return $self->{ axis }->plotOption( 'axisHeight' ) / 2 + $self->{ axis }->get('marginTop');
 }
 

@@ -1,5 +1,6 @@
 use strict;
 
+use Chart::Magick::Axis::None;
 use Chart::Magick::Axis::Lin;
 use Chart::Magick::Axis::LinLog;
 use Chart::Magick::Chart::Line;
@@ -62,7 +63,7 @@ my $lineChart1 = Chart::Magick::Chart::Line->new();
 $lineChart1->dataset->addDataset( @ds5 );
 
 my $canvas = Chart::Magick->new( 800, 600 );
-$canvas->matrix( 2, 2, { 1 => 'Chart::Magick::Axis::LinLog', 3 => 'Chart::Magick::Axis' } );
+$canvas->matrix( 2, 2, { 1 => 'Chart::Magick::Axis::LinLog', 3 => 'Chart::Magick::Axis::None' } );
 
 # First chart
 my $axis = $canvas->getAxis( 0 );
