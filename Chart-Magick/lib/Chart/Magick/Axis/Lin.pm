@@ -101,7 +101,7 @@ sub definition {
 
 #---------------------------------------------
 #TODO: move to superclass?
-=getChartWidth ( )
+=head2 getChartWidth ( )
 
 Returns the width of charts on the Axis in pixels.
 
@@ -115,7 +115,7 @@ sub getChartWidth {
 
 #---------------------------------------------
 #TODO: move to superclass?
-=getChartHeight ( )
+=head2 getChartHeight ( )
 
 Returns the height of charts on the Axis in pixels.
 

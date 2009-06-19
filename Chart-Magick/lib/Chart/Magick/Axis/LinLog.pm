@@ -51,7 +51,7 @@ Generates ticks on a logarithmic scale that envelope the interval given by from 
 
 The maximum value at which the ticks start.
 
-=head to
+=head3 to
 
 The minimum value at which the ticks stop.
 
