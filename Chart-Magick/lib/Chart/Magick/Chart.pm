@@ -11,6 +11,14 @@ use Chart::Magick::Data;
 readonly palette    => my %palette;
 readonly dataset    => my %dataset;
 private  properties => my %properties;
+readonly axis       => my %axis;
+
+sub setAxis {
+    my $self = shift;
+    my $axis = shift;
+
+    $axis{ id $self } = $axis;
+}
 
 #-------------------------------------------------------------------
 sub setData {

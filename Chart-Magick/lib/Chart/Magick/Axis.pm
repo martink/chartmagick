@@ -274,7 +274,7 @@ sub definition {
         titleFontSize   => 20,
         titleColor      => 'purple',
 
-        labelFont       => 'DejaVuSans', #'/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
+        labelFont       => 'Courier', #'/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
         labelFontSize   => 10,
         labelColor      => 'black',
         
@@ -296,7 +296,8 @@ sub draw {
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->preprocessData( $self );
+        $chart->setAxis( $self );
+        $chart->preprocessData( ); #$self );
     }
 
     # Preprocess data
@@ -307,7 +308,7 @@ sub draw {
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->plot( $self );
+        $chart->plot( ); #$self );
     }
 
     $self->plotLast;
@@ -466,6 +467,18 @@ sub set {
     }
 }
 
+=head2 toPx ( x, y )
+
+Shorthand method that calls the project method and returns the x and y value joined by a comma as scalar. This
+string can be directly used in ImageMagick path definitions.
+
+=cut
+
+sub toPx {
+    my $self    = shift;
+    
+    return join ",", $self->project( @_ );
+}
 #---------------------------------------------
 
 =head2 plotOption ( key, value )
@@ -528,7 +541,7 @@ sub text {
     delete $testProperties{fill};
     delete $testProperties{alignHorizontal};
     delete $testProperties{alignVertical};
-    my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryMultilineFontMetrics(%testProperties);
+    my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryFontMetrics(%testProperties);
 
     # Convert the rotation angle to radians
     $properties{rotate} ||= 0;

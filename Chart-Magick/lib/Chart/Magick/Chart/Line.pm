@@ -24,7 +24,7 @@ sub definition {
 #-------------------------------------------------------------------
 sub plot {
     my $self = shift;
-    my $axis = shift;
+    my $axis = $self->axis;
 
     my $datasetCount =  $self->dataset->datasetCount;
     my $previousCoord;

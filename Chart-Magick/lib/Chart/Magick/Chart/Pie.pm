@@ -8,22 +8,22 @@ use base qw{ Chart::Magick::Chart };
 #### TODO: getXOffset en Y offset tov. axis anchor bepalen.
 sub getXOffset {
     my $self = shift;
+    my $axis = $self->axis;
 
-    return $self->{ axis }->getChartWidth / 2 + $self->{ axis }->get('marginLeft');
-    return $self->{ axis }->plotOption( 'axisWidth' ) / 2 + $self->{ axis }->get('marginLeft');
+    return $axis->getChartWidth / 2 + $axis->get('marginLeft');
 }
 
 sub getYOffset {
     my $self = shift;
+    my $axis = $self->axis;
 
-    return $self->{ axis }->getChartHeight / 2 + $self->{ axis }->get('marginTop');
-    return $self->{ axis }->plotOption( 'axisHeight' ) / 2 + $self->{ axis }->get('marginTop');
+    return $axis->getChartHeight / 2 + $axis->get('marginTop');
 }
 
 sub im {
     my $self = shift;
 
-    return $self->{ axis }->im;
+    return $self->axis->im;
 }
 
 sub definition {
@@ -355,10 +355,8 @@ Draws the pie chart.
 sub plot {
 	my ($currentSlice, $coordinates, $leftPlaneVisible, $rightPlaneVisible);
 	my $self = shift;
-    my $axis = shift;
+    my $axis = $self->axis;
 
-    $self->{ axis } = $axis;
-	
 	$self->processDataset;
 
 	# Draw slices in the correct order or you'll get an MC Escher.
@@ -411,8 +409,6 @@ sub plot {
 			$self->drawLabel($sliceData);
 		}
 	}
-
-    delete $self->{ axis };
 }
 
 #-------------------------------------------------------------------
@@ -521,17 +517,18 @@ sub drawLabel {
 	my $maxWidth = $anchorX;
 ####	$maxWidth = $self->getImageWidth - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
 	$maxWidth = $self->get('chartWidth') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
-	
-	$self->{ axis }->text(
+
+    my $axis = $self->axis;
+	$self->axis->text(
         text            => $text, #$self->wrapLabelToWidth( $text, $maxWidth ),
 		alignHorizontal => $horizontalAlign,
 		align           => $align,
 		alignVertical   => $verticalAlign,
 		x               => $anchorX,
 		y               => $endPointY,
-        font            => $self->{ axis }->get('labelFont'),
-        pointsize       => $self->{ axis }->get('labelFontSize'),
-        fill            => $self->{ axis }->get('labelColor'),
+        font            => $self->axis->get('labelFont'),
+        pointsize       => $self->axis->get('labelFontSize'),
+        fill            => $self->axis->get('labelColor'),
 	);
 }
 
@@ -840,7 +837,7 @@ sub processDataset {
 
 		$self->addSlice( {
 			percentage	=> $y / $total, 
-			label		=> $self->{ axis }->getLabels( 0, $x ) || $x,
+			label		=> $self->axis->getLabels( 0, $x ) || $x,
 			color		=> $self->getPalette->getNextColor,
 		} );
 		

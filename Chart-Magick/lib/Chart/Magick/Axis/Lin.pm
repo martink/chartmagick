@@ -510,7 +510,7 @@ sub plotAxes {
               " M $xStart,$originY L $xStop,$originY"
             . " M $originX,$yStart L $originX,$yStop",
         fill        => 'none',
-        gravity     => 'Center',
+#        gravity     => 'Center',
     );
 
     # X label
@@ -856,18 +856,6 @@ sub project {
     );
 }
 
-=head2 toPx ( x, y )
-
-Shorthand method that calls the project method and returns the x and y value joined by a comma as scalar. This
-string can be directly used in ImageMagick path definitions.
-
-=cut
-
-sub toPx {
-    my $self    = shift;
-    
-    return join ",", $self->project( @_ );
-}
 
 1;
 

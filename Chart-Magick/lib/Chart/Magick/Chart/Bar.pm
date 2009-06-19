@@ -22,7 +22,6 @@ sub definition {
 
 sub drawBar {
     my $self            = shift;
-    my $axis            = shift;
 
     my $color           = shift;
     my $width           = shift;
@@ -30,6 +29,8 @@ sub drawBar {
     my $coord           = shift;        # x-location of center of bar group
     my $coordOffset     = shift || 0;   # offset of bar center wrt. $coord 
     my $bottom          = shift || 0;   # y-location of bar bottom wrt. 0 axis
+
+    my $axis    = $self->axis;
 
     my $left    = $coord - $width / 2 + $coordOffset;   # x-location of left bar edge
     my $right   = $left + $width;                       # x-location of right bar edge
@@ -78,7 +79,6 @@ sub getDataRange {
 
 sub plot {
     my $self = shift;
-    my $axis = shift;
 
     my $barCount    = $self->dataset->datasetCount;
     my $groupCount  = $self->get('drawMode') eq 'cumulative' 
@@ -130,7 +130,7 @@ sub plot {
                 }
 
                 # Draw bars on top of each other.
-                $self->drawBar( $axis, $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
+                $self->drawBar( $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
 
                 $verticalOffset += $barLength;
             }
@@ -138,7 +138,7 @@ sub plot {
                 # Default to sideBySide draw mode
                 my $offset      = $dataset * ( $barWidth + $barSpacing) - ($barSpacing + $barWidth ) * ( $barCount - 1 ) / 2;
 
-                $self->drawBar( $axis, $color, $barWidth, $barLength, $coord->[ 0 ], $offset, 0  );
+                $self->drawBar( $color, $barWidth, $barLength, $coord->[ 0 ], $offset, 0  );
             }
         }
     }
