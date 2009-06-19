@@ -35,9 +35,8 @@ sub draw {
 
     my $path = join(' ', map { 
         $_->[0] .' '
-        . ( $_->[1] ? $size*$_->[1].','. $size*$_->[2] : '' )
+        . ( defined $_->[1] ? $size*$_->[1].','. $size*$_->[2] : '' )
     } @$marker2);
-
 
     my $translateX = int( $x - 0.5*$size + 0.5 );
     my $translateY = int( $y - 0.5*$size + 0.5 );
@@ -53,7 +52,6 @@ sub draw {
        affine       => [ 1, 0, 0, 1, $translateX,$translateY ],
        antialias    => 'true',
     );
-
 }    
 
 1;
