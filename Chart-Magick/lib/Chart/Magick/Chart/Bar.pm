@@ -146,8 +146,11 @@ sub plot {
 
 
 sub preprocessData {
+    my $self = shift;
+    my $axis = $self->axis;
 
-
+    $self->SUPER::preprocessData;
+    $axis->set('xTickOffset', 1 ) unless $axis->get('xTickOffset');
 }
 
 
