@@ -495,20 +495,27 @@ You'll probably never need to call this method manually.
 sub plotAxes {
     my $self = shift;
 
-    my $xStart  = int $self->plotOption('chartAnchorX');
-    my $xStop   = $xStart + $self->getChartWidth; 
-    my $yStart  = int $self->plotOption('chartAnchorY');
-    my $yStop   = $yStart + $self->getChartHeight;
-    my $originX = int $self->plotOption('originX');
-    my $originY = int $self->plotOption('originY');
+#    my $xStart  = int $self->plotOption('chartAnchorX');
+#    my $xStop   = $xStart + $self->getChartWidth; 
+#    my $yStart  = int $self->plotOption('chartAnchorY');
+#    my $yStop   = $yStart + $self->getChartHeight;
+#    my $originX = int $self->plotOption('originX');
+#    my $originY = int $self->plotOption('originY');
+
+    my $xFrom   = $self->toPx( [ $self->get('xStart') ],    [ 0 ]                       );
+    my $xTo     = $self->toPx( [ $self->get('xStop')  ],    [ 0 ]                       );
+    my $yFrom   = $self->toPx( [ 0 ],                       [ $self->get('yStart') ]    );
+    my $yTo     = $self->toPx( [ 0 ],                       [ $self->get('yStop')  ]    );
 
     # Main axes
     $self->im->Draw(
         primitive   => 'Path',
         stroke      => 'black', #$self->getAxisColor,
         points      =>
-              " M $xStart,$originY L $xStop,$originY"
-            . " M $originX,$yStart L $originX,$yStop",
+               " M $xFrom L $xTo "
+             . " M $yFrom L $yTo ",
+#              " M $xStart,$originY L $xStop,$originY"
+#            . " M $originX,$yStart L $originX,$yStop",
         fill        => 'none',
 #        gravity     => 'Center',
     );
@@ -781,7 +788,7 @@ sub transformX {
     my $self    = shift;
     my $x       = shift;
 
-    return $x - $self->get('xStart');
+    return $x - $self->get( 'xStart' );
 }
 
 #---------------------------------------------
@@ -800,9 +807,6 @@ sub transformY {
     return $_[1];
 }
 
-
-# TODO: combine toPxX and toPxY so that polar coordinates are also viable.
-
 #---------------------------------------------
 
 =head2 toPxX ( x )
@@ -815,8 +819,12 @@ sub toPxX {
     my $self    = shift;
     my $coord   = shift;
 
-    my $x = $self->plotOption('originX') + $self->transformX( $coord ) * $self->getPxPerXUnit 
+#    my $x = $self->plotOption('originX') + $self->transformX( $coord ) * $self->getPxPerXUnit 
+#        + $self->plotOption('xTickOffset');
+    my $x = $self->plotOption('chartAnchorX') + $self->transformX( $coord ) * $self->getPxPerXUnit 
         + $self->plotOption('xTickOffset');
+
+print "[$coord][".$self->plotOption('chartAnchorX')."][".$self->transformX( $coord )."][".$self->transformX( $coord ) * $self->getPxPerXUnit ."]\n";
 
     return $x;
 }

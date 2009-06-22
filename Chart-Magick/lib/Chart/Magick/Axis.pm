@@ -477,7 +477,7 @@ string can be directly used in ImageMagick path definitions.
 sub toPx {
     my $self    = shift;
     
-    return join ",", $self->project( @_ );
+    return join ",", map { int } $self->project( @_ );
 }
 #---------------------------------------------
 

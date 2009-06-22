@@ -25,21 +25,21 @@ my $ds = Chart::Magick::Data->new;
 #    [ qw( 1 3 5.9 3 2 ) ],
 #);
 
-$ds->addDataset(
-    [ qw( 1 10 100 1000 10000 ) ],
-    [ qw( 5 2 -1 8 3 ) ],
-);
+#$ds->addDataset(
+#    [ qw( 1 10 100 1000 10000 ) ],
+#    [ qw( 5 2 -1 8 3 ) ],
+#);
 
 #$ds->addDataset(
-#    [ qw( 1 2 3 4 5 ) ],
+#    [ qw( -2 2 3 4 5 ) ],
 #    [ qw( 7 -4 6 1 9 ) ],
 #);
-#$ds->addDataset(
-#    [ qw( 1 2 3 4 5 ) ],
-#    [ qw( 0.5 5 1 4 2 ) ],
-#);
+$ds->addDataset(
+    [ qw( 0.5 5 1 4 2 ) ],
+    [ qw( 20 21 22 23 24 ) ],
+);
 
-my $axis    = Chart::Magick::Axis::LinLog->new( {
+my $axis    = Chart::Magick::Axis::Lin->new( {
     width   => 1000,
     height  => 600,
 } );
