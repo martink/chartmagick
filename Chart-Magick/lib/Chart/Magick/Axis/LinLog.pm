@@ -95,10 +95,12 @@ Returns the value of x transformed to a logarithmic coordinate system.
 sub transformX {
     my $self    = shift;
     my $x       = shift;
+
     return 0 unless $x;
+
     my $logx = log( $x ) / log(10);
 
-    return $logx;
+    return $logx; #log( $self->get('xStart') ) / log(10);
 }
 
 1;

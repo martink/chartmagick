@@ -313,7 +313,7 @@ sub preprocessData {
     my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
 
     # The treshold variable is used to determine when the y=0 axis should be include in the chart
-    my $treshold = 0.1;
+    my $treshold = 0.4;
     
     # Figure out whether we want to let the y axis include 0.
     if ( ($maxX > 0 &&  $minY > 0) || ($maxX < 0 && $maxY < 0) ) {
@@ -495,29 +495,29 @@ You'll probably never need to call this method manually.
 sub plotAxes {
     my $self = shift;
 
-#    my $xStart  = int $self->plotOption('chartAnchorX');
-#    my $xStop   = $xStart + $self->getChartWidth; 
-#    my $yStart  = int $self->plotOption('chartAnchorY');
-#    my $yStop   = $yStart + $self->getChartHeight;
-#    my $originX = int $self->plotOption('originX');
-#    my $originY = int $self->plotOption('originY');
+    my ( $xStart, $xStop, $yStart, $yStop ) = ( 
+        $self->get('xStart'), $self->get('xStop'), $self->get('yStart'), $self->get('yStop') 
+    );
 
-    my $xFrom   = $self->toPx( [ $self->get('xStart') ],    [ 0 ]                       );
-    my $xTo     = $self->toPx( [ $self->get('xStop')  ],    [ 0 ]                       );
-    my $yFrom   = $self->toPx( [ 0 ],                       [ $self->get('yStart') ]    );
-    my $yTo     = $self->toPx( [ 0 ],                       [ $self->get('yStop')  ]    );
+    my $xFrom   = int $self->plotOption('chartAnchorX');
+    my $xTo     = $xFrom + $self->getChartWidth;
+    my $yFrom   = int $self->plotOption('chartAnchorY');
+    my $yTo     = $yFrom + $self->getChartHeight;
+    my $xYPos   = $yStart * $yStop <= 0     ? $self->toPxY( 0 )
+                : $yStart > 0               ? $yFrom
+                :                             $yTo;
+    my $yXPos   = $xStart * $yStop <= 0     ? $self->toPxX( 0 )
+                : $xStart > 0               ? $xFrom 
+                :                             $xTo;
 
     # Main axes
     $self->im->Draw(
         primitive   => 'Path',
         stroke      => 'black', #$self->getAxisColor,
         points      =>
-               " M $xFrom L $xTo "
-             . " M $yFrom L $yTo ",
-#              " M $xStart,$originY L $xStop,$originY"
-#            . " M $originX,$yStart L $originX,$yStop",
+               " M $xFrom,$xYPos L $xTo,$xYPos "
+             . " M $yXPos,$yFrom L $yXPos,$yTo ",
         fill        => 'none',
-#        gravity     => 'Center',
     );
 
     # X label
@@ -804,6 +804,10 @@ The value to be transformed.
 =cut
 
 sub transformY {
+    my $self    = shift;
+    my $y       = shift; 
+    
+    return $y - $self->get( 'yStart' );
     return $_[1];
 }
 
@@ -826,7 +830,7 @@ sub toPxX {
 
 print "[$coord][".$self->plotOption('chartAnchorX')."][".$self->transformX( $coord )."][".$self->transformX( $coord ) * $self->getPxPerXUnit ."]\n";
 
-    return $x;
+    return int $x;
 }
 
 #---------------------------------------------
@@ -841,9 +845,10 @@ sub toPxY {
     my $self    = shift;
     my $coord   = shift;
 
-    my $y = $self->plotOption('originY') - $self->transformY( $coord ) * $self->getPxPerYUnit;
+#    my $y = $self->plotOption('originY') - $self->transformY( $coord ) * $self->getPxPerYUnit;
+    my $y = $self->plotOption('chartAnchorY') + $self->getChartHeight - $self->transformY( $coord ) * $self->getPxPerYUnit;
 
-    return $y;
+    return int $y;
 }
 
 
