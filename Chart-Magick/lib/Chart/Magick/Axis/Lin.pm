@@ -828,7 +828,7 @@ sub toPxX {
     my $x = $self->plotOption('chartAnchorX') + $self->transformX( $coord ) * $self->getPxPerXUnit 
         + $self->plotOption('xTickOffset');
 
-print "[$coord][".$self->plotOption('chartAnchorX')."][".$self->transformX( $coord )."][".$self->transformX( $coord ) * $self->getPxPerXUnit ."]\n";
+#print "[$coord][".$self->plotOption('chartAnchorX')."][".$self->transformX( $coord )."][".$self->transformX( $coord ) * $self->getPxPerXUnit ."]\n";
 
     return int $x;
 }
