@@ -60,7 +60,7 @@ sub plot {
 
     my $palette = $self->getPalette;
 
-    foreach my $coord ( $self->dataset->getCoords( 0 ) ) {
+    foreach my $coord ( @{ $self->dataset->getCoords( 0 ) } ) {
         $self->drawNeedle( $self->dataset->getDataPoint( $coord, 0 )->[0] , $palette->getNextColor ); 
     }
 

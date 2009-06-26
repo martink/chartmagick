@@ -31,7 +31,7 @@ sub plot {
 
     my $marker = Chart::Magick::Marker->new( $axis, 3 );
 
-    foreach my $x ($self->dataset->getCoords) {
+    foreach my $x ( @{ $self->dataset->getCoords } ) {
         $self->getPalette->paletteIndex( 1 );
 
         for my $ds ( 0 .. $datasetCount - 1) {

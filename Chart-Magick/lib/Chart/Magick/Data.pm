@@ -172,15 +172,12 @@ sub getCoords {
                 : { map { %{$_} } @{$data} }
                 ;
 
-    #return map { [ split /_/, $_ ] } keys %{ $data{ id $self } };
-
-    return 
+    return [ 
         sort    { $a->[0] <=> $b->[0] }         # !!!only sorts on first coord, needs something more advanced
         map     { [ split /_/, $_ ] }           # decode the keys to actual coords
         keys    %$coords                        # coords are encoded in the keys of the data hash
+    ];
 
-
-#    return sort { $a <=> $b } keys %{ $data{ id $self } };
 }
 
 #---------------------------------------------------------------
