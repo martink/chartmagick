@@ -7,6 +7,8 @@ use List::Util          qw{ min max };
 use Chart::Magick::Palette;
 use Chart::Magick::Color;
 use Chart::Magick::Data;
+use Data::Dumper;
+
 
 readonly palette    => my %palette;
 readonly dataset    => my %dataset;
@@ -65,6 +67,7 @@ sub get {
     my $self    = shift;
     my $key     = shift;
 
+    return { $properties{ id $self } } unless $key;
     return $properties{ id $self }->{ $key };
 }
 
@@ -122,6 +125,7 @@ sub set {
     my $self    = shift;
     my %update  = ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
+print "[[[". Dumper( \%update )."]]]" ;
     my $properties  = $properties{ id $self };
 
     while ( my ($key, $value) = each %update ) {

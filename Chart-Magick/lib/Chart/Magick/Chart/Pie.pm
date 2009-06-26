@@ -148,10 +148,10 @@ sub addSlice {
 		rimColor	=> $sideColor, #$properties->{rimColor} || $properties->{fillColor},
 
 		# geometric properties
-		topHeight	=> $self->get('topHeight'),
+		topHeight	    => $self->get('topHeight'),
 		bottomHeight	=> $self->get('bottomHeight'),
 		explosionLength	=> $self->get('explosionLength'),
-		scaleFactor	=> $self->get('scaleFactor'),
+		scaleFactor	    => ($self->get('scaleFactor') - 1) * $percentage + 1,
 
 		# keep the slice number for debugging properties
 		sliceNr		=> scalar(@{$self->{_slices}}),
@@ -323,23 +323,25 @@ sub calcCoordinates {
 	my $self = shift;
 	my $slice = shift;
 
-	$pieHeight = $self->get('radius') * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$pieWidth = $self->get('radius');
+    my $radius = $self->get('radius') * $slice->{ scaleFactor };
+
+	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
+	$pieWidth   = $radius;
 	
 	# Translate the origin from the top corner to the center of the image.
 	$offsetX = $self->getXOffset;
 	$offsetY = $self->getYOffset;
 
-	$offsetX += ($self->get('radius')/($pieWidth+$pieHeight))*$slice->{explosionLength}*cos($slice->{avgAngle});
-	$offsetY -= ($pieHeight/($pieWidth+$pieHeight))*$slice->{explosionLength}*sin($slice->{avgAngle});
+	$offsetX += ( $radius    / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos($slice->{avgAngle} );
+	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin($slice->{avgAngle} );
 
 	$coords->{bigCircle} = ($slice->{angle} > pi) ? '1' : '0';
 	$coords->{tip}->{x} = $offsetX;
 	$coords->{tip}->{y} = $offsetY;
-	$coords->{startCorner}->{x} = $offsetX + $pieWidth*$slice->{scaleFactor}*cos($slice->{startAngle});
-	$coords->{startCorner}->{y} = $offsetY - $pieHeight*$slice->{scaleFactor}*sin($slice->{startAngle});
-	$coords->{endCorner}->{x} = $offsetX + $pieWidth*$slice->{scaleFactor}*cos($slice->{stopAngle});
-	$coords->{endCorner}->{y} = $offsetY - $pieHeight*$slice->{scaleFactor}*sin($slice->{stopAngle});
+	$coords->{startCorner}->{x} = $offsetX + $pieWidth  * cos $slice->{ startAngle };
+	$coords->{startCorner}->{y} = $offsetY - $pieHeight * sin $slice->{ startAngle };
+	$coords->{endCorner}->{x}   = $offsetX + $pieWidth  * cos $slice->{ stopAngle };
+	$coords->{endCorner}->{y}   = $offsetY - $pieHeight * sin $slice->{ stopAngle };
 
 	return $coords;
 }
@@ -593,9 +595,10 @@ sub drawPieSlice {
 		y	=> $slice->{overallEndCorner}->{y} - $offset,
 	);
 
-	$pieWidth = $self->get('radius'); 
-	$pieHeight = $self->get('radius') * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$bigCircle = $slice->{overallBigCircle};
+    my $radius     = $self->get('radius') * $slice->{ scaleFactor  };
+	$pieWidth   = $radius; 
+	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
+	$bigCircle  = $slice->{overallBigCircle};
 
 	$self->im->Draw(
 		primitive	=> 'Path',
@@ -662,10 +665,11 @@ sub drawRim {
 		x	=> $slice->{endCorner}->{x},
 		y	=> $slice->{endCorner}->{y} + $slice->{bottomHeight}
 	);
-	
-	$pieWidth = $self->get('radius');
-	$pieHeight = $self->get('radius') * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$bigCircle = $slice->{bigCircle};
+
+    my $radius  = $self->get('radius') * $slice->{ scaleFactor };
+	$pieWidth   = $radius;
+	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
+	$bigCircle  = $slice->{bigCircle};
 	
 	# Draw curvature
 	$self->im->Draw(

@@ -534,6 +534,7 @@ You can use the align property to set the text justification.
 sub text {
 	my $self = shift;
 	my %properties = @_;
+#warn Dumper( \%properties );
 
     my %testProperties = %properties;
     delete $testProperties{align};
