@@ -7,62 +7,38 @@ use List::Util          qw{ min max };
 use Chart::Magick::Palette;
 use Chart::Magick::Color;
 use Chart::Magick::Data;
-use Data::Dumper;
-
+use Carp;
 
 readonly palette    => my %palette;
 readonly dataset    => my %dataset;
 private  properties => my %properties;
 readonly axis       => my %axis;
 
-sub setAxis {
-    my $self = shift;
-    my $axis = shift;
-
-    $axis{ id $self } = $axis;
-}
-
 #-------------------------------------------------------------------
-sub setData {
-    my $self    = shift;
-    my $dataset = shift;
 
-    $dataset{ id $self } = $dataset;
-}
+=head2 definition 
 
-#sub addDataset {
-#    my $self    = shift;
-#    my $dataset = shift || return;
-#
-#    push @{ $datasets{ id $self } }, $dataset;
-#
-#    # Find extreme values of dataset
-#    my $minX    = min @{ $dataset->{x} };
-#    my $maxX    = max @{ $dataset->{x} };
-#    my $minY    = min @{ $dataset->{y} };
-#    my $maxY    = max @{ $dataset->{y} };
-#
-#    # Update extreme value cache of chart where necessary.
-#    $self->set('minX', $minX) if ($minX < $self->get('minX') || !defined $self->get('minX'));
-#    $self->set('maxX', $maxX) if $maxX > $self->get('maxX');
-#    $self->set('minY', $minY) if ($minY < $self->get('minY') || !defined $self->get('minY'));
-#    $self->set('maxY', $maxY) if $maxY > $self->get('maxY');
-#
-#    $self->{_dsCount} = $self->{_dsCount} ? $self->{_dsCount} + 1 : 1;
-#
-#    for (0 .. scalar(@{ $dataset->{x} }) -1 ) {
-#        $self->{_ds2}->{ $dataset->{x}->[$_] }->{ $self->{_dsCount} } = $dataset->{y}->[$_];
-#    }
-#
-#    return;
-#}
+Defines the properties of your plugin as well as their default values.
 
-#-------------------------------------------------------------------
+=cut
+#TODO: More verbose docs overhere.
+
 sub definition {
     return {};
 }
 
 #-------------------------------------------------------------------
+
+=head2 get ( [ key ] )
+
+Returns the value of property 'key'. If key is ommitted returns all properties as a hashref.
+
+=head3 key
+
+The property you want the value of. 
+
+=cut
+
 sub get {
     my $self    = shift;
     my $key     = shift;
@@ -70,6 +46,19 @@ sub get {
     return { $properties{ id $self } } unless $key;
     return $properties{ id $self }->{ $key };
 }
+
+#-------------------------------------------------------------------
+
+=head2 getDataRange ( )
+
+Returns a list of four arrayrefs containing range in terms off coords and values the plugin needs to plot the
+chart. The arrayrefs each contain the minimum or maximum values for each of the coord or value dimensions.
+
+These arrayref are returned in the following order:
+
+    minimum coord, maximum coord, minimum value, maximum value
+
+=cut
 
 sub getDataRange {
     my $self    = shift;
@@ -80,10 +69,19 @@ sub getDataRange {
 }
 
 #-------------------------------------------------------------------
+
+=head2 getPalette ( )
+
+Returns the Chart::Magick::Palette object associated with this plugin. If none is set, will create a default
+palette and return that.
+
+=cut
+
 sub getPalette {
     my $self = shift;
 
     return $palette{ id $self } if $palette{ id $self };
+
     my @colors = (
         { fillTriplet => '7ebfe5', fillAlpha => '77', strokeTriplet => '7ebfe5', strokeAlpha => 'ff' },
         { fillTriplet => '43EC43', fillAlpha => '77', strokeTriplet => '43EC43', strokeAlpha => 'ff' },
@@ -100,7 +98,15 @@ sub getPalette {
     return $palette;
 
 }
+
 #-------------------------------------------------------------------
+
+=head2 new ( )
+
+Constructor.
+
+=cut
+
 sub new {
     my $class   = shift;
     my $self    = {};
@@ -121,11 +127,21 @@ sub preprocessData {
 }
 
 #-------------------------------------------------------------------
+
+=head2 set ( properties )
+
+Sets properties for this plugin.
+
+=head3 properties
+
+Either a hash or a hashref containing properties and there new values as keys and values respectively.
+
+=cut
+
 sub set {
     my $self    = shift;
     my %update  = ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
 
-print "[[[". Dumper( \%update )."]]]" ;
     my $properties  = $properties{ id $self };
 
     while ( my ($key, $value) = each %update ) {
@@ -133,6 +149,66 @@ print "[[[". Dumper( \%update )."]]]" ;
             $properties->{ $key } = $value;
         }
     }
+}
+
+#-------------------------------------------------------------------
+
+=head2 setAxis ( axis )
+
+Set the axis objcet the chart should be drawn on.
+
+=head3 axis
+
+An instanciated Chart::Magick::Axis:: object.
+
+=cut
+
+sub setAxis {
+    my $self = shift;
+    my $axis = shift;
+
+    $axis{ id $self } = $axis;
+}
+
+#-------------------------------------------------------------------
+
+=head2 setData ( dataset )
+
+Set the dataset object the plugin should chart.
+
+=head3 dataset
+
+An instanciated Chart::Magick::Data object.
+
+=cut
+
+sub setData {
+    my $self    = shift;
+    my $dataset = shift;
+
+    $dataset{ id $self } = $dataset;
+}
+
+#-------------------------------------------------------------------
+
+=head2 setPalette ( palette )
+
+Set the palette to use for drawing the chart.
+
+=head3 palette
+
+An instanciated Chart::Magick::Palette object.
+
+=cut
+
+sub setPalette {
+    my $self    = shift;
+    my $palette = shift;
+
+    croak "setPalette requires a palette to be passed" unless $palette;
+    croak "Palette must be a Chart::Magick::Palette" unless $palette->isa( 'Chart::Magick::Palette' );
+
+    $palette{ id $self } = $palette;
 }
 
 1;
