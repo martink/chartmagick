@@ -467,10 +467,20 @@ sub set {
     }
 }
 
-=head2 toPx ( x, y )
+#-------------------------------------------------------------------
+
+=head2 toPx ( coords, values )
 
 Shorthand method that calls the project method and returns the x and y value joined by a comma as scalar. This
 string can be directly used in ImageMagick path definitions.
+
+=head3 coords
+
+Array ref containing the coordinates of the spot to be projected.
+
+=head3 value
+
+Array ref containing the values of the spot to be projected.
 
 =cut
 
@@ -479,6 +489,7 @@ sub toPx {
     
     return join ",", map { int } $self->project( @_ );
 }
+
 #---------------------------------------------
 
 =head2 plotOption ( key, value )
