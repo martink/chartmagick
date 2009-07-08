@@ -46,8 +46,7 @@ These methods are available from this class:
 
 =head2 copy ( )
 
-Returns a new Chart::Magick::Color object being an exact copy of this color,
-except for the persistency. This means that the new copy will not be stored in
+Returns a new Chart::Magick::Color object being an exact copy of this color.
 the database. To accomplish that use the save method on the copy.
 
 =cut
@@ -68,8 +67,7 @@ sub copy {
 =head2 darken ( )
 
 Returns a new Chart::Magick::Color object with the same properties but the
-colors darkened. This object will not be saved to the database automatically.
-Use the save method on it if you want to do so.
+colors darkened. 
 
 =cut
 
@@ -80,8 +78,8 @@ sub darken {
 
 	my $c = Color::Calc->new(OutputFormat => 'hex');
 	
-	$newColor->fillTriplet('#'.$c->dark($self->fillTriplet));
-	$newColor->strokeTriplet('#'.$c->dark($self->strokeTriplet));
+	$newColor->fillTriplet(   $c->dark( $self->fillTriplet )    );
+	$newColor->strokeTriplet( $c->dark( $self->strokeTriplet )  );
 
 	return $newColor;
 }

@@ -131,11 +131,11 @@ sub addSlice {
 	$fillColor = $color->getFillColor;
 	$strokeColor = $color->getStrokeColor;
 	
-#	if ($self->get('shadedSides')) {
-#		$sideColor = $color->darken->getFillColor;
-#	} else {
+	if ($self->get('shadedSides')) {
+		$sideColor = $color->darken->getFillColor;
+	} else {
 		$sideColor = $fillColor;
-#	}
+	}
 	
 	my %sliceData = (
 		# color properties
