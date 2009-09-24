@@ -4,9 +4,13 @@ use strict;
 use Color::Calc;
 use Class::InsideOut qw{ :std };
 
-public  strokeTriplet   => my %strokeTriplet;
+public  strokeTriplet   => my %strokeTriplet, {
+    set_hook => sub { s/^#?([^0-9a-f]+)$/#$1/gi }
+};
 public  strokeAlpha     => my %strokeAlpha;
-public  fillTriplet     => my %fillTriplet;
+public  fillTriplet     => my %fillTriplet, {
+    set_hook => sub { s/^#?([^0-9a-f]+)$/#$1/gi }
+};
 public  fillAlpha       => my %fillAlpha;
 
 
@@ -60,6 +64,18 @@ sub copy {
         strokeTriplet   => $self->strokeTriplet,
         strokeAlpha     => $self->strokeAlpha,
     } );
+}
+
+#TODO: Get inphasen en de losse methods eruit.
+sub get {
+    my $self = shift;
+
+    return {
+        fillTriplet     => $self->fillTriplet,
+        fillAlpha       => $self->fillAlpha,
+        strokeTriplet   => $self->strokeTriplet,
+        strokeAlpha     => $self->strokeAlpha,
+    };
 }
 
 #-------------------------------------------------------------------

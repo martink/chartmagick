@@ -3,6 +3,7 @@ package Chart::Magick::Palette;
 use strict;
 use Chart::Magick::Color;
 use Class::InsideOut qw{ :std };
+use Carp;
 
 private     colors          => my %colors;
 public      paletteIndex    => my %paletteIndex;
@@ -150,13 +151,16 @@ Constructor for this class.
 
 sub new {
 	my $class   = shift;
+    my $colors  = shift || [];
     
     my $self    = {};
     bless $self, $class;
 
     register( $self );
 
-    $colors{ id $self }         = [ ];
+    $colors{ id $self }         = [
+        map { ref $_ eq 'HASH' ? Chart::Magick::Color->new( $_ ) : $_ } @{ $colors }
+    ];
     $paletteIndex{ id $self }   = undef;
 
     return $self;
@@ -205,8 +209,8 @@ The Chart::Magick::Color object.
 
 sub setColor {
 	my $self = shift;
-	my $index = shift;
 	my $color = shift;
+	my $index = shift;
 
     # Make sure the index is within bounds
 	return undef if $index >= $self->getNumberOfColors;
@@ -256,8 +260,8 @@ sub swapColors {
 	my $colorA = $self->getColor( $indexA );
 	my $colorB = $self->getColor( $indexB );
 
-	$self->setColor($indexA, $colorB);
-	$self->setColor($indexB, $colorA);
+	$self->setColor($colorB, $indexA );
+	$self->setColor($colorA, $indexB );
 }
 
 1;
