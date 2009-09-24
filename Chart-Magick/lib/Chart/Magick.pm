@@ -60,7 +60,6 @@ sub matrix {
         my $xCount = scalar @$row;
 
         my $axisWidth   = ( $self->{ options }->{ width } - ( ( 1 + $xCount ) * $m ) ) / $xCount;
-print "[$axisWidth]\n";
 
         my $x = 0;
 
@@ -79,27 +78,6 @@ print "[$axisWidth]\n";
         $y++;
     }
 
-
-#    for my $y ( 0 .. $yc-1 ) {
-#        for my $x ( 0 .. $xc -1 ) {
-#            my $class;
-#            if ( exists $types->{ $y * $xc + $x } ) {
-#                $class = $types->{ $y * $xc + $x };
-#                eval { "require $class" };
-#            }
-#            else {
-#                $class = 'Chart::Magick::Axis::Lin';
-#            }
-#
-#            eval { "require $class" };
-#            $self->addAxis(
-#                $class->new( { width => $axisWidth, height => $axisHeight } ),
-##                Chart::Magick::Axis::Lin->new( { width => $axisWidth, height => $axisHeight } ),
-#                $x * ( $axisWidth + $m ) + $m,
-#                $y * ( $axisHeight + $m ) + $m,
-#            );
-#        }
-#    }
 }
 
     

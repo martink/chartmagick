@@ -545,14 +545,9 @@ You can use the align property to set the text justification.
 sub text {
 	my $self = shift;
 	my %properties = @_;
-#warn Dumper( \%properties );
 
     my %testProperties = %properties;
-    delete $testProperties{align};
-    delete $testProperties{style};
-    delete $testProperties{fill};
-    delete $testProperties{alignHorizontal};
-    delete $testProperties{alignVertical};
+    delete @testProperties{ qw{align style fill alignHorizontal alignVertical } };
     my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryFontMetrics(%testProperties);
 
     # Convert the rotation angle to radians

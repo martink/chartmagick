@@ -236,22 +236,8 @@ sub generateTicks {
 }
 
 #---------------------------------------------
-sub getXUnitRange {
-    my $self    = shift;
-    my $x       = shift;
 
-    
-
-#    my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-#    my $xAddUnit    = $self->get('xTickOffset');
-#    my $xPxPerUnit  = $self->plotOption( 'chartWidth' ) / ( $xUnits + $xAddUnit );
-#
-
-}
-
-#---------------------------------------------
-
-=head2 calcTckWidth ( from, to, [ count ] )
+=head2 calcTickWidth ( from, to, [ count ] )
 
 Returns the tick spacing for a given number of ticks within a given interval. If the number of ticks is omitted the
 tick spacing will be calculated in such way that the tick spacing is of an order less that the range of the
@@ -288,7 +274,7 @@ sub calcTickWidth {
 
     my $range       = $to - $from || $to || 1;
     # The 0.6 is a factor used to influence rounding. Use 0.5 for arithmetic rounding.
-    my $order       = int( log( $range ) / log(10) + 0.6 );
+    my $order       = int( log( $range ) / log( 10 ) + 0.6 );
     my $tickWidth   = 10 ** ( $order - 1 );
 
     return $tickWidth * $unit;
