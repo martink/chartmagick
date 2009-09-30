@@ -5,11 +5,11 @@ use Color::Calc;
 use Class::InsideOut qw{ :std };
 
 public  strokeTriplet   => my %strokeTriplet, {
-    set_hook => sub { s/^#?([^0-9a-f]+)$/#$1/gi }
+    set_hook => sub { s/^#?([0-9a-f]+)$/$1/gi }
 };
 public  strokeAlpha     => my %strokeAlpha;
 public  fillTriplet     => my %fillTriplet, {
-    set_hook => sub { s/^#?([^0-9a-f]+)$/#$1/gi }
+    set_hook => sub { s/^#?([0-9a-f]+)$/$1/gi }
 };
 public  fillAlpha       => my %fillAlpha;
 
@@ -31,7 +31,7 @@ color that is used to fill that area. Fill color thus have no effect on lines.
 Each fill and stroke color consists of a Red, Green, Blue and Alpha component.
 These values are given in hexadecimal notation. A concatenation of the Red,
 Greean and Blue values, prepended with a '#' sign is called a triplet. A similar
-combination that also includes the Alpha values at the end is called a quarted.
+combination that also includes the Alpha values at the end is called a quartet.
 
 Alpha value are used to define the transparency of the color. The higher the
 value the more transparent the color is. If the alpha value = 00 the color is
