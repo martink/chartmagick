@@ -508,8 +508,10 @@ sub drawLabel {
 	}
 
 	my $verticalAlign = 'center';
-	$verticalAlign = 'bottom' if ($slice->{avgAngle} == 0.5 * pi);
-	$verticalAlign = 'top' if ($slice->{avgAngle} == 1.5 * pi);
+	#$verticalAlign = 'bottom' if ($slice->{avgAngle} == 0.5 * pi);
+	#$verticalAlign = 'top' if ($slice->{avgAngle} == 1.5 * pi);
+	$verticalAlign = 'bottom' if ($slice->{avgAngle} < pi);
+	$verticalAlign = 'top' if ($slice->{avgAngle} > pi);
 
 	my $anchorX = $endPointX + $self->get('labelOffset');
 	$anchorX = $endPointX - $self->get('labelOffset') if ($horizontalAlign eq 'right');
@@ -517,20 +519,19 @@ sub drawLabel {
 	my $text = $slice->{label} || sprintf('%.1f', $slice->{percentage}*100).' %';
 
 	my $maxWidth = $anchorX;
-####	$maxWidth = $self->getImageWidth - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
-	$maxWidth = $self->get('chartWidth') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
-
-    my $axis = $self->axis;
-	$self->axis->text(
+	$maxWidth = $self->axis->get('width') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
+   
+	$self->axis->textWrap(
         text            => $text, #$self->wrapLabelToWidth( $text, $maxWidth ),
-		alignHorizontal => $horizontalAlign,
+		halign          => $horizontalAlign,
 		align           => $align,
-		alignVertical   => $verticalAlign,
+		valign          => $verticalAlign,
 		x               => $anchorX,
 		y               => $endPointY,
         font            => $self->axis->get('labelFont'),
         pointsize       => $self->axis->get('labelFontSize'),
         fill            => $self->axis->get('labelColor'),
+        wrapWidth       => $maxWidth,
 	);
 }
 
