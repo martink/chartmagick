@@ -80,7 +80,7 @@ $axis->addChart( $chart );
 $axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr', 5 => 'mei' } );
 $axis->draw;
 
-print Dumper( $axis->get );
+#print Dumper( $axis->get );
 #print Dumper( $axis->{_plotOptions} );
 
 

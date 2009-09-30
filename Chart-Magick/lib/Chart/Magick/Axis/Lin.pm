@@ -322,6 +322,8 @@ sub preprocessData {
     # Figure out the spacing between the ticks.
     my $yTickWidth = $self->get('yTickWidth') || $self->calcTickWidth( $minY, $maxY, $self->get('yTickCount'), $self->get('yLabelUnits') );
     my $xTickWidth = $self->get('xTickWidth') || $self->calcTickWidth( $minX, $maxX, $self->get('xTickCount'), $self->get('xLabelUnits') );
+    $self->set('yTickWidth' => $yTickWidth);
+    $self->set('xTickWidth' => $xTickWidth);
 
     # Adjust the tick width so that they align with the 0 axes if desired.
     if ( $self->get('alignAxesWithTicks') ) {
@@ -653,7 +655,7 @@ sub plotTicks {
 
         my $y = $outset + $self->get('xLabelTickOffset');
         my $value = sprintf( $self->get('xLabelFormat'), $tick / $self->get('xLabelUnits') );
-        $self->text(
+        $self->textWrap(
             text        => $self->getLabels( 0, $value ) || $value,
             font        => $self->get('labelFont'),
             halign      => 'center',
@@ -664,6 +666,7 @@ sub plotTicks {
             fill        => $self->get('labelColor'),
             x           => $x,
             y           => $y,
+            wrapWidth   => $self->get('xTickWidth') * $self->plotOption( 'xPxPerUnit' ),
         );
     }
 

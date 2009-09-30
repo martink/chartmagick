@@ -6,6 +6,7 @@ use Image::Magick;
 use List::Util qw{ min max };
 use Carp;
 use Data::Dumper;
+use Text::Wrap;
 
 use constant pi => 3.14159265358979;
 
@@ -521,6 +522,28 @@ sub plotOption {
 
     return $self->{ _plotOptions }->{ $option };
 }
+
+#-------------------------------------------------------------------
+sub textWrap {
+    my $self = shift;
+    my %properties = @_;
+    my %testProperties  = %properties;
+    my $wrapWidth       = $properties{ wrapWidth };
+ 
+    delete @testProperties{ qw{align style fill alignHorizontal alignVertical wrapWidth} };
+    
+    my $w       = [ $self->im->QueryFontMetrics(%testProperties) ]->[4];
+    
+    if ( $w > $wrapWidth ) {
+        # This is not guaranteed to work in every case, but it'll do for now.
+        local $Text::Wrap::columns = int( $wrapWidth / $w * length( $properties{ text } ) );
+        $properties{ text } = join "\n", wrap( '', '', $properties{ text });
+    }
+
+    delete $properties{ wrapWidth };
+    return $self->text( %properties );
+}
+
 
 #-------------------------------------------------------------------
 
