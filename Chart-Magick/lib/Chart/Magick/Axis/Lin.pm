@@ -32,6 +32,8 @@ Defines additional properties for this class:
 sub definition {
     my $self = shift;
     my %options = (
+        minTickWidth    => 25,
+
         xAxisLocation   => undef,
         xTickOffset     => 0,
 
@@ -261,6 +263,7 @@ sub calcTickWidth {
     my $self    = shift;
     my $from    = shift;
     my $to      = shift;
+    my $pxRange = shift;
     my $count   = shift;
     my $unit    = shift || 1;
 
@@ -272,10 +275,23 @@ sub calcTickWidth {
         return ($to - $from) / ($count - 1);
     }
 
+    # Make sure we always have a range to draw a graph on.
     my $range       = $to - $from || $to || 1;
+
+    # The tick width is initially calculated to a power of 10. The order of the power is chosen to be one less than
+    # the order of the range.
     # The 0.6 is a factor used to influence rounding. Use 0.5 for arithmetic rounding.
     my $order       = int( log( $range ) / log( 10 ) + 0.6 );
     my $tickWidth   = 10 ** ( $order - 1 );
+
+    # To prevent ticks from being to close to each other, we first calc the approximate tick width in pixels...
+    my $approxPxPerTick = $pxRange / $range * $tickWidth;
+
+    # ... and then check that width against the minTickWidth treshold. Continue to expand the tick width with
+    # base10-aligned factors until we have something suitable.
+    for my $expand ( 1, 1.25, 2, 2.5, 5, 10, 20, 50, 100, 1000 ) {
+        return $tickWidth * $expand * $unit if ($approxPxPerTick * $expand) > $self->get('minTickWidth');
+    }
 
     return $tickWidth * $unit;
 }
@@ -317,11 +333,17 @@ sub preprocessData {
     # Handle case when y equal zero for all coords. 
     $maxY = 1 if ($minY == 0 && $maxY == 0);
 
+    # Determine the space occupied by margin stuff like labels and the like. This als sets the chart width and
+    # height in terms of pixels that can be used to draw charts on.
+    $self->autoRangeMargins;
+
 ###############################
 
     # Figure out the spacing between the ticks.
-    my $yTickWidth = $self->get('yTickWidth') || $self->calcTickWidth( $minY, $maxY, $self->get('yTickCount'), $self->get('yLabelUnits') );
-    my $xTickWidth = $self->get('xTickWidth') || $self->calcTickWidth( $minX, $maxX, $self->get('xTickCount'), $self->get('xLabelUnits') );
+    my $yTickWidth = $self->get('yTickWidth')
+        || $self->calcTickWidth( $minY, $maxY, $self->getChartHeight, $self->get('yTickCount'), $self->get('yLabelUnits') );
+    my $xTickWidth = $self->get('xTickWidth') 
+        || $self->calcTickWidth( $minX, $maxX, $self->getChartWidth, $self->get('xTickCount'), $self->get('xLabelUnits') );
     $self->set('yTickWidth' => $yTickWidth);
     $self->set('xTickWidth' => $xTickWidth);
 
@@ -344,9 +366,6 @@ sub preprocessData {
 
 ###############################
 
-    # Determine the space occupied by margin stuff like labels and the like. This als sets the chart width and
-    # height in terms of pixels that can be used to draw charts on.
-    $self->autoRangeMargins;
 
     # Calculate the pixels per unit in the y axis.
     # TODO: Calc ppu like is done for the x axis right below.

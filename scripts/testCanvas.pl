@@ -75,11 +75,16 @@ $canvas->matrix( [ 'Lin' ], [ 'Lin', 'LinLog' ], [ 'None', 'None' ] );
 my $axis = $canvas->getAxis( 0 );
 $axis->addChart( $lineChart1 );
 $axis->set('xSubtickCount', 0);
-$axis->set('title', '1.1 + sin 50x + sin 61x');
 my $config = $axis->get;
-$axis->set('font', '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf');
-$axis->set('xLabelUnits', pi);
-$axis->set('xLabelFormat', '%.1fπ');
+$axis->set(
+    title           => '1.1 + sin 50Θ + sin 61Θ',
+    font            => '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
+    xLabelUnits     => pi,
+    xLabelFormat    => '%.1fπ',
+    xTitle          => 'Θ [rad]',
+    yTitle          => 'power [W]',
+);
+
 
 # Second chart
 $axis = $canvas->getAxis( 2 );
