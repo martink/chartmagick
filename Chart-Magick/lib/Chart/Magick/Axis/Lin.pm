@@ -139,62 +139,162 @@ sub getValueDimension {
     return 1;
 }
 
+
+sub getXTickLabel {
+    my $self    = shift;
+    my $value   = shift;
+
+    my $label   =     
+        $self->getLabels( 0, $value )
+        || sprintf( $self->get('xLabelFormat'), $value / $self->get('xLabelUnits') );
+
+    return $label;
+}
+
+sub getYTickLabel {
+    my $self    = shift;
+    my $value   = shift;
+
+    my $label   =     
+        $self->getLabels( 1, $value )
+        || sprintf( $self->get('yLabelFormat'), $value / $self->get('yLabelUnits') );
+
+    return $label;
+}
+
+sub optimizeMargins {
+    my $self = shift;
+
+    my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
+    my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
+    my $yLabelWidth = 0;
+    my $xLabelWidth = 0;
+    my $prevXLabelWidth = 0;
+    my $prevYLabelWidth = 0;
+
+    my $ready;
+    while ( !$ready ) {
+        my ($minX, $maxX, $minY, $maxY) = @_;
+
+        # Calc current chart dimensions
+        my $chartWidth  = $baseWidth  - $yLabelWidth;
+        my $chartHeight = $baseHeight - $xLabelWidth;
+
+print "--->cw: $chartWidth = $baseWidth  - $yLabelWidth\nch: $chartHeight = $baseHeight - $xLabelWidth\n";
+
+        # Calc tick width
+        my $xTickWidth = 
+            $self->calcTickWidth( 
+                $minX, $maxX, $chartWidth, $self->get('xTickCount'), $self->get('xLabelUnits') 
+            );
+        my $yTickWidth = 
+            $self->calcTickWidth( 
+                $minY, $maxY, $chartHeight, $self->get('yTickCount'), $self->get('yLabelUnits') 
+            );
+
+print "xtw: $xTickWidth, ytw: $yTickWidth\n";
+        # Adjust the chart ranges so that they align with the 0 axes if desired.
+        if ( $self->get('alignAxesWithTicks') ) {
+            $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
+            $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
+            $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
+            $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
+        }   
+
+        # Get ticks
+        my @xLabels = map { $self->getXTickLabel( $_ ) } @{ $self->generateTicks( $minX, $maxX, $xTickWidth ) };
+        my @yLabels = map { $self->getYTickLabel( $_ ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
+
+        # Calc max label lengths
+        $xLabelWidth = max map { $self->getLabelDimensions( $_ )->[1] } @xLabels;
+        $yLabelWidth = max map { $self->getLabelDimensions( $_ )->[1] } @yLabels;
+    
+print "xw: $xLabelWidth\nyw: $yLabelWidth\n";
+        if ( $prevXLabelWidth == $xLabelWidth && $prevYLabelWidth == $yLabelWidth ) {
+print "ready!\n";
+            $ready = 1;
+            $self->set( 
+                'xTickWidth'    => $xTickWidth,
+                'yTickWidth'    => $yTickWidth,
+            );
+
+            $self->plotOption( 'axisMarginLeft', $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth );
+            $self->plotOption( 'axisMarginBottom', $self->plotOption( 'axisMarginBottom' ) + $yLabelWidth );
+
+            return ($minX, $maxX, $minY, $maxY);
+        }
+print "not ready\n";
+        $prevXLabelWidth = $xLabelWidth;
+        $prevYLabelWidth = $yLabelWidth;
+    }
+}
+
+
+
+sub getLabelDimensions {
+    my $self = shift;
+    my $label = shift;
+
+    my ($w, $h) = ( $self->im->QueryFontMetrics(
+        text        => $label,
+        font        => $self->get('labelFont'),
+        pointsize   => $self->get('labelFontSize'),
+    ) )[4,5];
+
+    return [ $w, $h ];
+}
+
+
 #### TODO: Dit anders noemen...
 #---------------------------------------------
 
-=head2 autoRangeMargins ( )
+=head2 calcBaseMargins ( )
+
+Calcs and sets the base margins of the axis.
 
 =cut
 
-sub autoRangeMargins {
+sub calcBaseMargins {
     my $self = shift;
-   
-    my $yTicks = $self->getYTicks;
 
-    # Find the label with the most characters
-    my $yMaxLabel = reduce { length($b) < length($a) ? $a : $b } @{ $yTicks };
-
-    my ($yLabelWidth, $labelHeight) = ($self->im->QueryFontMetrics(
-        text        => $yMaxLabel,
-        font        => $self->get('labelFont'),
-        pointsize   => $self->get('labelFontSize'),
-    ))[4,5];
-
+    # calc axisMarginLeft
     my $yTitleWidth = ($self->im->QueryFontMetrics(
         text        => $self->get('yTitle'),
         font        => $self->get('yTitleFont'),
         pointsize   => $self->get('yTitleFontSize'),
         rotate      => -90,
     ))[5];
+    $self->plotOption( yTitleWidth => $yTitleWidth      );
 
-    my $axisMarginRight = 0;
     my $axisMarginLeft  = 
         $self->get('yTitleBorderOffset') + $self->get('yTitleLabelOffset') 
         + $self->get('yLabelTickOffset') + $self->get('yTickOutset') 
-        + $yTitleWidth + $yLabelWidth;
-
-    $self->plotOption( yLabelWidth     => $yLabelWidth      );
-    $self->plotOption( yTitleWidth     => $yTitleWidth      );
-    $self->plotOption( axisMarginRight => 0                 );
-    $self->plotOption( axisMarginLeft  => $axisMarginLeft   );
-    $self->plotOption( chartWidth      => 
-        $self->plotOption( 'axisWidth' ) - $axisMarginLeft - $axisMarginRight
-    );
+        + $yTitleWidth;
     
+    $self->plotOption( axisMarginLeft => $axisMarginLeft   );
+
+    #------------------------------------
+    # calc axisMarginBottom
     my $xTitleHeight = ($self->im->QueryFontMetrics(
         text        => $self->get('xTitle'),
         font        => $self->get('xTitleFont'),
         pointsize   => $self->get('xTitleFontSize'),
-        rotate      => 0,
     ))[5];
+    $self->plotOption( xTitleHeight => $xTitleHeight      );
 
-    my $axisMarginTop       = 0;
-    my $axisMarginBottom    = $xTitleHeight + $labelHeight + $self->get('xTickOutset') + 2 + 5;
-    $self->plotOption( axisMarginTop    => $axisMarginTop );
-    $self->plotOption( axisMarginBottom => $axisMarginBottom );
-    $self->plotOption( chartHeight      =>
-        $self->plotOption( 'axisHeight' ) - $axisMarginTop - $axisMarginBottom
-    );
+    my $axisMarginBottom = 
+        $self->get('xTitleBorderOffset') + $self->get('xTitleLabelOffset') 
+        + $self->get('xLabelTickOffset') + $self->get('xTickOutset') 
+        + $xTitleHeight;
+
+    $self->plotOption( axisMarginBottom  => $axisMarginLeft );
+    
+    #-------------------------------------
+    # calc axisMarginRight
+    $self->plotOption( axisMarginRight => 0 );
+
+    # calc axisMarginTop
+    $self->plotOption( axisMarginTop => 0 );
 }
 
 #---------------------------------------------
@@ -335,34 +435,46 @@ sub preprocessData {
 
     # Determine the space occupied by margin stuff like labels and the like. This als sets the chart width and
     # height in terms of pixels that can be used to draw charts on.
-    $self->autoRangeMargins;
+    $self->calcBaseMargins;
+
+
+##%%%%%%%%%%%%%%
 
 ###############################
 
-    # Figure out the spacing between the ticks.
-    my $yTickWidth = $self->get('yTickWidth')
-        || $self->calcTickWidth( $minY, $maxY, $self->getChartHeight, $self->get('yTickCount'), $self->get('yLabelUnits') );
-    my $xTickWidth = $self->get('xTickWidth') 
-        || $self->calcTickWidth( $minX, $maxX, $self->getChartWidth, $self->get('xTickCount'), $self->get('xLabelUnits') );
-    $self->set('yTickWidth' => $yTickWidth);
-    $self->set('xTickWidth' => $xTickWidth);
+#    # Figure out the spacing between the ticks.
+#    my $yTickWidth = $self->get('yTickWidth')
+#        || $self->calcTickWidth( $minY, $maxY, $self->getChartHeight, $self->get('yTickCount'), $self->get('yLabelUnits') );
+#    my $xTickWidth = $self->get('xTickWidth') 
+#        || $self->calcTickWidth( $minX, $maxX, $self->getChartWidth, $self->get('xTickCount'), $self->get('xLabelUnits') );
+#    $self->set('yTickWidth' => $yTickWidth);
+#    $self->set('xTickWidth' => $xTickWidth);
+#
+#    # Adjust the chart ranges so that they align with the 0 axes if desired.
+#    if ( $self->get('alignAxesWithTicks') ) {
+#        $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
+#        $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
+#        $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
+#        $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
+#    }
 
-    # Adjust the tick width so that they align with the 0 axes if desired.
-    if ( $self->get('alignAxesWithTicks') ) {
-        $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
-        $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
-        $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
-        $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
-    }
+    ($minX, $maxX, $minY, $maxY) = $self->optimizeMargins( $minX, $maxX, $minY, $maxY );
+
+    $self->plotOption( chartWidth      => 
+        $self->plotOption( 'axisWidth' ) - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight' ) 
+    );
+    $self->plotOption( chartHeight      =>
+        $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop' ) - $self->plotOption( 'axisMarginBottom' )
+    );
 
     # Store the calulated values in the object and generate the tick locations based on the tick width.
     $self->set( 'yStop',    $maxY );
     $self->set( 'yStart',   $minY );
-    $self->set( 'yTicks',   $self->generateTicks( $minY, $maxY, $yTickWidth ) );
+    $self->set( 'yTicks',   $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ) );
 
     $self->set( 'xStop',    $maxX );
     $self->set( 'xStart',   $minX );
-    $self->set( 'xTicks',   $self->generateTicks( $minX, $maxX, $xTickWidth ) );
+    $self->set( 'xTicks',   $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ) );
 
 ###############################
 
