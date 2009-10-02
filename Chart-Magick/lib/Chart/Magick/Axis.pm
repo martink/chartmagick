@@ -262,22 +262,31 @@ sub definition {
     my $self = shift;
 
     my %options = (
+        # Image dimensions
         width           => 400,
         height          => 300,
 
+        # Image margins
         marginLeft      => 40,
         marginTop       => 50,
         marginRight     => 20,
         marginBottom    => 20,
 
-        title           => 'Ze Title',
-        titleFont       => 'Courier', #'/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
-        titleFontSize   => 20,
-        titleColor      => 'purple',
+        # Default font settings
+        font            => 'Courier',
+        fontSize        => 10,
+        fontColor       => 'black',
 
-        labelFont       => 'Courier', #'/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
-        labelFontSize   => 10,
-        labelColor      => 'black',
+        # Title settings
+        title           => '',
+        titleFont       => sub { $_[0]->get('font') }, 
+        titleFontSize   => sub { $_[0]->get('fontSize') * 3 },
+        titleColor      => sub { $_[0]->get('fontColor') },
+
+        # Label settings
+        labelFont       => sub { $_[0]->get('font') }, 
+        labelFontSize   => sub { $_[0]->get('fontSize') },
+        labelColor      => sub { $_[0]->get('fontColor') },
         
     );
 
@@ -337,7 +346,12 @@ sub get {
     if ($key) {
         #### TODO: handle error and don't croak?
         croak "invalid key: [$key]" unless exists $properties->{ $key };
-        return $properties->{ $key };
+
+        return 
+            ref $properties->{ $key } eq 'CODE'
+                ? $properties->{ $key }->( $self )
+                : $properties->{ $key }
+                ;
     }
     else {
         return { %{ $properties } };

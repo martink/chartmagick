@@ -63,6 +63,12 @@ $axis->set('yChartOffset',  40);
 $axis->set('xTickOffset',   1);
 $axis->set('yTickWidth',    2);
 $axis->set('axesOutside',   0);
+
+$axis->set('font', '/usr/share/fonts/truetype/dustin/PenguinAttack.ttf');
+$axis->set('fontSize', 15);
+$axis->set('fontColor', 'black');
+$axis->set('titleColor', 'purple');
+$axis->set('title', 'Een barretje om aan te borrelen?' );
 #$axis->set('xChartOffset', 40);
 #$axis->set('xLabelUnits', pi);
 

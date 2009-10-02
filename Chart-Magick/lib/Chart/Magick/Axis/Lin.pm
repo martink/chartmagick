@@ -53,10 +53,10 @@ sub definition {
         xLabelTickOffset    => 3,
 
 #        xDrawRulers
-        xTitle          => 'x-title',
-        xTitleColor     => 'green',
-        xTitleFont      => '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
-        xTitleFontSize  => 15,
+        xTitle          => '',
+        xTitleFont      => sub { $_[0]->get('font') },
+        xTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
+        xTitleColor     => sub { $_[0]->get('fontColor') },
 #        xTitleAngle
 #        xLabelAngle
         xStart          => 1,
@@ -73,10 +73,10 @@ sub definition {
         yTicks          => [ ],
 #        yDrawRulers
 
-        yTitle          => 'y-label-label-label',
-        yTitleColor     => 'green',
-        yTitleFont      => '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
-        yTitleFontSize  => 10,
+        yTitle          => '',
+        yTitleFont      => sub { $_[0]->get('font') },
+        yTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
+        yTitleColor     => sub { $_[0]->get('fontColor') },
 #        yTitleAngle
 #        yLabelAngle
         yStart          => 1,
