@@ -77,7 +77,9 @@ $axis->addChart( $lineChart1 );
 $axis->set('xSubtickCount', 0);
 $axis->set('title', '1.1 + sin 50x + sin 61x');
 my $config = $axis->get;
+$axis->set('font', '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf');
 $axis->set('xLabelUnits', pi);
+$axis->set('xLabelFormat', '%.1fπ');
 
 # Second chart
 $axis = $canvas->getAxis( 2 );

@@ -58,17 +58,21 @@ my $axis    = Chart::Magick::Axis::Lin->new( {
     width   => 1000,
     height  => 600,
 } );
-$axis->set('xSubtickCount',  0);
-$axis->set('yChartOffset',  40);
-$axis->set('xTickOffset',   1);
-$axis->set('yTickWidth',    2);
-$axis->set('axesOutside',   0);
 
-$axis->set('font', '/usr/share/fonts/truetype/dustin/PenguinAttack.ttf');
-$axis->set('fontSize', 15);
-$axis->set('fontColor', 'black');
-$axis->set('titleColor', 'purple');
-$axis->set('title', 'Een barretje om aan te borrelen?' );
+$axis->set( {
+    font            => '/usr/share/fonts/truetype/dustin/PenguinAttack.ttf',
+    fontSize        => 15,
+    fontColor       => 'black',
+
+    # This overrides the default color set by fontColor.
+    titleColor      => 'purple',
+    title           => 'Een barretje om aan te borrelen?',
+
+#    yTickWidth      => 2,
+    axesOutside     => 0,
+} );
+
+
 #$axis->set('xChartOffset', 40);
 #$axis->set('xLabelUnits', pi);
 

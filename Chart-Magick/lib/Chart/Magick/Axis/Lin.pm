@@ -40,7 +40,7 @@ sub definition {
         xTickInset      => 4,
         xTickOutset     => 8,
 
-        xSubtickCount   => 10,
+        xSubtickCount   => 0,
         xSubtickInset   => 2,
         xSubtickOutset  => 2,
         xTicks          => [ ],
