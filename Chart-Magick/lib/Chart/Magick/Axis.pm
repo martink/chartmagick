@@ -524,15 +524,18 @@ Plot option value.
 
 sub plotOption {
     my $self    = shift;
-    my $option  = shift;
-    my $value   = shift;
 
-    if ( defined $value ) {
-        $self->{ _plotOptions }->{ $option } = $value;
+    if ( scalar @_ > 1 ) {
+        my %options = @_;
+        for my $option ( keys %options ) {
+            $self->{ _plotOptions }->{ $option } = $options{ $option };
+        }
+        return ;
     }
-    else {
-        croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
-    }
+
+    my $option = shift;
+    croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
+    
 
     return $self->{ _plotOptions }->{ $option };
 }
