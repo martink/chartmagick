@@ -4,6 +4,7 @@ use strict;
 
 use base qw{ Chart::Magick::Axis };
 use List::Util qw{ min max reduce };
+use Text::Wrap;
 use POSIX qw{ floor ceil };
 
 =head1 NAME
@@ -165,6 +166,8 @@ sub getYTickLabel {
 sub optimizeMargins {
     my $self = shift;
 
+print ">>>>>>>", join '][', $self->plotOption( 'axisWidth' ), $self->plotOption( 'axisMarginLeft' ), $self->plotOption( 'axisMarginRight'  ), "\n";
+print ">>>>>>>", join '][', $self->plotOption( 'axisHeight' ), $self->plotOption( 'axisMarginTop'  ), $self->plotOption( 'axisMarginBottom' ), "\n";
     my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
     my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
     my $yLabelWidth = 0;
@@ -205,21 +208,34 @@ print "xtw: $xTickWidth, ytw: $yTickWidth\n";
         my @xLabels = map { $self->getXTickLabel( $_ ) } @{ $self->generateTicks( $minX, $maxX, $xTickWidth ) };
         my @yLabels = map { $self->getYTickLabel( $_ ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
 
+        my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
+        my $xAddUnit    = $self->get('xTickOffset');
+        my $xPxPerUnit  = $chartWidth / ( $xUnits + $xAddUnit );
+        my $yPxPerUnit  = $chartHeight / ( $maxY - $minY );
+
         # Calc max label lengths
-        $xLabelWidth = max map { $self->getLabelDimensions( $_ )->[1] } @xLabels;
+        $xLabelWidth = max map { $self->getLabelDimensions( $_, $xTickWidth * $xPxPerUnit )->[1] } @xLabels;
         $yLabelWidth = max map { $self->getLabelDimensions( $_ )->[1] } @yLabels;
     
 print "xw: $xLabelWidth\nyw: $yLabelWidth\n";
         if ( $prevXLabelWidth == $xLabelWidth && $prevYLabelWidth == $yLabelWidth ) {
 print "ready!\n";
+            
+
             $ready = 1;
             $self->set( 
-                'xTickWidth'    => $xTickWidth,
-                'yTickWidth'    => $yTickWidth,
+                xTickWidth  => $xTickWidth,
+                yTickWidth  => $yTickWidth,
             );
-
-            $self->plotOption( 'axisMarginLeft', $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth );
-            $self->plotOption( 'axisMarginBottom', $self->plotOption( 'axisMarginBottom' ) + $yLabelWidth );
+            $self->plotOption( 
+                chartWidth      => $chartWidth,
+                chartHeight     => $chartHeight,
+                xPxPerUnit      => $xPxPerUnit,
+                xTickOffset     => $xAddUnit / 2 * $xPxPerUnit,
+                yPxPerUnit      => $yPxPerUnit,
+                axisMarginLeft  => $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth,
+                axisMarginBottom=> $self->plotOption( 'axisMarginBottom' ) + $yLabelWidth, 
+            );
 
             return ($minX, $maxX, $minY, $maxY);
         }
@@ -232,14 +248,25 @@ print "not ready\n";
 
 
 sub getLabelDimensions {
-    my $self = shift;
-    my $label = shift;
+    my $self        = shift;
+    my $label       = shift;
+    my $wrapWidth   = shift;
 
-    my ($w, $h) = ( $self->im->QueryFontMetrics(
+    my %properties = (
         text        => $label,
         font        => $self->get('labelFont'),
         pointsize   => $self->get('labelFontSize'),
-    ) )[4,5];
+    );
+
+    my ($w, $h) = ( $self->im->QueryFontMetrics( %properties ) )[4,5];
+    
+    if ( $wrapWidth && $w > $wrapWidth ) {
+        # This is not guaranteed to work in every case, but it'll do for now.
+        local $Text::Wrap::columns = int( $wrapWidth / $w * length $label );
+        $properties{ text } = join qq{\n}, wrap( q{}, q{}, $label );
+
+        ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
+    }
 
     return [ $w, $h ];
 }
@@ -275,20 +302,23 @@ sub calcBaseMargins {
 
     #------------------------------------
     # calc axisMarginBottom
-    my $xTitleHeight = ($self->im->QueryFontMetrics(
-        text        => $self->get('xTitle'),
-        font        => $self->get('xTitleFont'),
-        pointsize   => $self->get('xTitleFontSize'),
-    ))[5];
-    $self->plotOption( xTitleHeight => $xTitleHeight      );
-
+    my $xTitleHeight = $self->get('xTitle') 
+        ? ($self->im->QueryFontMetrics(
+                text        => $self->get('xTitle'),
+                font        => $self->get('xTitleFont'),
+                pointsize   => $self->get('xTitleFontSize'),
+          ) )[5]
+        : 0
+        ;
+    $self->plotOption( xTitleHeight => $xTitleHeight );
+print "xth: $xTitleHeight\n";
     my $axisMarginBottom = 
         $self->get('xTitleBorderOffset') + $self->get('xTitleLabelOffset') 
         + $self->get('xLabelTickOffset') + $self->get('xTickOutset') 
         + $xTitleHeight;
 
-    $self->plotOption( axisMarginBottom  => $axisMarginLeft );
-    
+    $self->plotOption( axisMarginBottom  => $axisMarginBottom );
+
     #-------------------------------------
     # calc axisMarginRight
     $self->plotOption( axisMarginRight => 0 );
@@ -437,35 +467,7 @@ sub preprocessData {
     # height in terms of pixels that can be used to draw charts on.
     $self->calcBaseMargins;
 
-
-##%%%%%%%%%%%%%%
-
-###############################
-
-#    # Figure out the spacing between the ticks.
-#    my $yTickWidth = $self->get('yTickWidth')
-#        || $self->calcTickWidth( $minY, $maxY, $self->getChartHeight, $self->get('yTickCount'), $self->get('yLabelUnits') );
-#    my $xTickWidth = $self->get('xTickWidth') 
-#        || $self->calcTickWidth( $minX, $maxX, $self->getChartWidth, $self->get('xTickCount'), $self->get('xLabelUnits') );
-#    $self->set('yTickWidth' => $yTickWidth);
-#    $self->set('xTickWidth' => $xTickWidth);
-#
-#    # Adjust the chart ranges so that they align with the 0 axes if desired.
-#    if ( $self->get('alignAxesWithTicks') ) {
-#        $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
-#        $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
-#        $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
-#        $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
-#    }
-
     ($minX, $maxX, $minY, $maxY) = $self->optimizeMargins( $minX, $maxX, $minY, $maxY );
-
-    $self->plotOption( chartWidth      => 
-        $self->plotOption( 'axisWidth' ) - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight' ) 
-    );
-    $self->plotOption( chartHeight      =>
-        $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop' ) - $self->plotOption( 'axisMarginBottom' )
-    );
 
     # Store the calulated values in the object and generate the tick locations based on the tick width.
     $self->set( 'yStop',    $maxY );
@@ -475,23 +477,6 @@ sub preprocessData {
     $self->set( 'xStop',    $maxX );
     $self->set( 'xStart',   $minX );
     $self->set( 'xTicks',   $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ) );
-
-###############################
-
-
-    # Calculate the pixels per unit in the y axis.
-    # TODO: Calc ppu like is done for the x axis right below.
-    my $yPxPerUnit = $self->plotOption( 'chartHeight' ) / ( $maxY - $minY );
-    $self->plotOption( yPxPerUnit => $yPxPerUnit );
-
-    # Calculate the pixels per unit on the x axis.
-    my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-    my $xAddUnit    = $self->get('xTickOffset');
-    my $xPxPerUnit  = $self->plotOption( 'chartWidth' ) / ( $xUnits + $xAddUnit );
-
-    $self->plotOption( xPxPerUnit   => $xPxPerUnit );
-    $self->plotOption( xTickOffset  => $xAddUnit / 2 * $xPxPerUnit);
-
 
     # Determine the pixel location of (0,0) within the canvas.
     my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );           # left border of axis

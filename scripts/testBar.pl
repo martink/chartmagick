@@ -67,9 +67,10 @@ $axis->set( {
     # This overrides the default color set by fontColor.
     titleColor      => 'purple',
     title           => 'Een barretje om aan te borrelen?',
+#    xTitle          => 'kalabam!',
 
 #    yTickWidth      => 2,
-    axesOutside     => 0,
+    axesOutside     => 1,
 } );
 
 
@@ -87,7 +88,7 @@ $chart->set('barSpacing',   3);
 #$chart->set('drawMode',     'cumulative');
 
 $axis->addChart( $chart );
-$axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr', 5 => 'mei' } );
+$axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr da\'s nou ook niet echt een hele lange naam toch?', 5 => 'eeennnn hele lange maand naam zoals bijvoorbeld zoiets als mei of misschien ook nog wel iets anders zeg maar' } );
 $axis->draw;
 
 #print Dumper( $axis->get );
