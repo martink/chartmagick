@@ -88,7 +88,7 @@ my $chart   = Chart::Magick::Chart::Bar->new( );
 $chart->setData( $ds );
 $chart->set('barWidth',     10);
 $chart->set('barSpacing',   3);
-#$chart->set('drawMode',     'cumulative');
+$chart->set('drawMode',     'cumulative');
 
 $axis->addChart( $chart );
 $axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr da\'s nou ook niet echt een hele lange naam toch?', 5 => 'eeennnn hele lange maand naam zoals bijvoorbeld zoiets als mei of misschien ook nog wel iets anders zeg maar' } );

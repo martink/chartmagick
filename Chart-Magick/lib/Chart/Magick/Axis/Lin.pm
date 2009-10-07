@@ -228,12 +228,12 @@ sub optimizeMargins {
         $self->plotOption( chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ) );
 
         # Calc max label lengths
-        $xLabelWidth = max map { $self->getLabelDimensions( $_, $xTickWidth * $xPxPerUnit )->[1] } @xLabels;
-        $yLabelWidth = max map { $self->getLabelDimensions( $_ )->[1] } @yLabels;
+        $xLabelWidth = ceil max map { int $self->getLabelDimensions( $_, $xTickWidth * $xPxPerUnit )->[1] } @xLabels; 
+        $yLabelWidth = ceil max map { int $self->getLabelDimensions( $_ )->[1] } @yLabels;
     
         # Adjust label sizes to
         unless ( $self->get('axesOutside') ) {
-            $xLabelWidth = max 0, $xLabelWidth - ( $chartAnchorY + $chartHeight - $originY );
+            $xLabelWidth = ceil max 0, $xLabelWidth - ( $chartAnchorY + $chartHeight - $originY );
         }
 
         if ( $prevXLabelWidth == $xLabelWidth && $prevYLabelWidth == $yLabelWidth ) {
