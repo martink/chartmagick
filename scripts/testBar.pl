@@ -60,6 +60,8 @@ my $axis    = Chart::Magick::Axis::Lin->new( {
 } );
 
 $axis->set( {
+    margin          => 10,
+
     font            => '/usr/share/fonts/truetype/dustin/PenguinAttack.ttf',
     fontSize        => 15,
     fontColor       => 'black',
@@ -67,10 +69,11 @@ $axis->set( {
     # This overrides the default color set by fontColor.
     titleColor      => 'purple',
     title           => 'Een barretje om aan te borrelen?',
-#    xTitle          => 'kalabam!',
+    xTitle          => 'kalabam!',
+    yTitle          => 'zlomp!',
 
-#    yTickWidth      => 2,
-    axesOutside     => 1,
+    yTickWidth      => 2,
+    axesOutside     => 0,
 } );
 
 
@@ -94,18 +97,7 @@ $axis->draw;
 #print Dumper( $axis->get );
 #print Dumper( $axis->{_plotOptions} );
 
-
-for (0 .. 1000/20) {
-    my $x = 50 * $_;
-    $axis->im->Draw(
-        primitive   => 'Line',
-        points      => "$x,0,$x,50",
-        stroke      => 'magenta',
-    );
-}
-
 $axis->im->Write('out.png');
-
 
 #print $ds->dumpData;
 
