@@ -267,10 +267,11 @@ sub definition {
         height          => 300,
 
         # Image margins
-        marginLeft      => 40,
-        marginTop       => 50,
-        marginRight     => 20,
-        marginBottom    => 20,
+        margin          => 30,
+        marginLeft      => sub { $_[0]->get('margin') },
+        marginTop       => sub { $_[0]->get('margin') }, 
+        marginRight     => sub { $_[0]->get('margin') },
+        marginBottom    => sub { $_[0]->get('margin') },
 
         # Default font settings
         font            => 'Courier',
@@ -282,6 +283,7 @@ sub definition {
         titleFont       => sub { $_[0]->get('font') }, 
         titleFontSize   => sub { $_[0]->get('fontSize') * 3 },
         titleColor      => sub { $_[0]->get('fontColor') },
+        minTitleMargin  => 5,
 
         # Label settings
         labelFont       => sub { $_[0]->get('font') }, 
@@ -421,7 +423,7 @@ sub plotLast {
         font        => $self->get('titleFont'),
         fill        => $self->get('titleColor'),
         x           => $self->get('width') / 2,
-        y           => 5,
+        y           => $self->plotOption( 'titleOffset' ),
         halign      => 'center',
         valign      => 'top',
     );
@@ -446,15 +448,34 @@ sub preprocessData {
         croak "Font $font (property $_) does not exist or is defined incorrect in the ImageMagick configuration file." 
             unless $self->checkFont( $font );
     }
-    
+   
+    # Calc title height
+    my $minTitleMargin  = $self->get('minTitleMargin');
+    my $titleHeight = [ 
+        $self->im->QueryFontMetrics( 
+            text        => $self->get('title'),
+            font        => $self->get('titleFont'),
+            pointsize   => $self->get('titleFontSize'),
+        )
+    ]->[ 5 ];
+
+    # Adjust top margin to fit title
+    my $marginTop   = max $self->get('marginTop'), $titleHeight + 2 * $minTitleMargin;
+    my $titleOffset = max int ( ( $marginTop - $titleHeight ) / 2 ), $minTitleMargin;
+
+    $self->set( 'marginTop', $marginTop );
+    $self->plotOption( 'titleOffset', $titleOffset);
+
     # global
     my $axisWidth  = $self->get('width') - $self->get('marginLeft') - $self->get('marginRight');
     my $axisHeight = $self->get('height') - $self->get('marginTop') - $self->get('marginBottom');
 
-    $self->plotOption( axisWidth    => $axisWidth   );
-    $self->plotOption( axisHeight   => $axisHeight  );
-    $self->plotOption( axisAnchorX  => $self->get('marginLeft') );
-    $self->plotOption( axisAnchorY  => $self->get('marginTop')  );
+    $self->plotOption( 
+        axisWidth    => $axisWidth,
+        axisHeight   => $axisHeight,
+        axisAnchorX  => $self->get('marginLeft'),
+        axisAnchorY  => $self->get('marginTop'),
+    );
 }
 
 #---------------------------------------------
