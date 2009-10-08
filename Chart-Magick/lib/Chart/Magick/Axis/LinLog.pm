@@ -28,7 +28,7 @@ sub draw {
     my $self = shift;
 
     # Ticks in linlog are always aligned with the axes, so prevent the super class from over adjusting.
-    $self->set( 'alignAxesWithTicks', 0 );
+    $self->set( 'xAlignAxesWithTicks', 0 );
     
     $self->SUPER::draw( @_ );
 }

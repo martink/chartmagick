@@ -104,7 +104,10 @@ sub definition {
         plotAxes            => 1,
         axisColor           => 'grey50',
         ticksOutside        => 1,
+
         alignAxesWithTicks  => 1,
+        xAlignAxesWithTicks => sub { $_[0]->get('alignAxesWithTicks') },
+        yAlignAxesWithTicks => sub { $_[0]->get('alignAxesWithTicks') },
 
         plotBox             => 1,
         boxColor            => 'black',
@@ -205,9 +208,11 @@ sub optimizeMargins {
             );
 
         # Adjust the chart ranges so that they align with the 0 axes if desired.
-        if ( $self->get('alignAxesWithTicks') ) {
+        if ( $self->get('yAlignAxesWithTicks') ) {
             $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
             $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
+        }
+        if ( $self->get('xAlignAxesWithTicks') ) {
             $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
             $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
         }   
