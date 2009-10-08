@@ -904,10 +904,7 @@ The value to be transformed.
 =cut
 
 sub transformX {
-    my $self    = shift;
-    my $x       = shift;
-
-    return $x - $self->get( 'xStart' );
+    return $_[1];
 }
 
 #---------------------------------------------
@@ -923,10 +920,6 @@ The value to be transformed.
 =cut
 
 sub transformY {
-    my $self    = shift;
-    my $y       = shift; 
-    
-    return $y - $self->get( 'yStart' );
     return $_[1];
 }
 
@@ -942,12 +935,11 @@ sub toPxX {
     my $self    = shift;
     my $coord   = shift;
 
-#    my $x = $self->plotOption('originX') + $self->transformX( $coord ) * $self->getPxPerXUnit 
-#        + $self->plotOption('xTickOffset');
-    my $x = $self->plotOption('chartAnchorX') + $self->transformX( $coord ) * $self->getPxPerXUnit 
-        + $self->plotOption('xTickOffset');
-
-#print "[$coord][".$self->plotOption('chartAnchorX')."][".$self->transformX( $coord )."][".$self->transformX( $coord ) * $self->getPxPerXUnit ."]\n";
+    my $x = 
+          $self->plotOption('chartAnchorX') 
+        + $self->plotOption('xTickOffset') 
+        + $self->transformX( $coord                 ) * $self->getPxPerXUnit
+        - $self->transformX( $self->get('xStart')   ) * $self->getPxPerXUnit;
 
     return int $x;
 }
@@ -964,8 +956,11 @@ sub toPxY {
     my $self    = shift;
     my $coord   = shift;
 
-#    my $y = $self->plotOption('originY') - $self->transformY( $coord ) * $self->getPxPerYUnit;
-    my $y = $self->plotOption('chartAnchorY') + $self->getChartHeight - $self->transformY( $coord ) * $self->getPxPerYUnit;
+    my $y = 
+          $self->plotOption('chartAnchorY') 
+        + $self->getChartHeight 
+        - $self->transformY( $coord                 ) * $self->getPxPerYUnit
+        + $self->transformY( $self->get('yStart')   ) * $self->getPxPerYUnit;
 
     return int $y;
 }
