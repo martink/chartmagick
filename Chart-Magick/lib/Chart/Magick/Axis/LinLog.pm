@@ -71,6 +71,20 @@ sub generateLogTicks {
 }
 
 #---------------------------------------------
+sub getDataRange {
+    my $self = shift;
+
+    my ($minX, $maxX, $minY, $maxY) = $self->SUPER::getDataRange( @_ );
+
+    return (
+        [ 10 ** ( floor $self->transformX( $minX->[0] ) ) ],
+        [ 10 ** ( ceil  $self->transformX( $maxX->[0] ) ) ],
+        $minY,
+        $maxY,
+    );
+}
+
+#---------------------------------------------
 sub getXTicks {
     my $self = shift;
 
