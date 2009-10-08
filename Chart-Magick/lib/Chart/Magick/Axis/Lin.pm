@@ -183,10 +183,12 @@ sub optimizeMargins {
 
         # Calc tick width
         my $xTickWidth = 
+            $self->get('xTickWidth') || 
             $self->calcTickWidth( 
                 $minX, $maxX, $chartWidth, $self->get('xTickCount'), $self->get('xLabelUnits') 
             );
         my $yTickWidth = 
+            $self->get('yTickWidth') ||
             $self->calcTickWidth( 
                 $minY, $maxY, $chartHeight, $self->get('yTickCount'), $self->get('yLabelUnits') 
             );
