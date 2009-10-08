@@ -11,8 +11,8 @@ sub definition {
     my %options = %{ $self->SUPER::definition };
 
     my %overrides = (
-        barWidth    => 20,
-        barSpacing  => 5,
+#        barWidth    => 20,
+#        barSpacing  => 5,
         drawMode    => 'sideBySide',
     );  
 
