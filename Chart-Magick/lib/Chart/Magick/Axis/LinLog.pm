@@ -27,17 +27,9 @@ Draws the graph. See Chart::Magick::Axis for documentation.
 sub draw {
     my $self = shift;
 
-    my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
-
-    $self->set('xStart', $minX); #floor $self->transformX( $minX ) );
-    $self->set('xStop',  $maxX); #ceil  $self->transformX( $maxX ) );
+    # Ticks in linlog are always aligned with the axes, so prevent the super class from over adjusting.
+    $self->set( 'alignAxesWithTicks', 0 );
     
-
-    $minY = int( $minY  );
-    $maxY = int( $maxY  );
-    $self->set('yStart', $minY - 5 + abs( $minY ) % 5 );
-    $self->set('yStop',  $maxY + 5 - abs( $maxY ) % 5 );
-
     $self->SUPER::draw( @_ );
 }
 
