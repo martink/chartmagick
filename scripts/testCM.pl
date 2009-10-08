@@ -13,41 +13,24 @@ use Time::HiRes qw( gettimeofday tv_interval );
 
 use constant pi => 3.14159265358979;
 
-my $time = [ gettimeofday ];
 my $pxCount = 1000;
-my $dsx = [ map { pi / $pxCount * $_          } (0..$pxCount) ];
-my $dsy = [ map { 1.1 + sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
+my $dsx = [ map { pi / $pxCount * $_          } (-$pxCount/2 .. $pxCount/2) ];
+my $dsy = [ map { sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
 
-my $axis    = Chart::Magick::Axis::Lin->new( {
-    width   => 1000,
-    height  => 600,
-} );
-$axis->set('xSubtickCount', 0);
-$axis->set('xLabelUnits', pi);
-$axis->set('xTickWidth', pi / 4);
-
+my $time = [ gettimeofday ];
 
 my $chart2  = Chart::Magick::Chart::Line->new();
 $chart2->dataset->addDataset( $dsx, $dsy );
-#$chart2->set('plotMarkers', 1);
-#print $chart2->dataset->dumpData;
 
-
+my $axis = Chart::Magick::Axis::Lin->new( {
+    width           => 1000,
+    height          => 600,
+    xSubtickCount   => 0,
+    xLabelUnits     => pi,
+    xTickWidth      => pi / 4
+} );
 $axis->addChart( $chart2 );
 $axis->draw;
-
-#print Dumper( $axis->get );
-#print Dumper( $axis->{_plotOptions} );
-
-
-#for (0 .. 1000/20) {
-#    my $x = 50 * $_;
-#    $axis->im->Draw(
-#        primitive   => 'Line',
-#        points      => "$x,0,$x,50",
-#        stroke      => 'magenta',
-#    );
-#}
 
 $axis->im->Write('out.png');
 

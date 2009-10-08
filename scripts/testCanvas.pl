@@ -43,8 +43,10 @@ my @ds5 = (
 # Set up chart objects
 my $pieChart = Chart::Magick::Chart::Pie->new();
 $pieChart->dataset->addDataset( @ds1 );
-$pieChart->set('tiltAngle', 80);
-$pieChart->set('stickLength', 30);
+$pieChart->set(
+    tiltAngle   => 80,
+    stickLength => 30,
+);
 
 my $gauge = Chart::Magick::Chart::Gauge->new();
 $gauge->dataset->addDataset( @ds1 );
@@ -54,9 +56,12 @@ my $barChart = Chart::Magick::Chart::Bar->new( );
 $barChart->dataset->addDataset( @ds1 );
 $barChart->dataset->addDataset( @ds3 );
 $barChart->dataset->addDataset( @ds4 );
-$barChart->set('barWidth',     10);
-$barChart->set('barSpacing',   3);
-#$barChart->set('drawMode',     'stacked');
+$barChart->set(
+    barWidth    => 10,
+    barSpacing  => 3,
+    drawMode    => 'stacked',
+);
+
 
 my $logChart = Chart::Magick::Chart::Line->new( );
 $logChart->dataset->addDataset( @ds2 );
@@ -69,13 +74,12 @@ my $lineChart1 = Chart::Magick::Chart::Line->new();
 $lineChart1->dataset->addDataset( @ds5 );
 
 my $canvas = Chart::Magick->new( 800, 750 );
-#$canvas->matrix( 2, 2, { 1 => 'Chart::Magick::Axis::LinLog', 3 => 'Chart::Magick::Axis::None' } );
 $canvas->matrix( [ 'Lin' ], [ 'Lin', 'LinLog' ], [ 'None', 'None' ] );
 
 # First chart
 my $axis = $canvas->getAxis( 0 );
 $axis->addChart( $lineChart1 );
-$axis->set('xSubtickCount', 0);
+$axis->set('xSubtickCount', 1);
 my $config = $axis->get;
 $axis->set(
     title           => '1.1 + sin 50Θ + sin 61Θ',
