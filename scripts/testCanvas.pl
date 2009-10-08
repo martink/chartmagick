@@ -32,7 +32,7 @@ use constant pi => 3.14159265358979;
 
 my $pxCount = 1000;
 my $dsx = [ map { pi / $pxCount * $_  - 0.5 * pi      } (0..$pxCount) ];
-my $dsx = [ map { pi / $pxCount * $_                  } (0..$pxCount) ];
+my $dsx = [ map { pi / $pxCount * $_                  } (-$pxCount/2..$pxCount/2) ];
 my $dsy = [ map { 1.1 + sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
 my @ds5 = (
     $dsx,

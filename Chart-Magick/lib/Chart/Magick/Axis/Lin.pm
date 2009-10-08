@@ -55,15 +55,20 @@ sub definition {
         xTitleLabelOffset   => 10,
         xLabelTickOffset    => 3,
 
-#        xDrawRulers
+        plotRulers      => 1,
+        rulerColor      => 'grey80',
+        
+        xPlotRulers     => sub { $_[0]->get('plotRulers') },
+        xRulerColor     => sub { $_[0]->get('rulerColor') },
+
         xTitle          => '',
         xTitleFont      => sub { $_[0]->get('font') },
         xTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
         xTitleColor     => sub { $_[0]->get('fontColor') },
 #        xTitleAngle
 #        xLabelAngle
-        xStart          => 1,
-        xStop           => 5,
+        xStart          => 0,
+        xStop           => 0,
 
         centerChart     => 0,
         yTickCount      => undef,
@@ -74,7 +79,9 @@ sub definition {
         ySubtickInset   => 2,
         ySubtickOutset  => 2,
         yTicks          => [ ],
-#        yDrawRulers
+        
+        yPlotRulers     => sub { $_[0]->get('plotRulers') },
+        yRulerColor     => sub { $_[0]->get('rulerColor') },
 
         yTitle          => '',
         yTitleFont      => sub { $_[0]->get('font') },
@@ -94,8 +101,9 @@ sub definition {
         yTitleLabelOffset   => 10,
         yLabelTickOffset    => 3,
 
-#        axisColor
-        axesOutside         => 1,
+        plotAxes            => 1,
+        axisColor           => 'grey50',
+        ticksOutside        => 1,
         alignAxesWithTicks  => 1,
 
         plotBox             => 1,
@@ -237,7 +245,7 @@ sub optimizeMargins {
         $yLabelWidth = ceil max map { int $self->getLabelDimensions( $_ )->[1] } @yLabels;
     
         # Adjust label sizes to
-        unless ( $self->get('axesOutside') ) {
+        unless ( $self->get('ticksOutside') ) {
             $xLabelWidth = ceil max 0, $xLabelWidth - ( $chartAnchorY + $chartHeight - $originY );
         }
 
@@ -636,12 +644,17 @@ sub plotAxes {
     # Main axes
     $self->im->Draw(
         primitive   => 'Path',
-        stroke      => 'black', #$self->getAxisColor,
+        stroke      => $self->get('axisColor'),
         points      =>
                " M $xFrom,$xYPos L $xTo,$xYPos "
              . " M $yXPos,$yFrom L $yXPos,$yTo ",
         fill        => 'none',
     );
+}
+
+#---------------------------------------------
+sub plotAxisTitles {
+    my $self = shift;
 
     # X label
     $self->text(
@@ -704,32 +717,36 @@ You'll probably never need to call this method manually.
 sub plotRulers {
     my $self = shift;
 
-    for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
-        my $y   = int $self->toPxY( $tick );
-        my $x1  = int $self->plotOption('chartAnchorX'); #int $self->toPxX( $self->get( 'xStart' ) );
-        my $x2  = int $x1 + $self->plotOption('chartWidth'); #int $self->toPxX( $self->get( 'xStop'  ) );
+    if ( $self->get('yPlotRulers') ) {
+        for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
+            my $y   = int $self->toPxY( $tick );
+            my $x1  = int $self->plotOption('chartAnchorX'); #int $self->toPxX( $self->get( 'xStart' ) );
+            my $x2  = int $x1 + $self->plotOption('chartWidth'); #int $self->toPxX( $self->get( 'xStop'  ) );
 
-        $self->im->Draw(
-            primitive   => 'Path',
-            stroke      => 'lightgrey',
-            points      => " M $x1,$y L $x2,$y ",
-            fill        => 'none',
-        );
-        
+            $self->im->Draw(
+                primitive   => 'Path',
+                stroke      => 'lightgrey',
+                points      => " M $x1,$y L $x2,$y ",
+                fill        => 'none',
+            );
+            
+        }
     }
 
-    for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
-        my $x   = int $self->toPxX( $tick );
-        my $y1  = int $self->toPxY( $self->get('yStop' ) );
-        my $y2  = int $self->toPxY( $self->get('yStart') );
+    if ( $self->get('xPlotRulers') ) {
+        for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
+            my $x   = int $self->toPxX( $tick );
+            my $y1  = int $self->toPxY( $self->get('yStop' ) );
+            my $y2  = int $self->toPxY( $self->get('yStart') );
 
-        $self->im->Draw(
-            primitive   => 'Path',
-            stroke      => 'lightgrey',
-            points      => " M $x,$y1 L $x,$y2 ",
-            fill        => 'none',
-        );
-     }
+            $self->im->Draw(
+                primitive   => 'Path',
+                stroke      => 'lightgrey',
+                points      => " M $x,$y1 L $x,$y2 ",
+                fill        => 'none',
+            );
+        }
+    }
 }
 
 #---------------------------------------------
@@ -745,7 +762,7 @@ You'll probably never need to call this method manually.
 sub plotTicks {
     my $self = shift;
 
-    my $ticksOutside = $self->get('axesOutside');
+    my $ticksOutside = $self->get('ticksOutside');
 
     my $xOffset = $ticksOutside ? int $self->plotOption('chartAnchorX') : int $self->plotOption('originX');
     my $yOffset = $ticksOutside ? int $self->plotOption('chartAnchorY') + $self->plotOption('chartHeight') : int $self->plotOption('originY');
@@ -857,6 +874,7 @@ sub plotFirst {
     $self->SUPER::plotFirst;
 
     $self->plotRulers;
+    $self->plotAxes if $self->get('plotAxes');
 }
 
 #---------------------------------------------
@@ -877,8 +895,9 @@ sub plotLast {
     $self->SUPER::plotLast;
 
     $self->plotTicks;
-    $self->plotAxes;
-    $self->plotBox      if $self->get('plotBox');
+    $self->plotBox if $self->get('plotBox');
+    $self->plotAxisTitles;
+
 }
 
 #---------------------------------------------
