@@ -97,6 +97,9 @@ sub definition {
 #        axisColor
         axesOutside         => 1,
         alignAxesWithTicks  => 1,
+
+        plotBox             => 1,
+        boxColor            => 'black',
     );
 
     return { %{ $self->SUPER::definition }, %options };
@@ -178,8 +181,8 @@ sub optimizeMargins {
         my ($minX, $maxX, $minY, $maxY) = @_;
 
         # Calc current chart dimensions
-        my $chartWidth  = $baseWidth  - $yLabelWidth;
-        my $chartHeight = $baseHeight - $xLabelWidth;
+        my $chartWidth  = floor( $baseWidth  - $yLabelWidth );
+        my $chartHeight = floor( $baseHeight - $xLabelWidth );
 
         # Calc tick width
         my $xTickWidth = 
@@ -669,6 +672,26 @@ sub plotAxes {
 }
 
 #---------------------------------------------
+sub plotBox {
+    my $self = shift;
+
+    my $xFrom   = int $self->plotOption('chartAnchorX');
+    my $xTo     = $xFrom + $self->getChartWidth;
+    my $yFrom   = int $self->plotOption('chartAnchorY');
+    my $yTo     = $yFrom + $self->getChartHeight;
+    
+    # Main axes
+    $self->im->Draw(
+        primitive   => 'Path',
+        stroke      => $self->get('boxColor'),
+        points      =>
+               " M $xFrom,$yFrom L $xFrom,$yTo L $xTo,$yTo L $xTo, $yFrom Z ",
+        fill        => 'none',
+    );
+}
+
+
+#---------------------------------------------
 
 =head2 plotRulers ( )
 
@@ -683,8 +706,8 @@ sub plotRulers {
 
     for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
         my $y   = int $self->toPxY( $tick );
-        my $x1  = $self->plotOption('chartAnchorX'); #int $self->toPxX( $self->get( 'xStart' ) );
-        my $x2  = $x1 + $self->plotOption('chartWidth'); #int $self->toPxX( $self->get( 'xStop'  ) );
+        my $x1  = int $self->plotOption('chartAnchorX'); #int $self->toPxX( $self->get( 'xStart' ) );
+        my $x2  = int $x1 + $self->plotOption('chartWidth'); #int $self->toPxX( $self->get( 'xStop'  ) );
 
         $self->im->Draw(
             primitive   => 'Path',
@@ -855,6 +878,7 @@ sub plotLast {
 
     $self->plotTicks;
     $self->plotAxes;
+    $self->plotBox      if $self->get('plotBox');
 }
 
 #---------------------------------------------
