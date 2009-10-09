@@ -28,13 +28,29 @@ sub plot {
     my $datasetCount =  $self->dataset->datasetCount;
     my $previousCoord;
 
-    my $marker = Chart::Magick::Marker->new( $axis, 3 );
+#    my $marker = Chart::Magick::Marker->new( 
+#        axis        => $axis, 
+#        predefined  => 'marker2',
+#        size        => 5, 
+#    );
 
+    my $markers = [];
     foreach my $x ( @{ $self->dataset->getCoords } ) {
         $self->getPalette->paletteIndex( 1 );
 
         for my $ds ( 0 .. $datasetCount - 1) {
-            my $color = $self->getPalette->getNextColor;
+            my $color   = $self->getPalette->getNextColor;
+            if (!exists $markers->[ $ds ]) {
+                $markers->[ $ds ] = Chart::Magick::Marker->new( 
+                    axis        => $axis, 
+                    predefined  => 'marker2',
+#                    fromFile    => '/home/martin/feed-icon.png',
+                    size        => 15, 
+                    strokeColor => $color->getStrokeColor,
+                );
+            }
+            my $marker = $markers->[ $ds ];
+
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
             next unless defined $y;
@@ -58,7 +74,7 @@ sub plot {
 
             # Draw markers
             if ( $self->get('plotMarkers') ) {
-                $marker->draw( $axis->project( $x, $y ), $color->getStrokeColor );
+                $marker->draw( $axis->project( $x, $y ) );
             }
 
             # Store the current position of this dataset
