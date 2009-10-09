@@ -78,10 +78,13 @@ palette and return that.
 =cut
 
 sub getPalette {
-    my $self = shift;
+    my $self    = shift;
+    my $id      = id $self;
 
-    return $palette{ id $self } if $palette{ id $self };
+    # If a palette has been set, return it
+    return $palette{ $id } if $palette{ $id };
 
+    # Otherwise generate a default palette
     my @colors = (
         { fillTriplet => '7ebfe5', fillAlpha => '77', strokeTriplet => '7ebfe5', strokeAlpha => 'ff' },
         { fillTriplet => '43EC43', fillAlpha => '77', strokeTriplet => '43EC43', strokeAlpha => 'ff' },
@@ -93,10 +96,9 @@ sub getPalette {
     my $palette = Chart::Magick::Palette->new;
     $palette->addColor( Chart::Magick::Color->new( $_ ) ) for @colors;
     
-    $palette{ id $self } = $palette;
+    $palette{ $id } = $palette;
 
     return $palette;
-
 }
 
 #-------------------------------------------------------------------
