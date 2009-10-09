@@ -880,6 +880,8 @@ sub plotFirst {
 
     $self->plotRulers;
     $self->plotAxes if $self->get('plotAxes');
+    $self->plotTicks;
+    $self->plotBox if $self->get('plotBox'); 
 }
 
 #---------------------------------------------
@@ -899,8 +901,6 @@ sub plotLast {
     
     $self->SUPER::plotLast;
 
-    $self->plotTicks;
-    $self->plotBox if $self->get('plotBox');
     $self->plotAxisTitles;
 
 }

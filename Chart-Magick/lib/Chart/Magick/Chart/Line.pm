@@ -27,14 +27,8 @@ sub plot {
 
     my $datasetCount =  $self->dataset->datasetCount;
     my $previousCoord;
-
-#    my $marker = Chart::Magick::Marker->new( 
-#        axis        => $axis, 
-#        predefined  => 'marker2',
-#        size        => 5, 
-#    );
-
     my $markers = [];
+
     foreach my $x ( @{ $self->dataset->getCoords } ) {
         $self->getPalette->paletteIndex( 1 );
 
@@ -43,8 +37,8 @@ sub plot {
             if (!exists $markers->[ $ds ]) {
                 $markers->[ $ds ] = Chart::Magick::Marker->new( 
                     axis        => $axis, 
-                    predefined  => 'marker2',
-#                    fromFile    => '/home/martin/feed-icon.png',
+#                    predefined  => 'marker2',
+                    fromFile    => '/home/martin/feed-icon.png',
                     size        => 15, 
                     strokeColor => $color->getStrokeColor,
                 );
@@ -72,13 +66,21 @@ sub plot {
                 );
             }
 
-            # Draw markers
-            if ( $self->get('plotMarkers') ) {
-                $marker->draw( $axis->project( $x, $y ) );
+            # Draw marker of previous data point so that it will be on top of the lines entering and leaving the
+            # point.
+            if ( $self->get('plotMarkers') && exists $previousCoord->[ $ds ] ) {
+                $marker->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
             }
 
             # Store the current position of this dataset
             $previousCoord->[ $ds ] = [ $x, $y ];
+        }
+    }
+
+    # Draw last markers
+    if ( $self->get('plotMarkers') ) {
+        for my $ds ( 0 .. $datasetCount - 1 ) {
+            $markers->[ $ds ]->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
         }
     }
 }
