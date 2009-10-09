@@ -13,6 +13,39 @@ readonly anchorX    => my %anchorX;
 readonly anchorY    => my %anchorY;
 
 #---------------------------------------------
+my %DEFAULT_MARKERS = (
+    marker1 => {
+        width   => 1,
+        height  => 0.75,
+        shape   => [
+            [ 'M', 0,    0.75   ],
+            [ 'L', 0.5,  0      ],
+            [ 'L', 1,    0.75   ],
+            [ 'L', 0,    0.75   ],
+        ],
+    },
+    marker2 => { 
+        width   => 1,
+        height  => 1,
+        shape   => [
+            [ 'M',  0,   0      ],
+            [ 'L',  1,   0      ],
+            [ 'L',  1,   1      ],
+            [ 'L',  0,   1      ],
+            [ 'L',  0,   0      ],
+        ],
+    },
+);
+
+#---------------------------------------------
+sub isDefaultMarker {
+    my $class = shift;
+    my $label = shift;
+
+    return exists $DEFAULT_MARKERS{ $label };
+}
+
+#---------------------------------------------
 sub new {
     my $class       = shift;
     my $properties  = ref $_[0] eq 'HASH' ? shift : { @_ };
@@ -103,33 +136,9 @@ sub getPredefinedMarker {
     my $id      = id $self;
     my $size    = $size{ $id };
 
-    my $markers = {
-        marker1 => {
-            width   => 1,
-            height  => 0.75,
-            shape   => [
-                [ 'M', 0,    0.75   ],
-                [ 'L', 0.5,  0      ],
-                [ 'L', 1,    0.75   ],
-                [ 'L', 0,    0.75   ],
-            ],
-        },
-        marker2 => { 
-            width   => 1,
-            height  => 1,
-            shape   => [
-                [ 'M',  0,   0      ],
-                [ 'L',  1,   0      ],
-                [ 'L',  1,   1      ],
-                [ 'L',  0,   1      ],
-                [ 'L',  0,   0      ],
-            ],
-        },
-    };
-
     my $strokeWidth = 1;
 
-    my $marker  = $markers->{ $shape };
+    my $marker  = $DEFAULT_MARKERS{ $shape };
     my $path    = join ' ', map { $_->[0] . $size*$_->[1] . ',' . $size*$_->[2] } @{ $marker->{ shape } };
     my $width   = $size * $marker->{ width  } + $strokeWidth;
     my $height  = $size * $marker->{ height } + $strokeWidth;

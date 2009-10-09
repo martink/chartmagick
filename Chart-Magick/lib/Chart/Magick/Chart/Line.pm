@@ -15,6 +15,7 @@ sub definition {
 
     my $properties = {
         plotMarkers     => 1,
+        markerSize      => 5,
     };
 
     return { %$definition, %$properties };
@@ -28,22 +29,26 @@ sub plot {
     my $datasetCount =  $self->dataset->datasetCount;
     my $previousCoord;
     my $markers = [];
+    my $markerSize = $self->get('markerSize');
+
+    $self->getPalette->paletteIndex( 1 );
+    for my $ds ( 0 .. $datasetCount - 1) { 
+        next unless exists $self->markers->[ $ds ];
+
+        my $markerDef = $self->markers->[ $ds ];
+        $markerDef->{ size } ||= $markerSize;
+        $markerDef->{ strokeColor } = $self->getPalette->getNextColor->getStrokeColor;
+        $markerDef->{ axis } = $axis;
+
+        $markers->[ $ds ] = Chart::Magick::Marker->new( $markerDef );
+    }
+
 
     foreach my $x ( @{ $self->dataset->getCoords } ) {
         $self->getPalette->paletteIndex( 1 );
 
         for my $ds ( 0 .. $datasetCount - 1) {
             my $color   = $self->getPalette->getNextColor;
-            if (!exists $markers->[ $ds ]) {
-                $markers->[ $ds ] = Chart::Magick::Marker->new( 
-                    axis        => $axis, 
-#                    predefined  => 'marker2',
-                    fromFile    => '/home/martin/feed-icon.png',
-                    size        => 15, 
-                    strokeColor => $color->getStrokeColor,
-                );
-            }
-            my $marker = $markers->[ $ds ];
 
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
@@ -68,7 +73,8 @@ sub plot {
 
             # Draw marker of previous data point so that it will be on top of the lines entering and leaving the
             # point.
-            if ( $self->get('plotMarkers') && exists $previousCoord->[ $ds ] ) {
+            my $marker = $markers->[ $ds ];
+            if ( $marker && $self->get('plotMarkers') && exists $previousCoord->[ $ds ] ) {
                 $marker->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
             }
 
@@ -80,6 +86,7 @@ sub plot {
     # Draw last markers
     if ( $self->get('plotMarkers') ) {
         for my $ds ( 0 .. $datasetCount - 1 ) {
+            next unless $markers->[ $ds ];
             $markers->[ $ds ]->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
         }
     }

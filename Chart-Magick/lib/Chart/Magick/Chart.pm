@@ -7,12 +7,26 @@ use List::Util          qw{ min max };
 use Chart::Magick::Palette;
 use Chart::Magick::Color;
 use Chart::Magick::Data;
+use Chart::Magick::Marker;
 use Carp;
 
 readonly palette    => my %palette;
 readonly dataset    => my %dataset;
+readonly markers    => my %markers;
 private  properties => my %properties;
 readonly axis       => my %axis;
+
+#-------------------------------------------------------------------
+sub addData {
+    my $self        = shift;
+    my $coords      = shift || croak "Need coordinates";
+    my $values      = shift || croak "Need values";
+    my $marker      = shift;
+    my $markerSize  = shift;
+
+    $self->dataset->addDataset( $coords, $values );
+    $self->setMarker( $self->dataset->datasetCount - 1, $marker, $markerSize ) if $marker;
+}
 
 #-------------------------------------------------------------------
 
@@ -118,6 +132,7 @@ sub new {
 
     my $id              = id $self;
     $dataset{ $id }     = Chart::Magick::Data->new;
+    $markers{ $id }     = [];
     $properties{ $id }  = $self->definition || {};
 
     return $self;
@@ -189,6 +204,31 @@ sub setData {
     my $dataset = shift;
 
     $dataset{ id $self } = $dataset;
+}
+
+#-------------------------------------------------------------------
+sub setMarker {
+    my $self    = shift;
+    my $index   = shift;
+    my $marker  = shift || croak "Need a marker";
+    my $size    = shift;
+
+    my $def = { size => $size };
+
+    if (-e $marker) {
+        $def->{ fromFile } = $marker;
+    }
+    elsif ( ref $marker eq 'Image::Magick' ) {
+        $def->{ magick  } = $marker;
+    }
+    elsif ( Chart::Magick::Marker->isDefaultMarker( $marker ) ) {
+        $def->{ predefined } = $marker;
+    }
+    else {
+        croak "Invalid marker [$marker] passed";
+    }
+
+    $markers{ id $self }->[ $index ] = $def;
 }
 
 #-------------------------------------------------------------------
