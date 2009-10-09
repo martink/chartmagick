@@ -17,11 +17,17 @@ my $pxCount = 1000;
 my $dsx = [ map { pi / $pxCount * $_          } (-$pxCount/2 .. $pxCount/2) ];
 my $dsy = [ map { sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
 
-my $time = [ gettimeofday ];
 
 my $chart2  = Chart::Magick::Chart::Line->new();
 $chart2->dataset->addDataset( $dsx, $dsy );
 
+
+$dsx = [ map { pi / $pxCount * 16 * $_      } ( -$pxCount / 32 .. $pxCount / 32 ) ];
+$dsy = [ map { $_ * pi + sin( 10*$_ )              }  @{ $dsx } ];
+    
+$chart2->dataset->addDataset( $dsx, $dsy ); 
+
+my $time = [ gettimeofday ];
 my $axis = Chart::Magick::Axis::Lin->new( {
     width           => 1000,
     height          => 600,

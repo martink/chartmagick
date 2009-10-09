@@ -88,6 +88,7 @@ $axis->set(
     xLabelFormat    => '%.1fπ',
     xTitle          => 'Θ [rad]',
     yTitle          => 'power [W]',
+    yLabelFormat    => '%.2f',
 );
 
 

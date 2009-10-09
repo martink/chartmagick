@@ -15,10 +15,10 @@ $ds->addDataset(
     [ qw( 50 210 520 800 1200 ) ],
     [ qw( 0.5 5 1 4 2 ) ],
 );
-$ds->addDataset(
-    [ map { 0.1 * $_        } ( 1 .. 1000 ) ],
-    [ map { sqrt 0.1 * $_   } ( 1 .. 1000 ) ],
-);
+#$ds->addDataset(
+#    [ map { 0.1 * $_        } ( 1 .. 1000 ) ],
+#    [ map { sqrt 0.1 * $_   } ( 1 .. 1000 ) ],
+#);
 
 # Chart
 my $chart   = Chart::Magick::Chart::Line->new( );
