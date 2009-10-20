@@ -6,7 +6,7 @@ use Test::Deep;
 use Chart::Magick::Color;
 use Scalar::Util qw{ refaddr };
 
-use Test::More tests => 26;
+use Test::More tests => 28;
 BEGIN {
     use_ok( 'Chart::Magick::Palette', 'Chart::Magick::Palette can be used' );
 }
@@ -207,17 +207,12 @@ my $col5 = Chart::Magick::Color->new( { fillTriplet => '000005' } );
     my $palette = Chart::Magick::Palette->new( $colors );
 
     my $got     = [ map { $palette->getNextColor } ( 1 .. 4 ) ];
-use Data::Dumper;
-print join( ",", map { refaddr $_ } @$got )."\n";
-print join( ",", map { refaddr $_ } @$colors)."\n";
-    # TODO: This doesn't fail while it should!!!!
+
     cmp_deeply(
-        $got,
-        $colors,
+        [ map { refaddr $_ } @$got      ],
+        [ map { refaddr $_ } @$colors   ],
         'getNextColor returns correct colors',
     );
-print join( ",", map { refaddr $_ } @$got )."\n";
-print join( ",", map { refaddr $_ } @$colors)."\n";
 
     my $col = $palette->getNextColor;
     is( $col, $col1, 'getNextColor starts at the first color again when crossing the last color' );
