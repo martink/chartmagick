@@ -520,6 +520,18 @@ sub preprocessData {
     $self->plotOption( originY      => $originY );
     $self->plotOption( chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft') );
     $self->plotOption( chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ) );
+
+    # Precalc toPx offsets.
+    $self->plotOption( 'xPxOffset'  => 
+          $self->plotOption('chartAnchorX') 
+        + $self->plotOption('xTickOffset') 
+        - $self->transformX( $self->get('xStart') ) * $self->getPxPerXUnit
+    );
+    $self->plotOption( 'yPxOffset'  => 
+        $self->plotOption('chartAnchorY') 
+        + $self->getChartHeight 
+        + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
+    );
 }
 
 #---------------------------------------------
@@ -982,14 +994,18 @@ Transform an x coordinate to pixel coordinates.
 =cut
 
 sub toPxX {
-    my $self    = shift;
-    my $coord   = shift;
+    my $self        = shift;
+    my $coord       = shift;
+
+    my $x = $self->plotOption( 'xPxOffset' )
+        + $self->transformX( $coord ) * $self->getPxPerXUnit;
+
+    return $x;
 
     my $x = 
           $self->plotOption('chartAnchorX') 
         + $self->plotOption('xTickOffset') 
-        + $self->transformX( $coord                 ) * $self->getPxPerXUnit
-        - $self->transformX( $self->get('xStart')   ) * $self->getPxPerXUnit;
+        +($self->transformX( $coord ) - $self->transformX( $self->get('xStart') ) ) * $self->getPxPerXUnit;
 
     return int $x;
 }
@@ -1006,11 +1022,18 @@ sub toPxY {
     my $self    = shift;
     my $coord   = shift;
 
+    my $y = $self->plotOption( 'yPxOffset' )
+        - $self->transformY( $coord ) * $self->getPxPerYUnit;
+
+    return int $y;
+
+    $self->plotOption('chartAnchorY') + $self->getChartHeight + $self->transformY( $self->get('yStart') )  *  $self->getPxPerYUnit;
+
+
     my $y = 
           $self->plotOption('chartAnchorY') 
         + $self->getChartHeight 
-        - $self->transformY( $coord                 ) * $self->getPxPerYUnit
-        + $self->transformY( $self->get('yStart')   ) * $self->getPxPerYUnit;
+        -($self->transformY( $coord ) - $self->transformY( $self->get('yStart') ) ) * $self->getPxPerYUnit;
 
     return int $y;
 }

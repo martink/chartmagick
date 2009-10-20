@@ -50,6 +50,7 @@ sub _buildObject {
     $properties{ $id }  = { %{ $self->definition }, %{ $properties } } || {};
     $axisLabels{ $id }  = [ ];
 
+    $self->{ _plotOptions } = {};
     return $self;
 }
 
@@ -547,10 +548,12 @@ sub plotOption {
     my $self    = shift;
 
     if ( scalar @_ > 1 ) {
-        my %options = @_;
-        for my $option ( keys %options ) {
-            $self->{ _plotOptions }->{ $option } = $options{ $option };
-        }
+        $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @_ };
+
+#        my %options = @_;
+#        for my $option ( keys %options ) {
+#            $self->{ _plotOptions }->{ $option } = $options{ $option };
+#        }
         return ;
     }
 
