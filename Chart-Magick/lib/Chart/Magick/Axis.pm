@@ -50,6 +50,7 @@ sub _buildObject {
     $properties{ $id }  = { %{ $self->definition }, %{ $properties } } || {};
     $axisLabels{ $id }  = [ ];
 
+    $self->{ _plotOptions } = {};
     return $self;
 }
 
@@ -547,17 +548,21 @@ sub plotOption {
     my $self    = shift;
 
     if ( scalar @_ > 1 ) {
-        my %options = @_;
-        for my $option ( keys %options ) {
-            $self->{ _plotOptions }->{ $option } = $options{ $option };
-        }
+        $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @_ };
+
+#        my %options = @_;
+#        for my $option ( keys %options ) {
+#            $self->{ _plotOptions }->{ $option } = $options{ $option };
+#        }
         return ;
     }
+
+    # Uncomment line below when debuggingis finished.
+    # return $self->{ _plotOptions }->{ $_[0] };
 
     my $option = shift;
     croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
     
-
     return $self->{ _plotOptions }->{ $option };
 }
 
