@@ -73,17 +73,17 @@ cmp_deeply( \@expectDs1, \@gotDs1, 'getDataPoint returns correct values for anot
 #
 #####################################################################
 
-my @gotAllCoords = $data->getCoords;
+my $gotAllCoords = $data->getCoords;
 my @expect       = ( [ 1 ], [ 2 ], [ 6 ] );
-cmp_deeply( \@gotAllCoords, \@expect, 'getCoords returns correct coords for all datasets' );
+cmp_deeply( $gotAllCoords, \@expect, 'getCoords returns correct coords for all datasets' );
 
-my @gotDs0Coords = $data->getCoords( 0 );
+my $gotDs0Coords = $data->getCoords( 0 );
 @expect          = ( [ 1 ], [ 2 ] );
-cmp_deeply( \@gotDs0Coords, \@expect, 'getCoords returns correct coords for dataset 0' );
+cmp_deeply( $gotDs0Coords, \@expect, 'getCoords returns correct coords for dataset 0' );
 
-my @gotDs1Coords = $data->getCoords( 1 );
+my $gotDs1Coords = $data->getCoords( 1 );
 @expect          = ( [ 6 ] );
-cmp_deeply( \@gotDs1Coords, \@expect, 'getCoords returns correct coords for dataset 1' );
+cmp_deeply( $gotDs1Coords, \@expect, 'getCoords returns correct coords for dataset 1' );
 
 #####################################################################
 #
