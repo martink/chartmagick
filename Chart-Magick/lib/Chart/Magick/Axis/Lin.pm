@@ -999,14 +999,6 @@ sub toPxX {
 
     my $x = $self->plotOption( 'xPxOffset' )
         + $self->transformX( $coord ) * $self->getPxPerXUnit;
-
-    return $x;
-
-    my $x = 
-          $self->plotOption('chartAnchorX') 
-        + $self->plotOption('xTickOffset') 
-        +($self->transformX( $coord ) - $self->transformX( $self->get('xStart') ) ) * $self->getPxPerXUnit;
-
     return int $x;
 }
 
@@ -1024,16 +1016,6 @@ sub toPxY {
 
     my $y = $self->plotOption( 'yPxOffset' )
         - $self->transformY( $coord ) * $self->getPxPerYUnit;
-
-    return int $y;
-
-    $self->plotOption('chartAnchorY') + $self->getChartHeight + $self->transformY( $self->get('yStart') )  *  $self->getPxPerYUnit;
-
-
-    my $y = 
-          $self->plotOption('chartAnchorY') 
-        + $self->getChartHeight 
-        -($self->transformY( $coord ) - $self->transformY( $self->get('yStart') ) ) * $self->getPxPerYUnit;
 
     return int $y;
 }
