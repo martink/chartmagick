@@ -43,12 +43,15 @@ sub plot {
         $markers->[ $ds ] = Chart::Magick::Marker->new( $markerDef );
     }
 
+    # Cache palette.
+    my @palette;
+    $self->getPalette->paletteIndex( 1 );
+    push @palette, $self->getPalette->getNextColor for ( 1 .. $datasetCount );
 
     foreach my $x ( @{ $self->dataset->getCoords } ) {
-        $self->getPalette->paletteIndex( 1 );
 
         for my $ds ( 0 .. $datasetCount - 1) {
-            my $color   = $self->getPalette->getNextColor;
+            my $color = $palette[ $ds ];
 
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
