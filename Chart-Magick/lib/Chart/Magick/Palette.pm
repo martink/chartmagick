@@ -47,7 +47,7 @@ sub getColorIndex {
 	
     #### TODO: Possibly 
 	for my $index (0 .. scalar( @palette ) - 1) {
-		return $index if ( $self->getColor( $index )->getId eq $color->getId );
+		return $index if ( $self->getColor( $index ) eq $color );
 	}
 
 	return undef;
