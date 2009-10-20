@@ -4,7 +4,6 @@ use strict;
 use Class::InsideOut qw{ :std };
 use Carp;
 use Data::Dumper;
-use Devel::Size qw{ total_size };
 
 readonly data           => my %data;
 readonly labels         => my %labels;
@@ -153,11 +152,14 @@ sub dumpData {
 
 #---------------------------------------------------------------
 sub memUsage {
+    eval { require Devel::Size; Devel::Size->import( 'total_size' ) };
+    return "Cannot display mem usage since require Devel::Size failed.\nError message:\n $@\n" if $@;
+
     return 
          "\n------------- MEMORY USAGE ------------------\n"
-        . "Data set     : " . total_size( \%data )       . "\n"
-        . "Global stats : " . total_size( \%globalData ) . "\n"
-        . "DS stats     : " . total_size( \%datasetData ). "\n";
+        . "Data set     : " . total_size( \%data )       . " bytes\n"
+        . "Global stats : " . total_size( \%globalData ) . " bytes\n"
+        . "DS stats     : " . total_size( \%datasetData ). " bytes\n";
 
 }
 #---------------------------------------------------------------
@@ -177,7 +179,6 @@ sub getCoords {
         map     { [ split /_/, $_ ] }           # decode the keys to actual coords
         keys    %$coords                        # coords are encoded in the keys of the data hash
     ];
-
 }
 
 #---------------------------------------------------------------
