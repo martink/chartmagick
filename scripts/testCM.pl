@@ -21,8 +21,8 @@ my $dsx = [ map { pi / $pxCount * $_          } (-$pxCount/2 .. $pxCount/2) ];
 my $dsy = [ map { sin( 50*$_ ) + sin( 61*$_ ) } @{ $dsx } ];
 
 # Generate dataset 2
-my $dsx2 = [ map { pi / $pxCount * 16 * $_      } ( -$pxCount / 32 .. $pxCount / 32 ) ];
-my $dsy2 = [ map { $_ * pi + sin( 10*$_ )       }  @{ $dsx2 } ];
+my $dsx2 = [ map { pi / $pxCount * 8 * $_      } ( -$pxCount / 16 .. $pxCount / 16 ) ];
+my $dsy2 = [ map { 10*cos( $_ ) - 5 + cos( 20*$_ )       }  @{ $dsx2 } ];
 
 # Timekeeping
 my $time = [ gettimeofday ];
