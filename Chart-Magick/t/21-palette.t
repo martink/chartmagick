@@ -1,4 +1,4 @@
-#!perl -T
+#!perl 
 
 use strict;
 
@@ -6,7 +6,7 @@ use Test::Deep;
 use Chart::Magick::Color;
 use Scalar::Util qw{ refaddr };
 
-use Test::More tests => 28;
+use Test::More tests => 37;
 BEGIN {
     use_ok( 'Chart::Magick::Palette', 'Chart::Magick::Palette can be used' );
 }
@@ -101,10 +101,12 @@ my $col5 = Chart::Magick::Color->new( { fillTriplet => '000005' } );
 {
     my $palette = Chart::Magick::Palette->new( [ $col1, $col2, $col3 ] );
 
-    is( $palette->getPaletteIndex, 0, 'getPaletteIndex initializes on 0' );
+    is( $palette->getPaletteIndex( 1 ), undef, 'getPaletteIndex initializes on undef' );
+    is( $palette->getPaletteIndex, 0,   'getPaletteIndex defaults to 0 when undef' );
 
     $palette->setPaletteIndex( 1 );
-    is( $palette->getPaletteIndex, 1, 'setPaletteIndex sets palette index to passed index' );
+    is( $palette->getPaletteIndex     , 1, 'setPaletteIndex sets palette index to passed index' );
+    is( $palette->getPaletteIndex( 1 ), 1, 'getPaletteIndex alway returns the index when defined' );
 
     $palette->setPaletteIndex( -1 );
     is( $palette->getPaletteIndex, 0, 'setPaletteIndex sets palette index to 0 for negative indices' );
@@ -205,7 +207,6 @@ my $col5 = Chart::Magick::Color->new( { fillTriplet => '000005' } );
 {
     my $colors  = [ $col1, $col2, $col3, $col4 ];
     my $palette = Chart::Magick::Palette->new( $colors );
-
     my $got     = [ map { $palette->getNextColor } ( 1 .. 4 ) ];
 
     cmp_deeply(
@@ -215,15 +216,95 @@ my $col5 = Chart::Magick::Color->new( { fillTriplet => '000005' } );
     );
 
     my $col = $palette->getNextColor;
-    is( $col, $col1, 'getNextColor starts at the first color again when crossing the last color' );
+    is( $col, $col1, 'getNextColor returns the first color after the last' );
 
     $palette->setPaletteIndex( 2 );
     $col    = $palette->getNextColor;
-    is( $col, $col4, 'getNextColor take ito account the palette index.' ); 
+    is( $col, $col4, 'getNextColor take ito account the palette index' ); 
 }
 
-#sub previousColor {
-#sub removeColor {
+#####################################################################
+#
+# previousColor
+#
+#####################################################################
+{
+    my $colors  = [ $col1, $col2, $col3, $col4 ];
+    my $palette = Chart::Magick::Palette->new( $colors );
+    my $got     = [ map { $palette->getPreviousColor } ( 1 .. 4 ) ];
+
+    cmp_deeply(
+        [ map { refaddr $_ } @$got              ],
+        [ map { refaddr $_ } reverse @$colors   ],
+        'getPreviousColor returns correct colors',
+    );
+
+    my $col = $palette->getPreviousColor;
+    is( $col, $col4, 'getPreviousColor return the last color after the first' );
+
+    $palette->setPaletteIndex( 2 );
+    $col    = $palette->getPreviousColor;
+    is( $col, $col2, 'getPreviousColor take ito account the palette index' ); 
+}
+
+#####################################################################
+#
+# removeColor
+#
+#####################################################################
+{
+    my $palette = Chart::Magick::Palette->new( [ $col1, $col2, $col3, $col4, $col5 ] );
+
+    $palette->removeColor( 2 );
+    my $colors = $palette->getColorsInPalette;
+    my $expect = [ $col1, $col2, $col4, $col5 ];
+    cmp_deeply(
+        [ map { refaddr $_ } @$colors    ],
+        [ map { refaddr $_ } @$expect   ],
+        'removeColor removes only correct color',
+    );
+    
+    # array is now [ 1 2 4 5 ];
+    $palette->removeColor;
+    $colors = $palette->getColorsInPalette;
+    $expect = [ $col1, $col2, $col4, $col5 ];
+    cmp_deeply(
+        [ map { refaddr $_ } @$colors    ],
+        [ map { refaddr $_ } @$expect   ],
+        'removeColor without index removes no color',
+    );
+
+    # array is still [ 1 2 4 5 ];
+    $palette->removeColor( 4 );
+    $colors = $palette->getColorsInPalette;
+    $expect = [ $col1, $col2, $col4, $col5 ];
+    cmp_deeply(
+        [ map { refaddr $_ } @$colors    ],
+        [ map { refaddr $_ } @$expect   ],
+        'removeColor with out of ranges index removes no color',
+    );
+
+    # array is still [ 1 2 4 5 ];
+    $palette->removeColor( -1 );
+    $colors = $palette->getColorsInPalette;
+    $expect = [ $col1, $col2, $col4, $col5 ];
+    cmp_deeply(
+        [ map { refaddr $_ } @$colors    ],
+        [ map { refaddr $_ } @$expect   ],
+        'removeColor with negative index removes no color',
+    );
+    
+    # array is still [ 1 2 4 5 ];
+    $palette->setPaletteIndex( 2 );
+    $palette->removeColor( 3 );
+    is( $palette->getPaletteIndex, 2, 'removeColor does not change palette index when it is still in range' );
+
+    # array is now [ 1 2 4 ]
+    $palette->removeColor( 2 );
+    is( $palette->getPaletteIndex, 1, 'removeColor sets palette index to last color when out of range' );
+
+}
+
 #sub setColor {
 #sub setPaletteIndex {
 #sub swapColors {
