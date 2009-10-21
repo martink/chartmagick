@@ -66,17 +66,17 @@ sub copy {
     } );
 }
 
-#TODO: Get inphasen en de losse methods eruit.
-sub get {
-    my $self = shift;
-
-    return {
-        fillTriplet     => $self->fillTriplet,
-        fillAlpha       => $self->fillAlpha,
-        strokeTriplet   => $self->strokeTriplet,
-        strokeAlpha     => $self->strokeAlpha,
-    };
-}
+##TODO: Get inphasen en de losse methods eruit.
+#sub get {
+#    my $self = shift;
+#
+#    return {
+#        fillTriplet     => $self->fillTriplet,
+#        fillAlpha       => $self->fillAlpha,
+#        strokeTriplet   => $self->strokeTriplet,
+#        strokeAlpha     => $self->strokeAlpha,
+#    };
+#}
 
 #-------------------------------------------------------------------
 
@@ -117,7 +117,7 @@ sub getFillColor {
 
 #-------------------------------------------------------------------
 
-=head2 getStrokeColor ( )
+=head2 getStrokeColor ( a )
 
 Returns the the quartet of the stroke color. The quartet consists of R, G, B and
 Alpha values respectively in HTML format: '#rrggbbaa'.
@@ -131,7 +131,8 @@ sub getStrokeColor {
 }
 
 #-------------------------------------------------------------------
-=head2 new ( [ properties ] )
+
+=head2 new ( properties )
 
 Constructor for this class.
 

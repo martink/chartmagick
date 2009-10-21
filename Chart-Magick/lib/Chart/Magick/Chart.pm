@@ -17,6 +17,29 @@ private  properties => my %properties;
 readonly axis       => my %axis;
 
 #-------------------------------------------------------------------
+
+=head2 addData ( coords, values, marker, markerSize )
+
+Adds a dataset to the dataset of this chart. Optionally you can set a marker for this dataset as well.
+
+=head3 coords
+
+Array ref of coord array refs. See Chart::Magick::Data::addDataset for details.
+
+=head3 values
+
+Array ref of value array refs. See Chart::Magick::Data::addDataset for details.
+
+=head3 marker
+
+Optional. A marker spec for the marker for this dataset. See setMarker() method.
+
+=head3 markerSize
+
+Optional. The size of the markers for this dataset. See setMarker() method.
+
+=cut
+
 sub addData {
     my $self        = shift;
     my $coords      = shift || croak "Need coordinates";
@@ -139,6 +162,13 @@ sub new {
 }
 
 #-------------------------------------------------------------------
+
+=head2 preprocessData ( )
+
+Override this method to do any preprocessing before the drawing phase begins.
+
+=cut
+
 sub preprocessData {
 
 }
@@ -207,6 +237,41 @@ sub setData {
 }
 
 #-------------------------------------------------------------------
+
+=head2 setMarker ( datasetIndex, marker, size )
+
+Set a marker for a specfic dataset.
+
+=head3 datasetIndex
+
+The index of the dataset.
+
+=head3 marker
+
+The marker spec. This can be either:
+
+=over 4
+
+=item *
+
+A path to an image file. The image will be scaled and used as the marker.
+
+=item *
+
+An Image::Magick object, which contains the marker image.
+
+=item *
+
+The name of a predefined marker.
+
+=back
+
+=head3 size
+
+The size of the marker. Both height and width will be at most this value. Scaling keeps the aspect ratio.
+ 
+=cut
+
 sub setMarker {
     my $self    = shift;
     my $index   = shift;

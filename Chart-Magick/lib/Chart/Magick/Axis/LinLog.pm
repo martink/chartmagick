@@ -63,6 +63,13 @@ sub generateLogTicks {
 }
 
 #---------------------------------------------
+
+=head2 getDataRange ( )
+
+See Chart::Magick::Axis::getDataRange.
+
+=cut
+
 sub getDataRange {
     my $self = shift;
 
@@ -77,6 +84,13 @@ sub getDataRange {
 }
 
 #---------------------------------------------
+
+=head2 getXTicks ( )
+
+See Chart::Magick::Axis::getXTicks.
+
+=cut
+
 sub getXTicks {
     my $self = shift;
 

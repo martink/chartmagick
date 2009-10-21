@@ -107,6 +107,22 @@ sub addDataPoint {
 }
 
 #---------------------------------------------------------------
+
+=head2 addDataset ( coords values )
+
+Adds a dataset. Multidimensional coords are always array refs, one dimensional coords may be either scalrs of array
+refs with one element. The same goes for values.
+
+=head3 coords
+
+Array ref of coords.
+
+=head3 values
+
+Array ref of values.
+
+=cut
+
 sub addDataset {
     my $self    = shift;
     my $coords  = shift;
@@ -123,6 +139,20 @@ sub addDataset {
 }
 
 #---------------------------------------------------------------
+
+=head2 checkCoords ( coord )
+
+Checks whether the passed coord is compatible with the other coords in the data object. The required dimension is
+set by the first coord passed to this method.
+
+Note: coords (even one dimensional) must be array refs.
+
+=head3 coord
+
+The coord you want to check.
+
+=cut
+
 sub checkCoords {
     my $self    = shift;
     my $coords  = shift;
@@ -138,8 +168,20 @@ sub checkCoords {
 }
 
 #---------------------------------------------------------------
+
+=head2 dumpData ( )
+
+Debug method. Dumps the raw data in the object and the statistics both per dataset and global.
+
+Requires Data::Dumper to be installed.
+
+=cut
+
 sub dumpData {
     my $self = shift;
+
+    eval { require Data::Dumper };
+    return "Cannot dump data since require Data::Dumper failed.\nError message:\n $@\n" if $@;
 
     return 
          "\n------------- DATA --------------------------\n"
@@ -151,6 +193,17 @@ sub dumpData {
 }
 
 #---------------------------------------------------------------
+
+=head2 memUsage ( )
+
+Debug method. Returns memory usage stats for this object. Note that data is aquired by Devel::Sizev::total_size and
+thus these numbers are not the total amount of used memory. Please read the documentation of Devel::Size for more
+information.
+
+Requires Devel::Size
+
+=cut
+
 sub memUsage {
     eval { require Devel::Size; Devel::Size->import( 'total_size' ) };
     return "Cannot display mem usage since require Devel::Size failed.\nError message:\n $@\n" if $@;
@@ -163,6 +216,19 @@ sub memUsage {
 
 }
 #---------------------------------------------------------------
+
+=head2 getCoords ( [ dataset ] )
+
+Returns an array ref containing the sorted unique coords that are in either the specified dataset or all datasets.
+These coords are array refs themselves. Please note that sorting for now is performed only on the first coord
+element. 
+
+=head3 dataset
+
+Optional. The index of the dataset you want the coords of. Returns coords of all datasets if omitted.
+
+=cut
+
 sub getCoords {
     my $self    = shift;
     my $dataset = shift;
@@ -174,6 +240,7 @@ sub getCoords {
                 : { map { %{$_} } @{$data} }
                 ;
 
+    # TODO: Fix coord sorting
     return [ 
         sort    { $a->[0] <=> $b->[0] }         # !!!only sorts on first coord, needs something more advanced
         map     { [ split /_/, $_ ] }           # decode the keys to actual coords
@@ -182,6 +249,22 @@ sub getCoords {
 }
 
 #---------------------------------------------------------------
+
+=head2 getDataPoint ( coord, [ dataset ] )
+
+Returns the value at the given coord for the given dataset as an array ref. If there's no value at those coords for
+the dataset undef will be returned.
+
+=head3 coord
+
+The coord for which the value should be retuned.
+
+=head3 dataset
+
+The index dataset of the dataset that should be used. If omitted, defaults to the current selected index.
+
+=cut
+
 sub getDataPoint {
     my $self    = shift;
     my $coords  = shift;
@@ -197,6 +280,25 @@ sub getDataPoint {
 }
 
 #---------------------------------------------------------------
+
+=head2 updateStats ( coord, value, dataset )
+
+Analyzes the passed coord/value pair and updates the global and dataset stats if necessary.
+
+=head3 coord
+
+The coord for this data point.
+
+=head3 value
+
+The value for this data point.
+
+=head3 dataset
+
+The index of the dataset this datapoint belongs to.
+
+=cut
+
 sub updateStats {
     my $self        = shift;
 #   my $destination = shift;

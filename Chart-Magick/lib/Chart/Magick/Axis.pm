@@ -35,6 +35,7 @@ These methods are available from this class:
 =cut
 
 #----------------------------------------------
+
 sub _buildObject {
     my $class       = shift;
     my $properties  = shift;
@@ -55,6 +56,7 @@ sub _buildObject {
 }
 
 #----------------------------------------------
+
 =head2 addLabels ( labels, [ axisIndex ] )
 
 Adds labels for an axis identified by axisIndex. Labels are passed as a hashref in which the keys indicate the
@@ -100,6 +102,17 @@ sub addLabels {
 }
 
 #----------------------------------------------
+
+=head2 checkFont ( font )
+
+Check whether the given font can actually be found by ImageMagick. Testing this is important because passin IM
+invalid fontnames or locations will slow the program down to the extreme.
+
+=head3 font
+
+Either the full path to the font or the font name as ImageMagick knows it.
+
+=cut
 
 sub checkFont {
     my $self = shift;
@@ -148,6 +161,7 @@ sub getLabels {
 }
 
 #----------------------------------------------
+
 =head2 im ( )
 
 Returns the Image::Magick object that is used for drawing. Will automatically create a new Image::Magick object if
@@ -173,6 +187,7 @@ sub im {
 }
 
 #----------------------------------------------
+
 =head2 new ( [ properties ] )
 
 Constructor for this class.
@@ -191,6 +206,7 @@ sub new {
 }
 
 #---------------------------------------------
+
 =head2 addChart ( chart )
 
 Adds a chart to this axis.
@@ -297,6 +313,7 @@ sub definition {
 }
 
 #---------------------------------------------
+
 =head2 draw ( )
 
 Draws the axis and all charts that are put onto it.
@@ -567,6 +584,20 @@ sub plotOption {
 }
 
 #-------------------------------------------------------------------
+
+=head2 textWrap ( properties )
+
+Does the same as text but tries to wrap the text to fit within a specified width. For now it assumes all characters
+have equal width so in some cases the out might be either less wide than possible or wider than requested. With
+most readable string you should be fairly safe, though.
+
+=head3 properties
+
+See the text method. However, the desired width is passed by means of the wrapWidth property.\
+
+=cut
+
+#TODO: Merge into text method.
 sub textWrap {
     my $self = shift;
     my %properties = @_;

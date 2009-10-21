@@ -6,8 +6,42 @@ use Chart::Magick::Marker;
 
 use base qw{ Chart::Magick::Chart }; 
 
+=head1 NAME
+
+Chart::Magick::Chart::Line
+
+=head1 DESCRIPTION
+
+A line graph Chart plugin for Chart::Magick.
+
+=head1 METHODS
+
+The following methods are available from this class:
+
+=cut
 
 #-------------------------------------------------------------------
+
+=head2 definition ( )
+
+See Chart::Magick::Chart::definition for details.
+
+The following properties can be set:
+
+=over 4
+
+=item plotMarkers
+
+Determines whether or not markers are draw at data points. Defaults to 1.
+
+=item markerSize
+
+Default marker size (in pixels) to be used when none was set with the marker itself. Defaults to 5.
+
+=back
+
+=cut
+
 sub definition {
     my $class = shift;
 
@@ -22,6 +56,13 @@ sub definition {
 }
 
 #-------------------------------------------------------------------
+
+=head2 plot
+
+Draws the graph.
+
+=cut
+
 sub plot {
     my $self = shift;
     my $axis = $self->axis;

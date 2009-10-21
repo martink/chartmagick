@@ -9,6 +9,17 @@ private     colors          => my %colors;
 public      paletteIndex    => my %paletteIndex;
 
 #-------------------------------------------------------------------
+
+=head2 addColor ( color )
+
+Adds a color to the end of the palette.
+
+=head3 color
+
+The Chart::Magick::Color object that should be added.
+
+=cut
+
 sub addColor {
 	my $self    = shift;
 	my $color   = shift;
@@ -17,6 +28,17 @@ sub addColor {
 }
 
 #-------------------------------------------------------------------
+
+=head2 getColor ( [ index ] )
+
+Returns the color at the specified index in the palette.
+
+=head3 index
+
+The index of the color. Defaults to the current palette index.
+
+=cut
+
 sub getColor {
 	my $self    = shift;
 	my $index   = shift || $self->getPaletteIndex;
@@ -82,10 +104,10 @@ palette.
 sub getNextColor {
 	my $self = shift;
 
-	my $index   = $self->getPaletteIndex + 1;
-	$index      = 0 if ( $index >= $self->getNumberOfColors );
+	my $index   = $self->getPaletteIndex( 1 );
+    $index      = -1 unless defined $index && $index < $self->getNumberOfColors - 1;
 
-	$self->setPaletteIndex( $index );
+	$self->setPaletteIndex( $index + 1);
     
 	return $self->getColor;
 }
@@ -104,19 +126,23 @@ sub getNumberOfColors {
 	return scalar @{ $colors{ id $self } };
 }
 
-##-------------------------------------------------------------------
-#
-#=head2 getPaletteIndex ( )
-#
-#Returns the index the internal palette index counter is set to. Ie. it returns
-#the current color.
-#
-#=cut
-#
-sub getPaletteIndex {
-	my $self = shift;
+#-------------------------------------------------------------------
 
-	return $paletteIndex{ id $self } || 0;
+=head2 getPaletteIndex ( )
+
+Returns the index the internal palette index counter is set to. Ie. it returns
+the current color index.
+
+=cut
+
+sub getPaletteIndex {
+	my $self        = shift;
+    my $canBeUndef  = shift;
+
+    my $index       = $paletteIndex{ id $self };
+    $index          = 0 unless defined $index || $canBeUndef;
+
+    return $index;
 }
 
 #-------------------------------------------------------------------
@@ -131,14 +157,17 @@ palette.
 
 =cut
 
-sub previousColor {
+sub getPreviousColor {
 	my $self = shift;
+    
+    my $colorCount = $self->getNumberOfColors;
 
-	my $index = $self->getPaletteIndex - 1;
-	$index = $self->getNumberOfColors - 1 if ($index < 0);
+	my $index   = $self->getPaletteIndex( 1 );
+    $index      = $colorCount  unless defined $index && $index > 0;
 
-	$self->setPaletteIndex( $index );
-	return $self->getColor($index);
+	$self->setPaletteIndex( $index - 1);
+
+	return $self->getColor;
 }
 
 #-------------------------------------------------------------------
@@ -182,9 +211,16 @@ sub removeColor {
 	my $self    = shift;
 	my $index   = shift;
 
-	return undef unless defined $index;
+    # Check index
+	return undef if !defined $index || $index < 0 || $index >= $self->getNumberOfColors;
 	
+    # Remove color from array
 	splice @{ $colors{ id $self } }, $index, 1;
+
+    # Adjust palette index if necessary.
+    if ( $self->getNumberOfColors <= $self->getPaletteIndex ) {
+        $self->setPaletteIndex( $self->getNumberOfColors - 1 );
+    }
 
     return;
 }
@@ -223,6 +259,13 @@ sub setColor {
 
 #### TODO: Sanitiy checks
 #-------------------------------------------------------------------
+
+=head2 setPaletteIndex ( index )
+
+Set the current palette index to the given value. If an index too low or too heigh is passed the index will be set
+to the first or the last color respectively.
+
+=cut
 
 sub setPaletteIndex {
     my $self = shift;

@@ -5,18 +5,28 @@ use strict;
 use base qw{ Chart::Magick::Axis::Lin };
 use constant pi => 3.141528;
 
-sub plotLast {
+=head2 preprocessData ()
 
-}
+See Chart::Magick::Axis::preprocessData.
+
+=cut
 
 sub preprocessData {
     my $self = shift;
-$self->SUPER::preprocessData;
+
+    $self->SUPER::preprocessData;
+    
     my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
 
     $self->{ _xPerDegree } = 2 * pi / $maxX;
     $self->{ _yRange     } = $maxY;
 }
+
+=head2 project ( coord, value )
+
+See Chart::Magick::Axis::project.
+
+=cut
 
 sub project {
     my $self    = shift;

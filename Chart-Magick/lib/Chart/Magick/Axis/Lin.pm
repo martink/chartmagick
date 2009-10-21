@@ -118,6 +118,7 @@ sub definition {
 
 #---------------------------------------------
 #TODO: move to superclass?
+
 =head2 getChartWidth ( )
 
 Returns the width of charts on the Axis in pixels.
@@ -132,6 +133,7 @@ sub getChartWidth {
 
 #---------------------------------------------
 #TODO: move to superclass?
+
 =head2 getChartHeight ( )
 
 Returns the height of charts on the Axis in pixels.
@@ -145,15 +147,30 @@ sub getChartHeight {
 }
 
 #---------------------------------------------
+
 sub getCoordDimension {
     return 1;
 }
 
 #---------------------------------------------
+
 sub getValueDimension {
     return 1;
 }
 
+#---------------------------------------------
+
+=head2 getXTickLabel ( value )
+
+Returns the tick label belonging to the passed value for the x axis. If no such label exists the value will be
+normalized and formatted according to the values of the xLabelUnits and xLabelFormat properties respectively, and
+then returned.
+
+=head3 value
+
+The value for which to get the tick label.
+
+=cut
 
 sub getXTickLabel {
     my $self    = shift;
@@ -166,6 +183,20 @@ sub getXTickLabel {
     return $label;
 }
 
+#---------------------------------------------
+
+=head2 getYTickLabel ( value )
+
+Returns the tick label belonging to the passed value for the y axis. If no such label exists the value will be
+normalized and formatted according to the values of the yLabelUnits and yLabelFormat properties respectively, and
+then returned.
+
+=head3 value
+
+The value for which to get the tick label.
+
+=cut
+
 sub getYTickLabel {
     my $self    = shift;
     my $value   = shift;
@@ -177,6 +208,14 @@ sub getYTickLabel {
     return $label;
 }
 
+#---------------------------------------------
+
+=head2 optimizeMargins ( )
+
+Iteratively tries toe get the optimal sizes for margin and graph widths and heights.
+
+=cut
+#TODO: More pod.
 sub optimizeMargins {
     my $self = shift;
 

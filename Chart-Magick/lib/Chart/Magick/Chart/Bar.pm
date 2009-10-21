@@ -2,9 +2,52 @@ package Chart::Magick::Chart::Bar;
 
 use strict;
 use List::Util qw{ sum reduce };
-#use POSIX;
 
 use base qw{ Chart::Magick::Chart };
+
+=head1 NAME
+
+Chart::Magick::Chart::Bar
+
+=head1 DESCRIPTION
+
+A bar graph Chart plugin for Chart::Magick.
+
+=head1 METHODS
+
+The following methods are available from this class:
+
+=cut
+
+#--------------------------------------------------------------------------
+
+=head2 definition ( )
+
+See Chart::Magick::Chart::definition for details.
+
+The following properties can be set:
+
+=over 4
+
+=item drawMode
+
+The way groups of bars are drawn. Valid values are:
+
+=over 8
+
+=item sideBySide
+
+Default value. Draws bars next to each other.
+
+=item cumulative
+
+Draws bars on top of each other.
+
+=back
+
+=back
+
+=cut
 
 sub definition {
     my $self    = shift;
@@ -19,6 +62,37 @@ sub definition {
     return { %options, %overrides };
 }
 
+#--------------------------------------------------------------------------
+
+=head2 drawBar ( color, width, length, coord, coordOffset, bottom )
+
+Draw a bar onto the axis set in the object. All parameters should be passed in coordinates, not pixels.
+
+=head3 color
+
+The Chart::Magick::Color object for this specific bar.
+
+=head3 width
+
+The width of the bar.
+
+=head3 length
+
+The length (or height) of the bar.
+
+=head3 coord
+
+The coordinate of the center of the bar(group).
+
+=head3 coordOffset
+
+The displacement of the actual bar center wrt. the center of the bar group. Defaults to 0.
+
+=head3 bottomOffset
+
+The displacement of the actual bar bottom and the horizontal axis. Defaults to 0.
+
+=cut
 
 sub drawBar {
     my $self            = shift;
@@ -54,6 +128,14 @@ sub drawBar {
     
 }
 
+#--------------------------------------------------------------------------
+
+=head2 getDataRange ( )
+
+See Chart::Magick::Chart::getDataRange.
+
+=cut
+
 sub getDataRange {
     my $self = shift;
 
@@ -76,6 +158,14 @@ sub getDataRange {
 
     return ( $global->{ minCoord }, $global->{ maxCoord }, [ $maxNeg ], [ $maxPos ] );
 }
+
+#--------------------------------------------------------------------------
+
+=head2 plot ( ) 
+
+Plots the bars onto the axis set in the object.
+
+=cut
 
 sub plot {
     my $self = shift;
@@ -144,6 +234,25 @@ sub plot {
     }
 }
 
+#--------------------------------------------------------------------------
+
+=head2 preprocessData ( )
+
+See Chart::Magick::Chart::preprocessData.
+
+Please note the following:
+
+=over 4
+
+=item *
+
+Sets the xTickOffset axis property to 1, unless it has been set to something else already.
+
+=item *
+
+Forces the xTickCount axis property to the number of bar(group)s. Even when xTickCount has been set already.
+
+=cut
 
 sub preprocessData {
     my $self = shift;
