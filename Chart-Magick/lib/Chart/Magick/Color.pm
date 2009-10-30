@@ -1,7 +1,7 @@
 package Chart::Magick::Color;
 
 use strict;
-use Color::Calc;
+#use Color::Calc;
 use Class::InsideOut qw{ :std };
 
 public  strokeTriplet   => my %strokeTriplet, {
@@ -92,10 +92,10 @@ sub darken {
 	
 	my $newColor = $self->copy;
 
-	my $c = Color::Calc->new(OutputFormat => 'hex');
-	
-	$newColor->fillTriplet(   $c->dark( $self->fillTriplet )    );
-	$newColor->strokeTriplet( $c->dark( $self->strokeTriplet )  );
+#	my $c = Color::Calc->new(OutputFormat => 'hex');
+#	
+#	$newColor->fillTriplet(   $c->dark( $self->fillTriplet )    );
+#	$newColor->strokeTriplet( $c->dark( $self->strokeTriplet )  );
 
 	return $newColor;
 }
