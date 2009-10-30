@@ -4,6 +4,9 @@ use strict;
 use Image::Magick;
 use Chart::Magick::Axis::LinLog;
 
+our $VERSION = '0.1.0';
+
+
 sub addAxis {
     my $self    = shift;
     my $axis    = shift;
