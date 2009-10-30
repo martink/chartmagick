@@ -3,13 +3,22 @@
 use strict;
 
 use Test::Deep;
-use Chart::Magick::Axis;
 use Scalar::Util qw{ refaddr };
 
-use Test::More tests => 42;
+use Test::More tests => 34;
 BEGIN {
     use_ok( 'Chart::Magick::Axis', 'Chart::Magick::Axis can be used' );
 }
+
+# Subs that still need testing!
+#sub preprocessData {
+#sub textWrap {
+#sub text {
+#sub definition {
+#sub draw {
+
+
+
 
 #####################################################################
 #
@@ -45,48 +54,6 @@ BEGIN {
 
     ok( $axis->getCoordDimension == 0, 'getCoordDimension defaults to 0' );
     ok( $axis->getValueDimension == 0, 'getValueDimension defaults to 0' );
-}
-
-#####################################################################
-#
-# get / set (single property)
-#
-#####################################################################
-{
-    my $axis    = Chart::Magick::Axis->new;
-    my $def     = $axis->definition;
-
-    is( $axis->get( 'width'), $def->{ width }, 'get fetches default value set in definition if no value is set' );
-    
-    $axis->set( width => 1234 );
-    is( $axis->get( 'width'), 1234, 'set can set a value and get fetches it' );
-
-    my @args;
-    $axis->set( width => sub { @args = @_; return 7890 } );
-    is( $axis->get( 'width' ), 7890, 'get returns the value returned by a sub ref if a property is set to that' );
-    ok( scalar @args == 1, 'get passes only one variable when calling a sub ref value');
-    is( $axis, $args[0], 'get passes the axis object on which it is called when calling a sub ref value' );
-
-}
-
-#####################################################################
-#
-# set ( multiple / invalid properties )
-#
-#####################################################################
-{
-    my $axis = Chart::Magick::Axis->new;
-
-    $axis->set( width => 5678, height => 9876 );
-    my $ok = $axis->get('width') == 5678 && $axis->get('height') == 9876;
-    ok( $ok, 'set accepts multple properties in the form of a hash' );
-
-    $axis->set( width => 6789, height => 8765 );
-    my $ok = $axis->get('width') == 6789 && $axis->get('height') == 8765;
-    ok( $ok, 'set accepts multple properties in the form of a hash ref' );
-
-    eval { $axis->set( width => 345, INVALID_OPTION => 1 ) };
-    ok( $@, 'set dies when an invalid option is passed' );
 }
 
 #####################################################################
@@ -315,12 +282,6 @@ BEGIN {
     );
 }
 
-#sub preprocessData {
-#sub textWrap {
-#sub text {
-#sub definition {
-#sub draw {
-#sub getDataRange {
 
 #--------------------------------------------------------------------
 =pod

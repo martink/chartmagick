@@ -30,7 +30,7 @@ my @ds4 = (
 
 use constant pi => 3.14159265358979;
 
-my $pxCount = 1000;
+my $pxCount = 2000;
 my $dsx = [ map { pi / $pxCount * $_  - 0.5 * pi      } (0..$pxCount) ];
 my $dsx = [ map { pi / $pxCount * $_                  } (-$pxCount/2..$pxCount/2) ];
 my $dsy = [ map { 1.1 + sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
@@ -112,17 +112,11 @@ $axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4', 5 => 'overall' }
 $axis = $canvas->getAxis( 3 );
 $axis->addChart( $pieChart );
 $axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
-$axis->set('xSubtickCount', 0);
-$axis->set('yChartOffset', 40);
-$axis->set('xChartOffset', 40);
 $axis->set('title', 'Pie!');
 
 $axis = $canvas->getAxis( 4 );
 $axis->addChart( $gauge );
 $axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
-$axis->set('xSubtickCount', 0);
-$axis->set('yChartOffset', 40);
-$axis->set('xChartOffset', 40);
 $axis->set('title', 'Gauge');
 
 

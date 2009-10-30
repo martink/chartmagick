@@ -10,8 +10,9 @@ use Text::Wrap;
 
 use constant pi => 3.14159265358979;
 
+use base qw{ Chart::Magick::Definition };
+
 readonly charts         => my %charts;
-private  properties     => my %properties;
 private  plotOptions    => my %plotOptions;
 private  im             => my %magick;
 private  axisLabels     => my %axisLabels;
@@ -38,8 +39,6 @@ These methods are available from this class:
 
 sub _buildObject {
     my $class       = shift;
-    my $properties  = shift;
-    my $magick      = shift;
     my $self        = {};
 
     bless       $self, $class;
@@ -50,9 +49,6 @@ sub _buildObject {
     $charts{ $id }      = [];
     $axisLabels{ $id }  = [ ];
 
-    $properties{ $id }  = $self->definition;
-    $self->set( $properties );
-    
     $self->{ _plotOptions } = {};
     return $self;
 }
@@ -203,8 +199,11 @@ Properties to initially configure the object. For available properties, see C<de
 sub new {
     my $class       = shift;
     my $properties  = shift || {};
-    
-    return $class->_buildObject( $properties );
+   
+    my $self = $class->_buildObject;
+    $self->initializeProperties( $properties );
+
+    return $self;
 }
 
 #---------------------------------------------
@@ -381,40 +380,6 @@ sub draw {
     $self->plotLast;
 }
 
-
-#---------------------------------------------
-
-=head2 get ( [ property ] )
-
-Returns a hash ref of all properties in the Axis object. If a specific property is passed only the value belong to
-that property is returned.
-
-=head3 property
-
-The property whose value should be returned.
-
-=cut 
-
-sub get {
-    my $self        = shift;
-    my $key         = shift;
-    my $properties  = $properties{ id $self };
-
-    if ($key) {
-        #### TODO: handle error and don't croak?
-        croak "invalid key: [$key]" unless exists $properties->{ $key };
-
-        return 
-            ref $properties->{ $key } eq 'CODE'
-                ? $properties->{ $key }->( $self )
-                : $properties->{ $key }
-                ;
-    }
-    else {
-        return { %{ $properties } };
-    }
-}
-
 #---------------------------------------------
 
 =head2 getDataRange ( )
@@ -544,31 +509,6 @@ sub preprocessData {
         axisAnchorX  => $self->get('marginLeft'),
         axisAnchorY  => $self->get('marginTop'),
     );
-}
-
-#---------------------------------------------
-
-=head2 set ( properties )
-
-Applies the passed properties to this object.
-
-head3 properties
-
-Either a hash or a hash ref containing the property names as keys and intended values as values.
-
-=cut
-
-sub set {
-    my $self    = shift;
-    my %update  = ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
-
-    my $properties  = $properties{ id $self };
-
-    while ( my ($key, $value) = each %update ) {
-        croak "Cannot set non-existing property [$key]" unless exists $properties->{ $key };
-
-        $properties->{ $key } = $value;
-    }
 }
 
 #-------------------------------------------------------------------

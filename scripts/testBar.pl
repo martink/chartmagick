@@ -58,6 +58,7 @@ $axis->set( {
 #    axesOutside     => 0,
 } );
 
+$axis->set( xSubtickCount => 10 );
 # Setup chart
 my $chart   = Chart::Magick::Chart::Bar->new( );
 $chart->setData( $ds );
