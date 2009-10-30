@@ -68,7 +68,7 @@ sub matrix {
 
         foreach my $type ( @$row ) {
             my $class = "Chart::Magick::Axis::$type";
-            eval { "require $class" };
+            eval { "use $class" };
 
             $self->addAxis(
                 $class->new( { width => $axisWidth, height => $axisHeight } ),

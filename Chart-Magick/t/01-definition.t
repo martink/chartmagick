@@ -71,7 +71,7 @@ BEGIN {
     my $dummy2 = DummyDef->new;
     $dummy2->initializeProperties( string => 'abcde', number => 192 );
 
-    my $ok = $dummy2->get('string') eq 'abcde' && $dummy2->get('number') == 192;
+    $ok = $dummy2->get('string') eq 'abcde' && $dummy2->get('number') == 192;
     ok( $ok, 'initializeProperties sets properties to provided overrides' );
 
     my $dummy3 = DummyDef->new;

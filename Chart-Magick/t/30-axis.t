@@ -1,6 +1,7 @@
 #!perl 
 
 use strict;
+no warnings 'redefine';
 
 use Test::Deep;
 use Scalar::Util qw{ refaddr };
