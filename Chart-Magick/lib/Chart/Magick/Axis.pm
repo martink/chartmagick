@@ -48,9 +48,11 @@ sub _buildObject {
     my $id = id $self;
 
     $charts{ $id }      = [];
-    $properties{ $id }  = { %{ $self->definition }, %{ $properties } } || {};
     $axisLabels{ $id }  = [ ];
 
+    $properties{ $id }  = $self->definition;
+    $self->set( $properties );
+    
     $self->{ _plotOptions } = {};
     return $self;
 }
@@ -207,9 +209,9 @@ sub new {
 
 #---------------------------------------------
 
-=head2 addChart ( chart )
+=head2 addChart ( chart, [ chart, [ chart, ... ] ] )
 
-Adds a chart to this axis.
+Adds one or more chart(s) to this axis.
 
 =head3 chart
 
@@ -219,9 +221,44 @@ An instantiated Chart::Magick::Chart object.
 
 sub addChart {
     my $self    = shift;
-    my $chart   = shift;
 
-    push @{ $charts{ id $self } }, $chart;
+    while ( my $chart = shift ) {
+        croak "Cannot add a chart of class $chart to an Axis. All charts mus be isa('Chart::Magick::Chart')." 
+            unless $chart->isa('Chart::Magick::Chart');
+        push @{ $charts{ id $self } }, $chart;
+    }
+}
+
+#---------------------------------------------
+
+=head2 charts ( ) 
+
+Returns an array ref containing the charts that have been added to this axis.
+
+=cut
+
+#---------------------------------------------
+
+=head2 getCoordDimension ( )
+
+Returns the dimension (ie. the number of components) of a coordinate in this axis.
+
+=cut
+
+sub getCoordDimension {
+    return 0;
+}
+
+#---------------------------------------------
+
+=head2 getValueDimension ( )
+
+Returns the dimension (ie. the number of components) of a value in this axis.
+
+=cut
+
+sub getValueDimension {
+    return 0;
 }
 
 #---------------------------------------------
@@ -418,7 +455,6 @@ You'll probably never call this method by yourself.
 =cut
 
 sub plotFirst {
-    my $self    = shift;
 }
 
 #---------------------------------------------
@@ -435,6 +471,20 @@ You'll probably never call this method by yourself.
 sub plotLast {
     my $self = shift;
 
+    $self->plotTitle;
+};
+
+#---------------------------------------------
+
+=head2 plotTitle ( )
+
+Plots the graph title, set by the title property.
+
+=cut
+
+sub plotTitle {
+    my $self = shift;
+
     $self->text(
         text        => $self->get('title'),
         pointsize   => $self->get('titleFontSize'),
@@ -445,7 +495,7 @@ sub plotLast {
         halign      => 'center',
         valign      => 'top',
     );
-};
+}
 
 #---------------------------------------------
 
@@ -515,9 +565,9 @@ sub set {
     my $properties  = $properties{ id $self };
 
     while ( my ($key, $value) = each %update ) {
-        if ( exists $properties->{ $key } ) {
-            $properties->{ $key } = $value;
-        }
+        croak "Cannot set non-existing property [$key]" unless exists $properties->{ $key };
+
+        $properties->{ $key } = $value;
     }
 }
 
@@ -551,6 +601,8 @@ sub toPx {
 Plot options are values and numbers that are used for plotting the graph and are automatically calculated by the
 Axis plugins.
 
+If no parameters are passed a safe copy of the plot options hash is returned.
+
 =head3 key
 
 Plot option name.
@@ -564,13 +616,12 @@ Plot option value.
 sub plotOption {
     my $self    = shift;
 
+    # No params? Return a safe copy of all plot options.
+    return { %{ $self->{ _plotOptions } } } unless scalar @_;
+
+    # More than one param? Apply the passed key/value pairs on the plot options.
     if ( scalar @_ > 1 ) {
         $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @_ };
-
-#        my %options = @_;
-#        for my $option ( keys %options ) {
-#            $self->{ _plotOptions }->{ $option } = $options{ $option };
-#        }
         return ;
     }
 
@@ -581,6 +632,12 @@ sub plotOption {
     croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
     
     return $self->{ _plotOptions }->{ $option };
+}
+
+#-------------------------------------------------------------------
+
+sub project {
+    croak "Chart::Magick::Axis->project must be overloaded by sub class";
 }
 
 #-------------------------------------------------------------------
