@@ -10,10 +10,11 @@ use Chart::Magick::Data;
 use Chart::Magick::Marker;
 use Carp;
 
+use base qw{ Chart::Magick::Definition };
+
 readonly palette    => my %palette;
 readonly dataset    => my %dataset;
 readonly markers    => my %markers;
-private  properties => my %properties;
 readonly axis       => my %axis;
 
 #-------------------------------------------------------------------
@@ -62,26 +63,6 @@ Defines the properties of your plugin as well as their default values.
 
 sub definition {
     return {};
-}
-
-#-------------------------------------------------------------------
-
-=head2 get ( [ key ] )
-
-Returns the value of property 'key'. If key is ommitted returns all properties as a hashref.
-
-=head3 key
-
-The property you want the value of. 
-
-=cut
-
-sub get {
-    my $self    = shift;
-    my $key     = shift;
-
-    return { $properties{ id $self } } unless $key;
-    return $properties{ id $self }->{ $key };
 }
 
 #-------------------------------------------------------------------
@@ -147,8 +128,9 @@ Constructor.
 =cut
 
 sub new {
-    my $class   = shift;
-    my $self    = {};
+    my $class       = shift;
+    my $properties  = shift || {};
+    my $self        = {};
 
     bless       $self, $class;
     register    $self;
@@ -156,7 +138,8 @@ sub new {
     my $id              = id $self;
     $dataset{ $id }     = Chart::Magick::Data->new;
     $markers{ $id }     = [];
-    $properties{ $id }  = $self->definition || {};
+
+    $self->initializeProperties( $properties );
 
     return $self;
 }
@@ -171,31 +154,6 @@ Override this method to do any preprocessing before the drawing phase begins.
 
 sub preprocessData {
 
-}
-
-#-------------------------------------------------------------------
-
-=head2 set ( properties )
-
-Sets properties for this plugin.
-
-=head3 properties
-
-Either a hash or a hashref containing properties and there new values as keys and values respectively.
-
-=cut
-
-sub set {
-    my $self    = shift;
-    my %update  = ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
-
-    my $properties  = $properties{ id $self };
-
-    while ( my ($key, $value) = each %update ) {
-        if ( exists $properties->{ $key } ) {
-            $properties->{ $key } = $value;
-        }
-    }
 }
 
 #-------------------------------------------------------------------
