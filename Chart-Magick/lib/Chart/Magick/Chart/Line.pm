@@ -82,7 +82,6 @@ sub plot {
         next unless exists $self->markers->[ $ds ];
 
         my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
-print "[$name][$size]\n";
         $size ||= $markerSize;
 
         $markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $axis, {

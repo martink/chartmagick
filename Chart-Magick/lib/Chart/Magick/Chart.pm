@@ -19,7 +19,7 @@ readonly axis       => my %axis;
 
 #-------------------------------------------------------------------
 
-=head2 addData ( coords, values, marker, markerSize )
+=head2 addDataset ( coords, values, marker, markerSize )
 
 Adds a dataset to the dataset of this chart. Optionally you can set a marker for this dataset as well.
 
@@ -41,7 +41,7 @@ Optional. The size of the markers for this dataset. See setMarker() method.
 
 =cut
 
-sub addData {
+sub addDataset {
     my $self        = shift;
     my $coords      = shift || croak "Need coordinates";
     my $values      = shift || croak "Need values";
@@ -205,7 +205,7 @@ sub setAxis {
     my $axis = shift;
 
     croak "setAxis requires a Chart::Magick::Axis object to be passed" 
-        unless $axis && $axis->can('isa') && $axis->isa( 'Chart::Magick::Axis' );
+        unless $axis && $axis->isa( 'Chart::Magick::Axis' );
 
     $axis{ id $self } = $axis;
 }
@@ -227,7 +227,7 @@ sub setData {
     my $data = shift;
 
     croak "setData requires a Chart::Magick::Data object to be passed" 
-        unless $data && $data->can('isa') && $data->isa( 'Chart::Magick::Data' );
+        unless $data && $data->isa( 'Chart::Magick::Data' );
 
     $dataset{ id $self } = $data;
 }
