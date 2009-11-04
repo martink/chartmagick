@@ -67,6 +67,38 @@ sub definition {
 
 #-------------------------------------------------------------------
 
+=head2 getAxis ( )
+
+Returns the Axis object this Chart is set to draw on.
+
+=cut
+
+sub getAxis {
+    my $self    = shift;
+
+    my $axis    = $axis{ id $self };
+
+    croak "Cannot call getAxis when no Axis has been set" unless $axis;
+    return $axis;
+}
+
+
+#-------------------------------------------------------------------
+
+=head2 getData ( )
+
+Returns the Data object the plugin should chart.
+
+=cut
+
+sub getData {
+    my $self    = shift;
+
+    return $dataset{ id $self };
+}
+
+#-------------------------------------------------------------------
+
 =head2 getDataRange ( )
 
 Returns a list of four arrayrefs containing range in terms off coords and values the plugin needs to plot the
@@ -172,6 +204,9 @@ sub setAxis {
     my $self = shift;
     my $axis = shift;
 
+    croak "setAxis requires a Chart::Magick::Axis object to be passed" 
+        unless $axis && $axis->can('isa') && $axis->isa( 'Chart::Magick::Axis' );
+
     $axis{ id $self } = $axis;
 }
 
@@ -188,10 +223,13 @@ An instanciated Chart::Magick::Data object.
 =cut
 
 sub setData {
-    my $self    = shift;
-    my $dataset = shift;
+    my $self = shift;
+    my $data = shift;
 
-    $dataset{ id $self } = $dataset;
+    croak "setData requires a Chart::Magick::Data object to be passed" 
+        unless $data && $data->can('isa') && $data->isa( 'Chart::Magick::Data' );
+
+    $dataset{ id $self } = $data;
 }
 
 #-------------------------------------------------------------------
