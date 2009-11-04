@@ -5,15 +5,16 @@ use strict;
 use Class::InsideOut qw{ :std };
 use Carp;
 use List::Util qw{ max };
+use Scalar::Util qw{ blessed };
 
 readonly axis       => my %axis;
-readonly marker     => my %marker;
+readonly im         => my %im;
 readonly size       => my %size;
 readonly anchorX    => my %anchorX;
 readonly anchorY    => my %anchorY;
 
 #---------------------------------------------
-my %DEFAULT_MARKERS = (
+our %DEFAULT_MARKERS = (
     marker1 => {
         width   => 1,
         height  => 0.75,
@@ -40,7 +41,7 @@ my %DEFAULT_MARKERS = (
 #---------------------------------------------
 sub isDefaultMarker {
     my $class = shift;
-    my $label = shift;
+    my $label = shift || return 0;
 
     return exists $DEFAULT_MARKERS{ $label };
 }
@@ -48,26 +49,29 @@ sub isDefaultMarker {
 #---------------------------------------------
 sub new {
     my $class       = shift;
-    my $properties  = ref $_[0] eq 'HASH' ? shift : { @_ };
+    my $marker      = shift;
+    my $size        = shift || 5;
+    my $axis        = shift;
+    my $properties  = shift || {};
     
     my $self = bless {}, $class;
     register $self;
 
     my $id = id $self;
 
-    $axis{ $id }    = $properties->{ axis };
-    $size{ $id }    = $properties->{ size };
-    $marker{ $id }  = 
-          ( exists $properties->{ predefined } ) ? 
-            $self->getPredefinedMarker( @{ $properties }{ 'predefined', 'strokeColor', 'fillColor' } )
+    $axis{ $id }    = $axis;
+    $size{ $id }    = $size;
+    $im{ $id }  = 
+          ( $self->isDefaultMarker( $marker ) ) ? 
+            $self->createMarkerFromDefault( $marker, @{ $properties }{ 'strokeColor', 'fillColor' } )
 
-        : ( exists $properties->{ fromFile } ) ? 
-            $self->getMarkerFromFile( $properties->{ fromFile } )
+        : ( blessed( $marker ) && $marker->isa('Image::Magick') ) ? 
+            $self->createMarkerFromIM( $marker )
 
-        : ( exists $properties->{ magick } ) ? 
-            $self->getImageMagickMarker( $properties->{ magick } )
+        : ( -e $marker ) ? 
+            $self->createMarkerFromFile( $marker )
 
-        : croak "Chart::Magick::Marker->new requires one of the following properties: predefined, fromFile or magick";
+        : croak "Chart::Magick::Marker->new requires either a predefined marker, an image file path or an Image::Magick object";
 
     return $self;
 }
@@ -81,7 +85,7 @@ sub draw {
     my $id      = id $self;
 
     $self->axis->im->Composite(
-        image   => $self->marker,
+        image   => $self->im,
         gravity => 'NorthWest',
         x       => $x - $self->anchorX,
         y       => $y - $self->anchorY,
@@ -89,7 +93,7 @@ sub draw {
 }
 
 #---------------------------------------------
-sub getImageMagickMarker {
+sub createMarkerFromIM {
     my $self    = shift;
     my $im      = shift;
 
@@ -97,7 +101,7 @@ sub getImageMagickMarker {
 }
 
 #---------------------------------------------
-sub getMarkerFromFile {
+sub createMarkerFromFile {
     my $self        = shift;
     my $filename    = shift || croak 'getMarkerFromFile requires a filename.';
     my $id          = id $self;
@@ -127,7 +131,7 @@ sub getMarkerFromFile {
 }
 
 #---------------------------------------------
-sub getPredefinedMarker {
+sub createMarkerFromDefault {
     my $self        = shift;
     my $shape       = shift || 'marker2';
     my $strokeColor = shift || 'black';

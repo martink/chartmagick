@@ -274,20 +274,10 @@ sub setMarker {
     my $marker  = shift || croak "Need a marker";
     my $size    = shift;
 
-    my $def = { size => $size };
-
-    if (-e $marker) {
-        $def->{ fromFile } = $marker;
-    }
-    elsif ( ref $marker eq 'Image::Magick' ) {
-        $def->{ magick  } = $marker;
-    }
-    elsif ( Chart::Magick::Marker->isDefaultMarker( $marker ) ) {
-        $def->{ predefined } = $marker;
-    }
-    else {
-        croak "Invalid marker [$marker] passed";
-    }
+    my $def = { 
+        name    => $marker,
+        size    => $size 
+    };
 
     $markers{ id $self }->[ $index ] = $def;
 }

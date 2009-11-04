@@ -72,23 +72,25 @@ sub plot {
     my $markers = [];
     my $markerSize = $self->get('markerSize');
 
-    $self->getPalette->paletteIndex( 1 );
-    for my $ds ( 0 .. $datasetCount - 1) { 
-        next unless exists $self->markers->[ $ds ];
-
-        my $markerDef = $self->markers->[ $ds ];
-        $markerDef->{ size } ||= $markerSize;
-        $markerDef->{ strokeColor } = $self->getPalette->getNextColor->getStrokeColor;
-        $markerDef->{ axis } = $axis;
-
-        $markers->[ $ds ] = Chart::Magick::Marker->new( $markerDef );
-    }
-
-    # Cache palette.
+    # Cache palette and instaciate markers
     my @palette;
     $self->getPalette->paletteIndex( 1 );
-    push @palette, $self->getPalette->getNextColor for ( 1 .. $datasetCount );
+    for my $ds ( 0 .. $datasetCount - 1) { 
+        my $color = $self->getPalette->getNextColor;
+        push @palette, $color;
 
+        next unless exists $self->markers->[ $ds ];
+
+        my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
+print "[$name][$size]\n";
+        $size ||= $markerSize;
+
+        $markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $axis, {
+            strokeColor => $color->getStrokeColor,
+        } );
+    }
+
+    # Draw the graphs
     foreach my $x ( @{ $self->dataset->getCoords } ) {
 
         for my $ds ( 0 .. $datasetCount - 1) {
