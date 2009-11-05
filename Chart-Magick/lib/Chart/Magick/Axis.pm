@@ -582,37 +582,37 @@ sub project {
 
 #-------------------------------------------------------------------
 
-=head2 textWrap ( properties )
+=head2 wrapText ( properties )
 
-Does the same as text but tries to wrap the text to fit within a specified width. For now it assumes all characters
-have equal width so in some cases the out might be either less wide than possible or wider than requested. With
-most readable string you should be fairly safe, though.
+Takes the same properties as text does, and returns the text property wrapped so that it fits within the amount of
+pixels given by the wrapWidth property.
+
+Note that, for now, the algorithm is very naive in that it assumes all characters to have equal width so in some
+cases the rendered text  might be either less wide than possible or wider than requested. With most readable
+strings you should be fairly safe, though.
 
 =head3 properties
 
-See the text method. However, the desired width is passed by means of the wrapWidth property.\
+See the text method. However, the desired width is passed by means of the wrapWidth property.
 
 =cut
 
-#TODO: Merge into text method.
-sub textWrap {
-    my $self = shift;
-    my %properties = @_;
-    my %testProperties  = %properties;
-    my $wrapWidth       = $properties{ wrapWidth };
+sub wrapText {
+    my $self        = shift;
+    my %properties  = @_;
+
+    my $maxWidth    = $properties{ wrapWidth    };
+    my $text        = $properties{ text         }; 
+    my $textWidth   = [ $self->im->QueryFontMetrics( %properties ) ]->[4];
  
-    delete @testProperties{ qw{align style fill alignHorizontal alignVertical wrapWidth} };
-    
-    my $w       = [ $self->im->QueryFontMetrics(%testProperties) ]->[4];
-    
-    if ( $w > $wrapWidth ) {
+    if ( $textWidth > $maxWidth ) {
         # This is not guaranteed to work in every case, but it'll do for now.
-        local $Text::Wrap::columns = int( $wrapWidth / $w * length( $properties{ text } ) );
-        $properties{ text } = join "\n", wrap( '', '', $properties{ text });
+
+        local $Text::Wrap::columns = int( $maxWidth / $textWidth * length $text );
+        $text = join "\n", wrap( '', '', $text );
     }
 
-    delete $properties{ wrapWidth };
-    return $self->text( %properties );
+    return $text;
 }
 
 
@@ -640,9 +640,11 @@ sub text {
 	my $self = shift;
 	my %properties = @_;
 
+    $properties{ text } = $self->wrapText( %properties ) if $properties{ wrapWidth };
+
     my %testProperties = %properties;
-    delete @testProperties{ qw{align style fill alignHorizontal alignVertical } };
-    my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryFontMetrics(%testProperties);
+#    delete @testProperties{ qw{align style fill alignHorizontal alignVertical } };
+    my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryMultilineFontMetrics(%testProperties);
 
     # Convert the rotation angle to radians
     $properties{rotate} ||= 0;

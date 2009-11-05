@@ -160,50 +160,33 @@ sub getValueDimension {
 
 #---------------------------------------------
 
-=head2 getXTickLabel ( value )
+=head2 getTickLabel ( value, [index] )
 
-Returns the tick label belonging to the passed value for the x axis. If no such label exists the value will be
-normalized and formatted according to the values of the xLabelUnits and xLabelFormat properties respectively, and
-then returned.
-
-=head3 value
-
-The value for which to get the tick label.
-
-=cut
-
-sub getXTickLabel {
-    my $self    = shift;
-    my $value   = shift;
-
-    my $label   =     
-        $self->getLabels( 0, $value )
-        || sprintf( $self->get('xLabelFormat'), $value / $self->get('xLabelUnits') );
-
-    return $label;
-}
-
-#---------------------------------------------
-
-=head2 getYTickLabel ( value )
-
-Returns the tick label belonging to the passed value for the y axis. If no such label exists the value will be
-normalized and formatted according to the values of the yLabelUnits and yLabelFormat properties respectively, and
-then returned.
+Returns the tick label belonging to the passed value for the axis identified by index. If no such label exists the
+value will be normalized and formatted according to the values of the xLabelUnits and xLabelFormat properties
+respectively, and then returned.
 
 =head3 value
 
 The value for which to get the tick label.
 
+=head3 index
+
+The index of the axis for which to get a tick. 0 = x, 1 = y. Defaults to 0.
+
 =cut
 
-sub getYTickLabel {
+sub getTickLabel {
     my $self    = shift;
     my $value   = shift;
+    my $index   = shift || 0;
+
+    my $format  = $self->get( $index ? 'yLabelFormat' : 'xLabelFormat' ) || '%s';
+    my $units   = $self->get( $index ? 'yLabelUnits'  : 'xLabelUnits'  ) || 1;
 
     my $label   =     
-        $self->getLabels( 1, $value )
-        || sprintf( $self->get('yLabelFormat'), $value / $self->get('yLabelUnits') );
+        $self->getLabels( $index, $value )
+        || sprintf( $format, $value / $units );
 
     return $label;
 }
@@ -257,8 +240,8 @@ sub optimizeMargins {
         }   
 
         # Get ticks
-        my @xLabels = map { $self->getXTickLabel( $_ ) } @{ $self->generateTicks( $minX, $maxX, $xTickWidth ) };
-        my @yLabels = map { $self->getYTickLabel( $_ ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
+        my @xLabels = map { $self->getTickLabel( $_, 0 ) } @{ $self->generateTicks( $minX, $maxX, $xTickWidth ) };
+        my @yLabels = map { $self->getTickLabel( $_, 1 ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
 
         my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
         my $xAddUnit    = $self->get('xTickOffset');
@@ -402,7 +385,7 @@ sub calcBaseMargins {
 
 =head2 generateTicks ( from, to, width )
 
-Generates tick locations spaced at a certain width. Tick will be generated in such a way that they are aligned with
+Generates tick locations spaced at a certain width. Ticks will be generated in such a way that they are aligned with
 value zero. This could lead to from and to values that are different from those passed as arguments.
 
 =head3 from
@@ -426,11 +409,11 @@ sub generateTicks {
     my $width   = shift;
 
     # Figure out the first tick so that the ticks will align with zero.
-    my $firstTick = int( $from / $width ) * $width;
+    my $firstTick = floor( $from / $width ) * $width;
 
-    # This is actually actual (number_of_ticks - 1), but below we start counting at 0, so for our purposes it is
+    # This is actually actual (number_of_ticks - 1), but below we count from 0 (.. $tickCount), so for our purposes it is
     # the correct amount.
-    my $tickCount = int( ( $to - $firstTick ) / $width );
+    my $tickCount = ceil( ( $to - $firstTick ) / $width );
 
     # generate the ticks
     my $ticks   = [ map { $_ * $width + $firstTick } ( 0 .. $tickCount ) ];
@@ -518,6 +501,7 @@ sub preprocessData {
     # The treshold variable is used to determine when the y=0 axis should be include in the chart
     my $treshold = 0.4;
     
+#TODO: Dit is raar... nog even goed naar kijken ( waarom x en y mixen?)
     # Figure out whether we want to let the y axis include 0.
     if ( ($maxX > 0 &&  $minY > 0) || ($maxX < 0 && $maxY < 0) ) {
         # dataset does not cross x axis.
@@ -584,7 +568,7 @@ Returns the locations of the ticks on the x axis in chart x coordinates.
 sub getXTicks {
     my $self = shift;
    
-    return $self->get('xTicks');
+    return [ @{ $self->get('xTicks') } ];
 }
 
 #---------------------------------------------
@@ -601,18 +585,17 @@ ordered.
 
 =head3 count
 
-The number of subtick per tick interval.
+The number of subtick intervals per tick interval.
 
 =cut
 
 sub generateSubticks {
     my $self    = shift;
     my $ticks   = shift || [];
-    my $count   = shift;
-
-    return [] unless $count;
+    my $count   = int( shift || 0 );
 
     return [] unless @{ $ticks };
+    return [] unless $count > 1;
 
     my @subticks;
     for my $i ( 1 .. scalar( @{ $ticks } ) -1 ) {
@@ -621,9 +604,10 @@ sub generateSubticks {
         my $this  = $ticks->[ $i ];
         my $width = ($this - $prev) / $count;
 
-        push @subticks, map { $prev + $_ * $width } (0 .. $count - 1 );
+        push @subticks, map { $prev + $_ * $width } ( 1 .. $count - 1 );
     }
 
+#print join( '][', @$ticks ), "],$count --> [", join( '][', @subticks ), "]\n";
     return \@subticks;
 }
 
@@ -652,7 +636,7 @@ Returns an array ref containing the locations of the ticks on the y axis in char
 sub getYTicks {
     my $self = shift;
    
-    return $self->get('yTicks');
+    return [ @{ $self->get('yTicks') } ];
 }
 
 #---------------------------------------------
@@ -836,11 +820,9 @@ sub plotTicks {
             fill        => 'none',
         );
 
-        my $x       = $outset - $self->get('yLabelTickOffset');
-
-        my $value   = sprintf( $self->get('yLabelFormat'), $tick / $self->get('yLabelUnits') );
+        my $x = $outset - $self->get('yLabelTickOffset');
         $self->text(
-            text        => $self->getLabels( 1, $value ) || $value,     #sprintf( $self->get('yLabelFormat'), $tick / $self->get('yLabelUnits') ),
+            text        => $self->getTickLabel( $tick, 1 ),
             halign      => 'right',
             valign      => 'center',
             align       => 'Right',
@@ -882,9 +864,8 @@ sub plotTicks {
         );
 
         my $y = $outset + $self->get('xLabelTickOffset');
-        my $value = sprintf( $self->get('xLabelFormat'), $tick / $self->get('xLabelUnits') );
-        $self->textWrap(
-            text        => $self->getLabels( 0, $value ) || $value,
+        $self->text(
+            text        => $self->getTickLabel( $tick, 0 ),
             font        => $self->get('labelFont'),
             halign      => 'center',
             valign      => 'top',
