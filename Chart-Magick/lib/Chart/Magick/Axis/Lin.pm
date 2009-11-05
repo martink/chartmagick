@@ -47,6 +47,8 @@ sub definition {
         xSubtickInset   => 2,
         xSubtickOutset  => 2,
         xTicks          => [ ],
+        xTickColor      => sub { $_[0]->get('tickColor') },
+        xSubtickColor   => sub { $_[0]->get('subtickColor') },
 
         xLabelFormat    => '%s',
         xLabelUnits     => 1,
@@ -79,6 +81,8 @@ sub definition {
         ySubtickInset   => 2,
         ySubtickOutset  => 2,
         yTicks          => [ ],
+        yTickColor      => sub { $_[0]->get('tickColor') },
+        ySubtickColor   => sub { $_[0]->get('subtickColor') },
         
         yPlotRulers     => sub { $_[0]->get('plotRulers') },
         yRulerColor     => sub { $_[0]->get('rulerColor') },
@@ -104,6 +108,8 @@ sub definition {
         plotAxes            => 1,
         axisColor           => 'grey50',
         ticksOutside        => 1,
+        tickColor           => sub { $_[0]->get('boxColor') },
+        subtickColor        => sub { $_[0]->get('tickColor') },
 
         alignAxesWithTicks  => 1,
         xAlignAxesWithTicks => sub { $_[0]->get('alignAxesWithTicks') },
@@ -815,7 +821,7 @@ sub plotTicks {
 
         $self->im->Draw(
             primitive   => 'Path',
-            stroke      => 'black',
+            stroke      => $self->get('yTickColor'),
             points      => " M $outset,$y L $inset,$y ",
             fill        => 'none',
         );
@@ -842,7 +848,7 @@ sub plotTicks {
 
         $self->im->Draw(
             primitive   => 'Path',
-            stroke      => 'black',
+            stroke      => $self->get('ySubtickColor'),
             points      => " M $outset,$y L $inset,$y ",
             fill        => 'none',
         );
@@ -858,7 +864,7 @@ sub plotTicks {
 
         $self->im->Draw(
             primitive   => 'Path',
-            stroke      => 'black',
+            stroke      => $self->get('xTickColor'),
             points      => " M $x,$outset L $x,$inset ",
             fill        => 'none',
         );
@@ -888,7 +894,7 @@ sub plotTicks {
 
         $self->im->Draw(
             primitive   => 'Path',
-            stroke      => 'black',
+            stroke      => $self->get('xSubtickColor'),
             points      => " M $x,$outset L $x,$inset ",
             fill        => 'none',
         );

@@ -399,7 +399,7 @@ BEGIN {
     );
     my %expectDraw = (
         primitive   => ignore(),
-        stroke      => 'black', # __tickColor
+        stroke      => '__xTickColor',
         points      => ignore(),
         fill        => 'none',
     );
@@ -413,7 +413,8 @@ BEGIN {
         labelFont       => '__labelFont',
         labelFontSize   => '__labelFontSize',
         labelColor      => '__labelColor',
-#        tickColor       => '__tickColor',
+        xTickColor      => '__xTickColor',
+        yTickColor      => '__yTickColor',
     );
 
     $axis->plotTicks;
@@ -439,6 +440,7 @@ BEGIN {
     @text = @draw = ();
     $axis->set( xTicks => [], yTicks => [ 5, 6, 7 ] );
     $axis->plotTicks;
+    $expectDraw{ stroke } = '__yTickColor';
     cmp_deeply(
         \@draw,
         [ map { { %expectDraw } } (5, 6, 7) ],
@@ -453,6 +455,7 @@ BEGIN {
         'plotTicks draws labels with correct value and layout for each x tick'
     );
 
+    #TODO: Test subticks!
 }
 
 #####################################################################
