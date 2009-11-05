@@ -7,7 +7,7 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis;
 
-use Test::More tests => 88;
+use Test::More tests => 90;
 BEGIN {
     use_ok( 'Chart::Magick::Axis::Lin', 'Chart::Magick::Axis::Lin can be used' );
 }
@@ -415,6 +415,8 @@ BEGIN {
         labelColor      => '__labelColor',
         xTickColor      => '__xTickColor',
         yTickColor      => '__yTickColor',
+        xSubtickColor   => '__xSubtickColor',
+        ySubtickColor   => '__ySubtickColor',
     );
 
     $axis->plotTicks;
@@ -435,10 +437,19 @@ BEGIN {
         [ map { superhashof( { %expectText, text => $axis->getTickLabel( $_, 0) } )  } ( 0, 1, 2) ],
         'plotTicks draws labels with correct value and layout for each x tick'
     );
+    @draw = @text = ();
+    $axis->set( xSubtickCount => 3 );
+    $axis->plotTicks;
+    $expectDraw{ stroke } = '__xSubtickColor';
+    cmp_deeply(
+        [ grep { $_->{ stroke } eq '__xSubtickColor' } @draw ],
+        [ map { { %expectDraw } } ( 1 .. 4 ) ],
+        'plotTicks draws the correct number of x axis sub ticks in the correct color',
+    );
 
     # y 
     @text = @draw = ();
-    $axis->set( xTicks => [], yTicks => [ 5, 6, 7 ] );
+    $axis->set( xTicks => [], yTicks => [ 5, 6, 7 ], xSubtickCount => 0 );
     $axis->plotTicks;
     $expectDraw{ stroke } = '__yTickColor';
     cmp_deeply(
@@ -446,6 +457,17 @@ BEGIN {
         [ map { { %expectDraw } } (5, 6, 7) ],
         'plotTicks draws ticks for each x tick in the right color', 
     );
+
+    @draw = @text = ();
+    $expectDraw{ stroke } = '__ySubtickColor';
+    $axis->set( ySubtickCount => 4 );
+    $axis->plotTicks;
+    cmp_deeply(
+        [ grep { $_->{ stroke } eq '__ySubtickColor' } @draw ],
+        [ map { { %expectDraw } } ( 1 .. 6 ) ],
+        'plotTicks draws the correct number of sub ticks in the correct color',
+    );
+        
     $expectText{ valign } = 'center';
     $expectText{ halign } = 'right';
     $expectText{ align  } = 'Right';
@@ -455,6 +477,7 @@ BEGIN {
         'plotTicks draws labels with correct value and layout for each x tick'
     );
 
+    
     #TODO: Test subticks!
 }
 
