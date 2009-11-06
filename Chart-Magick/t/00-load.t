@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 12;
+use Test::More tests => 14;
 
 BEGIN {
     use_ok( 'Chart::Magick' );
