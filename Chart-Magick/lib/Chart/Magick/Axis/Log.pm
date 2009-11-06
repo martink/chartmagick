@@ -106,11 +106,8 @@ sub generateLogTicks {
     croak "generateLogTicks only accepts positive from and to values" unless $from > 0;
     croak "generateLogTicks requires that to >= from" if $to < $from;
 
-    # The sprintf's below are necessary to prevent precision errors:
-    # For instance logTransform( 0.1 ) returns -0.99999999999999977795539507496869191527366638183594 which ceil
-    # will round to -0 while this should obviously be -1.
-    my $fromOrder   = floor sprintf( '%.5f', $self->logTransform( $from ) );
-    my $toOrder     = ceil  sprintf( '%.5f', $self->logTransform( $to   ) );
+    my $fromOrder   = floor $self->logTransform( $from );
+    my $toOrder     = ceil  $self->logTransform( $to   );
 
     my @ticks       = map { 10**$_ } ( $fromOrder .. $toOrder );
 
@@ -191,7 +188,10 @@ sub logTransform {
 
     return undef if ( $value <= 0 );
 
-    return log( $value ) / log( $base )
+    # The sprintf's below are necessary to prevent precision errors:
+    # For instance log( 0.1 ) / log( 10 ) returns -0.99999999999999977795539507496869191527366638183594 which ceil
+    # will round to -0 while this should obviously be -1.
+    return sprintf '%.5f', log( $value ) / log( $base );
 }
 
 #--------------------------------------------------------------------

@@ -1,6 +1,8 @@
 use strict;
 
 use Chart::Magick::Axis::LogLin;
+use Chart::Magick::Axis::LinLog;
+
 use Chart::Magick::Chart::Line;
 use Chart::Magick::Data;
 
@@ -12,7 +14,8 @@ use constant pi => 3.14159265358979;
 # Dataset
 my $ds = Chart::Magick::Data->new;
 $ds->addDataset(
-    [ qw( 48 210 520 800 1200 ) ],
+#    [ qw( 48 210 520 800 1200 ) ],
+    [ qw( 0.003 0.02 0.03 0.05 0.1 )],
     [ qw( 0.5 5 1 4 2 ) ],
 );
 #$ds->addDataset(
@@ -25,7 +28,7 @@ my $chart   = Chart::Magick::Chart::Line->new( );
 $chart->setData( $ds );
 
 # Axis
-my $axis    = Chart::Magick::Axis::LogLin->new( {
+my $axis    = Chart::Magick::Axis::LinLog->new( {
     width           => 1000,
     height          => 600,
     title           => 'Logarithmic plot',
@@ -35,8 +38,8 @@ my $axis    = Chart::Magick::Axis::LogLin->new( {
     yTitle          => 'Revenue',
    # xTickOffset     => 1,
    # yTickOffset     => 1,
-    expandXRange    => 0,
-    expandYRange    => 0,
+    xExpandRange    => 1,
+    yExpandRange    => 1,
 } );
 $axis->addChart( $chart );
 $axis->draw;
