@@ -49,7 +49,7 @@ sub isDefaultMarker {
 #---------------------------------------------
 sub new {
     my $class       = shift;
-    my $marker      = shift;
+    my $marker      = shift || q{};
     my $size        = shift || 5;
     my $axis        = shift;
     my $properties  = shift || {};

@@ -276,7 +276,7 @@ sub getDataPoint {
     my $key = join '_', @{ $coords };
     return exists $data->{ $key } ? $data->{ $key } : undef;
 ##########
-    return exists $data->{ $key } ? $data->{ $key }->{ value } : undef;
+#    return exists $data->{ $key } ? $data->{ $key }->{ value } : undef;
 }
 
 #---------------------------------------------------------------
