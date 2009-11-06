@@ -168,7 +168,7 @@ sub getYTicks {
 #--------------------------------------------------------------------
 =head2 logTransform ( value, base )
 
-Returns the base n logarithm of value. Defaults to base 10.
+Returns the base n logarithm of value. Defaults to base 10. Output is formatted to have 5 decimals.
 
 =head3 value
 
