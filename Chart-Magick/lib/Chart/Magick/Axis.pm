@@ -643,7 +643,6 @@ sub text {
     $properties{ text } = $self->wrapText( %properties ) if $properties{ wrapWidth };
 
     my %testProperties = %properties;
-#    delete @testProperties{ qw{align style fill alignHorizontal alignVertical } };
     my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryMultilineFontMetrics(%testProperties);
 
     # Convert the rotation angle to radians

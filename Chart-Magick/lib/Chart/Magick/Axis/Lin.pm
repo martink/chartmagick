@@ -556,12 +556,9 @@ sub preprocessData {
 
     # Get the extreme values of the data, so we can determine what values the axis should at leat span.
     my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
-print "A($minX, $maxX, $minY, $maxY)\n";
 
     ($minX, $maxX) = $self->adjustXRangeToOrigin( $minX, $maxX );
-print "B1($minX, $maxX, $minY, $maxY)\n";
     ($minY, $maxY) = $self->adjustYRangeToOrigin( $minY, $maxY );
-print "B2($minX, $maxX, $minY, $maxY)\n";
 
     # Determine the space occupied by margin stuff like labels and the like. This als sets the chart width and
     # height in terms of pixels that can be used to draw charts on.
@@ -569,7 +566,6 @@ print "B2($minX, $maxX, $minY, $maxY)\n";
 
     ($minX, $maxX, $minY, $maxY) = $self->optimizeMargins( $minX, $maxX, $minY, $maxY );
 
-print "C($minX, $maxX, $minY, $maxY)\n";
     # Store the calulated values in the object and generate the tick locations based on the tick width.
     $self->set( 'yStop',    $maxY );
     $self->set( 'yStart',   $minY );

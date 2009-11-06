@@ -183,7 +183,7 @@ The base of the logarithm. Defaults to 10.
 
 sub logTransform {
     my $self    = shift;
-    my $value   = shift;
+    my $value   = shift || 0;
     my $base    = shift || 10;
 
     return undef if ( $value <= 0 );

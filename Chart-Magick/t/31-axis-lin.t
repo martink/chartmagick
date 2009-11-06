@@ -274,11 +274,12 @@ BEGIN {
     no warnings 'redefine';
     
     my $axis = Chart::Magick::Axis::Lin->new;
-    $axis->set( 'axisColor', '#123456' );
 
     my ($class, %args);
     local *Image::Magick::Draw = sub { $class = shift; %args = @_ };
 
+    $axis->addChart( DummyChart->new );
+    $axis->set( 'axisColor', '#123456' );
     $axis->preprocessData;
     $axis->plotAxes;
 
@@ -297,20 +298,18 @@ BEGIN {
 {
     no warnings 'redefine';
 
-    my $axis = Chart::Magick::Axis::Lin->new;
-    $axis->set( 'axisColor', '#123456' );
-
     my @invocations;
     local *Chart::Magick::Axis::text = sub { push @invocations, { class => shift, args => { @_ } } };
 
+    my $axis = Chart::Magick::Axis::Lin->new;
     foreach ( qw{ Title TitleFontSize TitleColor TitleFont } ) {
         $axis->set( 
             "x$_"   => "__x$_",
             "y$_"   => "__y$_",
         );
     }
-
-    no warnings;# 'uninitialized';    # These warns are caused by not feeding the axis some charts;
+    $axis->set( 'axisColor', '#123456' );
+    $axis->addChart( DummyChart->new );
     $axis->preprocessData;
     $axis->plotAxisTitles;
 
@@ -359,6 +358,7 @@ BEGIN {
     my ($class, %args);
     local *Image::Magick::Draw = sub { $class = shift; %args = @_ };
 
+    $axis->addChart( DummyChart->new );
     $axis->preprocessData;
     $axis->plotBox;
 
@@ -380,7 +380,9 @@ BEGIN {
     no warnings 'redefine';
 
     my $axis = Chart::Magick::Axis::Lin->new;
-    
+    my $chart = DummyChart->new( dataRange => [ [ 0 ], [ 2 ], [ 5 ], [ 7 ] ] );
+    $axis->addChart( $chart );
+
     my ( @text, @draw );
     local *Chart::Magick::Axis::text = sub { shift; push @text, { @_ } };
     local *Image::Magick::Draw       = sub { shift; push @draw, { @_ } };
@@ -502,6 +504,7 @@ BEGIN {
         *{ "Chart::Magick::Axis::Lin::$method" } = sub { push @callOrder, $method };
     }
 
+    $axis->addChart( DummyChart->new );
     $axis->preprocessData;
     $axis->set( plotBox => 0, plotAxes => 0 );
     $axis->plotFirst;
@@ -569,5 +572,41 @@ BEGIN {
 # toPxX {
 # toPxY {
 # project {
+
+#--------------------------------------------------------------------
+=pod
+
+Dummy class used for tests in this file.
+
+=cut
+
+package DummyChart;
+use strict;
+use base qw{ Chart::Magick::Chart };
+
+sub setDataRange {
+    my $self = shift;
+    $self->{ _dataRange } = [ @_ ];
+}
+
+sub getDataRange {
+    my $self = shift;
+    return @{ $self->{ _dataRange } || [] };
+}
+
+sub new { 
+    my $class   = shift; 
+    my %prop    = @_;
+    my $self    = $class->SUPER::new;
+
+    $self->{ _dataRange } = $prop{ dataRange } || [ [0], [1], [0], [1] ];
+    return $self;
+}
+
+sub plot { };
+
+1;
+
+
 
 
