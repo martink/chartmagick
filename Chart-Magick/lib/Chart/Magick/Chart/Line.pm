@@ -74,7 +74,7 @@ sub plot {
 
     # Cache palette and instaciate markers
     my @palette;
-    $self->getPalette->paletteIndex( 1 );
+    $self->getPalette->paletteIndex( undef );
     for my $ds ( 0 .. $datasetCount - 1) { 
         my $color = $self->getPalette->getNextColor;
         push @palette, $color;
