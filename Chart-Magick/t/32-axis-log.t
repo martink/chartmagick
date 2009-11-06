@@ -38,8 +38,8 @@ BEGIN {
 
     my $superDef    = Chart::Magick::Axis::Lin->new->definition;
     cmp_deeply(
-        $def,
-        superhashof( $superDef ),
+        [ keys %{ $def } ],
+        superbagof( keys %{ $superDef }  ),
         'definition includes all properties from super class' 
     );
 
