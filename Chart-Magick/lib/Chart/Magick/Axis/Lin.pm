@@ -72,7 +72,12 @@ sub definition {
         xStart          => 0,
         xStop           => 0,
 
+        xIncludeOrigin  => 0,
+
         centerChart     => 0,
+
+        yTickOffset     => 0,
+
         yTickCount      => undef,
         yTickWidth      => 0,
         yTickInset      => 3,
@@ -252,7 +257,10 @@ sub optimizeMargins {
         my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
         my $xAddUnit    = $self->get('xTickOffset');
         my $xPxPerUnit  = $chartWidth / ( $xUnits + $xAddUnit );
-        my $yPxPerUnit  = $chartHeight / ( $maxY - $minY );
+
+        my $yUnits      = ( $self->transformY( $maxY ) - $self->transformY( $minY ) ) || 1;
+        my $yAddUnit    = $self->get('yTickOffset');
+        my $yPxPerUnit  = $chartHeight / ( $yUnits + $yAddUnit );
 
 #        # Determine the pixel location of (0,0) within the canvas.
 #        my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );           # left border of axis
@@ -294,6 +302,7 @@ sub optimizeMargins {
                 xPxPerUnit      => $xPxPerUnit,
                 xTickOffset     => $xAddUnit / 2 * $xPxPerUnit,
                 yPxPerUnit      => $yPxPerUnit,
+                yTickOffset     => $yAddUnit / 2 * $yPxPerUnit,
                 axisMarginLeft  => $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth,
                 axisMarginBottom=> $self->plotOption( 'axisMarginBottom' ) + $yLabelWidth, 
             );
@@ -486,6 +495,50 @@ sub calcTickWidth {
     return $tickWidth * $unit;
 }
 
+sub adjustXRangeToOrigin {
+    my $self    = shift;
+    my $min     = shift;
+    my $max     = shift;
+
+    return $self->adjustRangeToOrigin( $min, $max, $self->get('xIncludeOrigin') );
+}
+
+sub adjustYRangeToOrigin {
+    my $self    = shift;
+    my $min     = shift;
+    my $max     = shift;
+
+    return $self->adjustRangeToOrigin( $min, $max, $self->get('yIncludeOrigin') );
+}
+
+sub adjustRangeToOrigin {
+    my $self        = shift;
+    my $min         = shift;
+    my $max         = shift;
+    my $override    = shift;
+
+    # The treshold variable is used to determine when the y=0 axis should be include in the chart
+    my $treshold = 0.4;
+    
+    # Does the axis have to be included?
+    if ( ($max > 0 &&  $min > 0) || ($max < 0 && $max < 0) ) {
+        # dataset does not cross axis.
+        if ( 
+            $override
+            || $min == $max
+            || abs( ( $max - $min ) / $min ) > $treshold 
+        ) {
+            $min = 0 if $min > 0;
+            $max = 0 if $max < 0;
+        }
+    }
+
+    # Handle case when y equal zero for all coords. 
+    $max = 1 if ($min == 0 && $max == 0);
+
+    return ($min, $max );
+}
+
 #---------------------------------------------
 
 =head2 preprocessData ( )
@@ -503,26 +556,12 @@ sub preprocessData {
 
     # Get the extreme values of the data, so we can determine what values the axis should at leat span.
     my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
+print "A($minX, $maxX, $minY, $maxY)\n";
 
-    # The treshold variable is used to determine when the y=0 axis should be include in the chart
-    my $treshold = 0.4;
-    
-#TODO: Dit is raar... nog even goed naar kijken ( waarom x en y mixen?)
-    # Figure out whether we want to let the y axis include 0.
-    if ( ($maxX > 0 &&  $minY > 0) || ($maxX < 0 && $maxY < 0) ) {
-        # dataset does not cross x axis.
-        if ( 
-            $self->get('yIncludeOrigin') 
-            || $minY == $maxY
-            || abs( ( $maxY - $minY ) / $minY ) > $treshold 
-        ) {
-            $minY   = 0 if $minY > 0;
-            $maxY   = 0 if $maxY < 0;
-        }
-    }
-
-    # Handle case when y equal zero for all coords. 
-    $maxY = 1 if ($minY == 0 && $maxY == 0);
+    ($minX, $maxX) = $self->adjustXRangeToOrigin( $minX, $maxX );
+print "B1($minX, $maxX, $minY, $maxY)\n";
+    ($minY, $maxY) = $self->adjustYRangeToOrigin( $minY, $maxY );
+print "B2($minX, $maxX, $minY, $maxY)\n";
 
     # Determine the space occupied by margin stuff like labels and the like. This als sets the chart width and
     # height in terms of pixels that can be used to draw charts on.
@@ -530,6 +569,7 @@ sub preprocessData {
 
     ($minX, $maxX, $minY, $maxY) = $self->optimizeMargins( $minX, $maxX, $minY, $maxY );
 
+print "C($minX, $maxX, $minY, $maxY)\n";
     # Store the calulated values in the object and generate the tick locations based on the tick width.
     $self->set( 'yStop',    $maxY );
     $self->set( 'yStart',   $minY );
@@ -559,6 +599,7 @@ sub preprocessData {
     $self->plotOption( 'yPxOffset'  => 
         $self->plotOption('chartAnchorY') 
         + $self->getChartHeight 
+        - $self->plotOption('yTickOffset')
         + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
     );
 }
@@ -763,8 +804,12 @@ You'll probably never need to call this method manually.
 sub plotRulers {
     my $self = shift;
 
+    my $minY = $self->get('yStart');
+    my $maxY = $self->get('yStop');
     if ( $self->get('yPlotRulers') ) {
         for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
+            next if $tick < $minY || $tick > $maxY;
+        
             my $y   = int $self->toPxY( $tick );
             my $x1  = int $self->plotOption('chartAnchorX'); #int $self->toPxX( $self->get( 'xStart' ) );
             my $x2  = int $x1 + $self->plotOption('chartWidth'); #int $self->toPxX( $self->get( 'xStop'  ) );
@@ -779,8 +824,11 @@ sub plotRulers {
         }
     }
 
+    my $minX = $self->get('xStart');
+    my $maxX = $self->get('xStop');
     if ( $self->get('xPlotRulers') ) {
         for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
+            next if $tick < $minX || $tick > $maxX;
             my $x   = int $self->toPxX( $tick );
             my $y1  = int $self->toPxY( $self->get('yStop' ) );
             my $y2  = int $self->toPxY( $self->get('yStart') );
@@ -813,8 +861,12 @@ sub plotTicks {
     my $xOffset = $ticksOutside ? int $self->plotOption('chartAnchorX') : int $self->plotOption('originX');
     my $yOffset = $ticksOutside ? int $self->plotOption('chartAnchorY') + $self->plotOption('chartHeight') : int $self->plotOption('originY');
 
+    my $minY = $self->get('yStart');
+    my $maxY = $self->get('yStop');
     # Y Ticks
     foreach my $tick ( @{ $self->getYTicks } ) {
+        next if $tick < $minY || $tick > $maxY;
+
         my $y       = int $self->toPxY( $tick );
         my $inset   = $xOffset + $self->get('yTickInset');
         my $outset  = $xOffset - $self->get('yTickOutset');
@@ -842,6 +894,8 @@ sub plotTicks {
     }
 
     foreach my $tick ( @{ $self->getYSubticks } ) {
+        next if $tick < $minY || $tick > $maxY;
+
         my $y       = int $self->toPxY( $tick );
         my $inset   = $xOffset + $self->get('ySubtickInset');
         my $outset  = $xOffset - $self->get('ySubtickOutset');
@@ -854,9 +908,13 @@ sub plotTicks {
         );
     }
 
+    my $minX = $self->get('xStart');
+    my $maxX = $self->get('xStop');
 
     # X main ticks
     foreach my $tick ( @{ $self->getXTicks } ) {
+        next if $tick < $minX || $tick > $maxX;
+
         my $x = int $self->toPxX( $tick );
 
         my $inset   = $yOffset - $self->get('xTickInset');
@@ -887,6 +945,8 @@ sub plotTicks {
 
     # X sub ticks
     foreach my $tick ( @{ $self->getXSubticks } ) {
+        next if $tick < $minX || $tick > $maxX;
+        
         my $x = int $self->toPxX( $tick );
 
         my $inset   = $yOffset - $self->get('xSubtickInset');

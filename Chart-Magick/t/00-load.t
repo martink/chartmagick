@@ -6,7 +6,9 @@ BEGIN {
     use_ok( 'Chart::Magick' );
     use_ok( 'Chart::Magick::Axis' );
     use_ok( 'Chart::Magick::Axis::Lin' );
+    use_ok( 'Chart::Magick::Axis::Log' );
     use_ok( 'Chart::Magick::Axis::LinLog' );
+    use_ok( 'Chart::Magick::Axis::LogLin' );
     use_ok( 'Chart::Magick::Chart' );
     use_ok( 'Chart::Magick::Chart::Bar' );
     use_ok( 'Chart::Magick::Chart::Line' );
