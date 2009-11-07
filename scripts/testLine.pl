@@ -40,6 +40,7 @@ my $axis    = Chart::Magick::Axis::LinLog->new( {
    # yTickOffset     => 1,
     xExpandRange    => 1,
     yExpandRange    => 1,
+    flipAxes        => 0,
 } );
 $axis->addChart( $chart );
 $axis->draw;

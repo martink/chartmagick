@@ -22,6 +22,17 @@ The following methods are available from this class:
 
 =cut
 
+
+sub getDataRange {
+    my $self = shift;
+
+    my @extremes = $self->SUPER::getDataRange( @_ );
+
+    return ( @extremes[ 2, 3, 0, 1 ] ) if $self->get('flipAxes');
+
+    return @extremes;
+}
+
 #---------------------------------------------
 
 =head2 definition ( )
@@ -34,7 +45,7 @@ sub definition {
     my $self = shift;
     my %options = (
         minTickWidth    => 25,
-
+flipAxes    => 0,
         xAxisLocation   => undef,
         xTickOffset     => 0,
 
@@ -1113,6 +1124,13 @@ sub project {
     my $self    = shift;
     my $coords  = shift;
     my $values  = shift;
+
+    if ($self->get('flipAxes') ) {
+        return (
+            $self->toPxX( $values->[0] ), 
+            $self->toPxY( $coords->[0] ) 
+        );
+    }
 
     return ( 
         $self->toPxX( $coords->[0] ), 

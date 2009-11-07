@@ -56,6 +56,7 @@ $axis->set( {
 
 #    yTickWidth      => 2,
 #    axesOutside     => 0,
+    flipAxes        => 1,
 } );
 
 $axis->set( xSubtickCount => 10 );
