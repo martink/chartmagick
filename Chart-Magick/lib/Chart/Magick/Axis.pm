@@ -644,10 +644,7 @@ sub text {
     $prop{ text } = $self->wrapText( %prop ) if $prop{ wrapWidth };
 
     # Find width and height of resulting text block
-    my ( $ascender, $width, $height ) = [ $self->im->QueryMultilineFontMetrics( %prop ) ]->[ 2, 4, 5 ];
-    $width ||= 0;
-    $height ||= 0;
-    $ascender ||= 0;
+    my ( $ascender, $width, $height ) = ( $self->im->QueryFontMetrics( %prop ) )[ 2, 4, 5 ];
 
 	# Process horizontal alignment
     my $anchorX  =
@@ -657,7 +654,8 @@ sub text {
 
     # Using the align properties will cause IM to shift its anchor point. We'll have to compensate for that...
     $anchorX     -=
-          $prop{ align }  eq 'Center'   ? $width / 2
+          !defined $prop{ align }       ? 0
+        : $prop{ align }  eq 'Center'   ? $width / 2
         : $prop{ align }  eq 'Right'    ? $width
         : 0;
 

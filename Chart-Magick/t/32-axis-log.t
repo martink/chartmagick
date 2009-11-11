@@ -84,7 +84,7 @@ BEGIN {
 #
 #####################################################################
 {
-    no warnings 'redefine';
+    no warnings qw{ redefine once };
 
     my $state = {}; 
     local *Chart::Magick::Axis::Lin::draw = sub { 

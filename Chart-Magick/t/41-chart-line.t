@@ -2,10 +2,10 @@
 
 use strict;
 
-use Test::Deep;
+use Test::Deep          qw{ !all    };  # Prevent import of Test::Deep::all, since we'll import List::MoreUtils::all
 use Scalar::Util        qw{ refaddr };
-use List::Util          qw{ sum     };
 use List::MoreUtils     qw{ all     };
+use List::Util          qw{ sum     };
 use Chart::Magick::Axis::Lin;
 
 use Test::More tests => 14;
@@ -196,7 +196,7 @@ sub registerDraw {
 
     # Create lookup key
     my $key     = exists $args{ stroke } ? $args{ stroke } : -1;
-    $key        =~ s{^#(\d+)$}{\1};
+    $key        =~ s{^#(\d+)$}{$1};
     $key        += 0; #convert to number ( 000001 => 1 )
 
     if ( exists $store->{ $key } ) {
