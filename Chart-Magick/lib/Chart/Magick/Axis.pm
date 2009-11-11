@@ -637,49 +637,42 @@ You can use the align property to set the text justification.
 =cut
 
 sub text {
-	my $self = shift;
-	my %properties = @_;
+	my $self    = shift;
+	my %prop    = @_;
 
-    $properties{ text } = $self->wrapText( %properties ) if $properties{ wrapWidth };
+    # Wrap text if necessary
+    $prop{ text } = $self->wrapText( %prop ) if $prop{ wrapWidth };
 
-    my %testProperties = %properties;
-    my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryMultilineFontMetrics(%testProperties);
-
-    # Convert the rotation angle to radians
-    $properties{rotate} ||= 0;
-    my $rotation = $properties{rotate} / 180 * pi;
+    # Find width and height of resulting text block
+    my ( $ascender, $width, $height ) = [ $self->im->QueryMultilineFontMetrics( %prop ) ]->[ 2, 4, 5 ];
+    $width ||= 0;
+    $height ||= 0;
+    $ascender ||= 0;
 
 	# Process horizontal alignment
-    my $anchorX = 0;
-	if ($properties{halign} eq 'center') {
-        $anchorX = $w / 2;
-	}
-	elsif ($properties{halign} eq 'right') {
-        $anchorX = $w;
-	}
+    my $anchorX  =
+          $prop{ halign } eq 'center'   ? $width / 2
+        : $prop{ halign } eq 'right'    ? $width
+        : 0;
 
     # Using the align properties will cause IM to shift its anchor point. We'll have to compensate for that...
-    if ($properties{align} eq 'Center') {
-        $anchorX -= $w / 2;
-    }
-    elsif ($properties{align} eq 'Right') {
-        $anchorX -= $w;
-    }
+    $anchorX     -=
+          $prop{ align }  eq 'Center'   ? $width / 2
+        : $prop{ align }  eq 'Right'    ? $width
+        : 0;
+
 
     # IM aparently always anchors at the baseline of the first line of a text block, let's take that into account.
-    my $lineHeight = $ascender;
-    my $anchorY = $lineHeight;
+    my $anchorY =
+          $prop{ valign } eq 'center'   ? $ascender - $height / 2
+        : $prop{ valign } eq 'bottom'   ? $ascender - $height
+        : $ascender;
 
-	# Process vertical alignment
-	if ($properties{valign} eq 'center') {
-        $anchorY -= $h / 2;
-	}
-	elsif ($properties{valign} eq 'bottom') {
-        $anchorY -= $h;
-    }
+    # Convert the rotation angle to radians
+    my $rotation = $prop{ rotate } ? $prop{ rotate } / 180 * pi : 0 ;
 
     # Calc the the angle between the IM anchor and our desired anchor
-    my $r       = sqrt( $anchorX**2 + $anchorY**2 );
+    my $r       = sqrt( $anchorX ** 2  + $anchorY ** 2 );
     my $theta   = atan2( -$anchorY , $anchorX ); 
 
     # And from that angle we can translate the coordinates of the text block so that it will be alligned the way we
@@ -687,17 +680,17 @@ sub text {
     my $offsetY = $r * sin( $theta + $rotation );
     my $offsetX = $r * cos( $theta + $rotation );
 
-    $properties{x} -= $offsetX;
-    $properties{y} -= $offsetY;
+    $prop{ x } -= $offsetX;
+    $prop{ y } -= $offsetY;
 
 	# We must delete these keys or else placement can go wrong for some reason...
-	delete($properties{halign});
-	delete($properties{valign});
+#	delete($properties{halign});
+#	delete($properties{valign});
 
     $self->im->Annotate(
 		#Leave align => 'Left' here as a default or all text will be overcompensated.
 		align		=> 'Left',
-		%properties,
+		%prop,
 		gravity		=> 'Center', #'NorthWest',
 		antialias	=> 'true',
 #        undercolor  => 'red',
