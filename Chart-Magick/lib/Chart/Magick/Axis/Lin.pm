@@ -771,17 +771,15 @@ sub plotAxisTitles {
 sub plotBox {
     my $self = shift;
 
-    my $xFrom   = int $self->plotOption('chartAnchorX');
-    my $xTo     = $xFrom + $self->getChartWidth;
-    my $yFrom   = int $self->plotOption('chartAnchorY');
-    my $yTo     = $yFrom + $self->getChartHeight;
-    
+    my ($x1, $y1) = $self->project( [ $self->get('xStart') ], [ $self->get('yStop')  ] );
+    my ($x2, $y2) = $self->project( [ $self->get('xStop' ) ], [ $self->get('yStart') ] );
+
     # Main axes
     $self->im->Draw(
         primitive   => 'Path',
         stroke      => $self->get('boxColor'),
         points      =>
-               " M $xFrom,$yFrom L $xFrom,$yTo L $xTo,$yTo L $xTo, $yFrom Z ",
+               " M $x1,$y1 L $x2,$y1 L $x2,$y2 L $x1,$y2 Z ",
         fill        => 'none',
     );
 }
