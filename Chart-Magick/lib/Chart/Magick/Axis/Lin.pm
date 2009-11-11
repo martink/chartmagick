@@ -73,6 +73,7 @@ sub definition {
         xStop           => 0,
 
         xIncludeOrigin  => 0,
+        xNoAdjustRange  => 1,
 
         centerChart     => 0,
 
@@ -102,6 +103,7 @@ sub definition {
         yStop           => 5,
 
         yIncludeOrigin  => 0,
+        yNoAdjustRange  => 0,
 
         yLabelFormat    => '%.1f',
         yLabelUnits     => 1,
@@ -500,6 +502,8 @@ sub adjustXRangeToOrigin {
     my $min     = shift;
     my $max     = shift;
 
+    return ( $min, $max ) if $self->get('xNoAdjustRange') && !$self->get('xIncludeOrigin');
+
     return $self->adjustRangeToOrigin( $min, $max, $self->get('xIncludeOrigin') );
 }
 
@@ -507,6 +511,8 @@ sub adjustYRangeToOrigin {
     my $self    = shift;
     my $min     = shift;
     my $max     = shift;
+
+    return ( $min, $max ) if $self->get('yNoAdjustRange') && !$self->get('yIncludeOrigin');
 
     return $self->adjustRangeToOrigin( $min, $max, $self->get('yIncludeOrigin') );
 }
@@ -517,7 +523,7 @@ sub adjustRangeToOrigin {
     my $max         = shift;
     my $override    = shift;
 
-    # The treshold variable is used to determine when the y=0 axis should be include in the chart
+    # The treshold variable is used to determine when the 0 axis should be include in the chart
     my $treshold = 0.4;
     
     # Does the axis have to be included?
@@ -650,7 +656,6 @@ sub generateSubticks {
         push @subticks, map { $prev + $_ * $width } ( 1 .. $count - 1 );
     }
 
-#print join( '][', @$ticks ), "],$count --> [", join( '][', @subticks ), "]\n";
     return \@subticks;
 }
 

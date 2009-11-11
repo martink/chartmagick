@@ -54,6 +54,7 @@ $axis->set( {
     xTitle          => 'kalabam!',
     yTitle          => 'zlomp!',
 
+    xTickOffset     => 0,
 #    yTickWidth      => 2,
 #    axesOutside     => 0,
 } );
