@@ -58,7 +58,7 @@ sub definition {
         xLabelTickOffset    => 3,
 
         plotRulers      => 1,
-        rulerColor      => 'grey80',
+        rulerColor      => 'lightgrey',
         
         xPlotRulers     => sub { $_[0]->get('plotRulers') },
         xRulerColor     => sub { $_[0]->get('rulerColor') },
@@ -567,13 +567,22 @@ sub preprocessData {
     ($minX, $maxX, $minY, $maxY) = $self->optimizeMargins( $minX, $maxX, $minY, $maxY );
 
     # Store the calulated values in the object and generate the tick locations based on the tick width.
-    $self->set( 'yStop',    $maxY );
-    $self->set( 'yStart',   $minY );
-    $self->set( 'yTicks',   $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ) );
+    $self->set( 
+        yStop       => $maxY,
+        yStart      => $minY,
+        yTicks      => $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ),
+        xStop       => $maxX,
+        xStart      => $minX,
+        xTicks      => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ),
+    );
 
-    $self->set( 'xStop',    $maxX );
-    $self->set( 'xStart',   $minX );
-    $self->set( 'xTicks',   $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ) );
+    $self->plotOption( 
+        yChartStop  => $maxY + $self->get('yTickOffset') / 2,
+        yChartStart => $minY - $self->get('yTickOffset') / 2,
+        xChartStop  => $maxX + $self->get('xTickOffset') / 2,
+        xChartStart => $minX - $self->get('xTickOffset') / 2,
+    );
+
 
     # Determine the pixel location of (0,0) within the canvas.
     my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );           # left border of axis
@@ -771,8 +780,8 @@ sub plotAxisTitles {
 sub plotBox {
     my $self = shift;
 
-    my ($x1, $y1) = $self->project( [ $self->get('xStart') ], [ $self->get('yStop')  ] );
-    my ($x2, $y2) = $self->project( [ $self->get('xStop' ) ], [ $self->get('yStart') ] );
+    my ($x1, $y1) = $self->project( [ $self->plotOption('xChartStart') ], [ $self->plotOption('yChartStop')  ] );
+    my ($x2, $y2) = $self->project( [ $self->plotOption('xChartStop' ) ], [ $self->plotOption('yChartStart') ] );
 
     # Main axes
     $self->im->Draw(
@@ -800,18 +809,17 @@ sub plotRulers {
 
     my $minY = $self->get('yStart');
     my $maxY = $self->get('yStop');
+
     if ( $self->get('yPlotRulers') ) {
         for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
             next if $tick < $minY || $tick > $maxY;
         
-            my $y   = int $self->toPxY( $tick );
-            my $x1  = int $self->plotOption('chartAnchorX'); #int $self->toPxX( $self->get( 'xStart' ) );
-            my $x2  = int $x1 + $self->plotOption('chartWidth'); #int $self->toPxX( $self->get( 'xStop'  ) );
-
             $self->im->Draw(
                 primitive   => 'Path',
-                stroke      => 'lightgrey',
-                points      => " M $x1,$y L $x2,$y ",
+                stroke      => $self->get('yRulerColor'),
+                points      => 
+                      " M " . $self->toPx( [ $self->plotOption('xChartStart') ], [ $tick ] ) 
+                    . " L " . $self->toPx( [ $self->plotOption('xChartStop')  ], [ $tick ] ),
                 fill        => 'none',
             );
             
@@ -820,17 +828,17 @@ sub plotRulers {
 
     my $minX = $self->get('xStart');
     my $maxX = $self->get('xStop');
+
     if ( $self->get('xPlotRulers') ) {
         for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
             next if $tick < $minX || $tick > $maxX;
-            my $x   = int $self->toPxX( $tick );
-            my $y1  = int $self->toPxY( $self->get('yStop' ) );
-            my $y2  = int $self->toPxY( $self->get('yStart') );
 
             $self->im->Draw(
                 primitive   => 'Path',
-                stroke      => 'lightgrey',
-                points      => " M $x,$y1 L $x,$y2 ",
+                stroke      => $self->get('xRulerColor'),
+                points      =>
+                      " M " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStart') ] ) 
+                    . " L " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStop')  ] ),
                 fill        => 'none',
             );
         }
