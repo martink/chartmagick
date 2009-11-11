@@ -29,8 +29,8 @@ my $time = [ gettimeofday ];
 
 # Create chart and add datasets to it
 my $chart = Chart::Magick::Chart::Line->new();
-$chart->addData( $dsx, $dsy,   'marker2' );
-$chart->addData( $dsx2, $dsy2, 'gooey.png', 20 ); 
+$chart->addDataset( $dsx, $dsy,   'marker2' );
+$chart->addDataset( $dsx2, $dsy2, 'gooey.png', 20 ); 
 
 # Create coordinate system
 my $axis = Chart::Magick::Axis::Lin->new( {

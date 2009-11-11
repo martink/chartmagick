@@ -3,11 +3,12 @@
 use strict;
 
 use Test::Deep;
-use Scalar::Util qw{ refaddr };
+use Scalar::Util        qw{ refaddr };
+use List::Util          qw{ sum     };
+use List::MoreUtils     qw{ all     };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 40;
-
+use Test::More tests => 14;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart::Line', 'Chart::Magick::Chart::Line can be used' );
@@ -64,42 +65,99 @@ BEGIN {
     my $chart = Chart::Magick::Chart::Line->new;
     setupDummyData( $chart );
 
+    my $drawOrder = 0;
     my %drawStack;
-    local *Image::Magick::Draw =  sub { registerDraw( \%drawStack, @_ ) };
+    local *Image::Magick::Draw =  sub { registerDraw( \%drawStack, @_, drawOrder => $drawOrder++ ) };
 
     my @markerStack;
-    local *Chart::Magick::Marker::draw = sub { shift; push @markerStack, [ @_ ] };
+    local *Chart::Magick::Marker::draw = sub { shift; push @markerStack, [ @_, $drawOrder++ ] };
+    local *Chart::Magick::Marker::createMarkerFromDefault = sub { };    # prevent this sub from doing draw ops
 
     $chart->plot;
 
+    # check if the lines are plotted correctly
     cmp_bag(
         [ keys %drawStack ],
         [ 0, 1, 2 ],
-        'plot uses the appropriate colors',
+        'plot draws the correct number of datasets',
     );
-
-    
+    cmp_deeply(
+        { map { $_ => scalar @{ $drawStack{$_} }            } ( 0 .. 2 ) },
+        { map { $_ => scalar @{ testData( $_ )->[0] }  - 1  } ( 0 .. 2 ) },
+        'plot draws the correct number of datapoints in the correct color for each dataset',
+    );
     ok( 
            isConnected( $drawStack{ 0 } )
         && isConnected( $drawStack{ 1 } )
         && isConnected( $drawStack{ 2 } ),
-        'no gaps in lines' 
+        'plot draws all the datapoints within a dataset without gaps',
     );
+    cmp_ok( scalar @markerStack, '==', 0, 'plot draws no  markers when none are set' );
+
+    # check if markers are drawn correctly
+    %drawStack = @markerStack = ();
+    $drawOrder = 0;
+    $chart->setMarker( 0, 'marker1' );
+    $chart->setMarker( 2, 'marker2' );
+    $chart->plot;
+
+    cmp_ok( 
+        scalar @markerStack, '==', sum( map { scalar @{ $_->[0] } } testData(0, 2) ),
+        'plot draws the correct number of  markers',
+    );
+
+    cmp_bag(
+        [ map { [ @{ $_ }[ 0, 1 ] ] } @markerStack ],
+        [   
+            map {
+                [ @{ $drawStack{ $_ }->[ -1 ] }{ 'x2', 'y2' } ],            # Add end coords of last line segment
+                map { [ @{ $_ }{ 'x1', 'y1' } ] } @{ $drawStack{ $_ } }     # Get start coords of each line segment
+            } ( 0, 2 )
+        ],
+        'plot draws markers at the right coords'
+    );
+
+    # check if markers are drawn on top of lines
+    my $onTopOk;
+    foreach ( @markerStack ) {
+        my ($x, $y, $order) = @{ $_ }[ 0, 1, -1 ];
+
+        $onTopOk = 
+            all     { $_->{ drawOrder } < $order } 
+            grep    { 
+                           ( $_->{ x1 } == $x && $_->{ y1 } == $y )
+                        || ( $_->{ x2 } == $x && $_->{ y2 } == $y )
+                    }
+            map     { @{ $_ } }
+            values  %drawStack
+        ;
+
+        last unless $onTopOk;
+    }
+    ok( $onTopOk, 'plot draws markers on top of line segments' );
+}
+
+#--------------------------------------------------------------------
+sub testData {
+    my @indices = @_;
+    my @data = (
+        [ [   1 ..   5 ], [   11 ..  15 ] ],
+        [ [  11 ..  16 ], [   21 ..  26 ] ],
+        [ [ 101 .. 107 ], [  111 .. 117 ] ],
+    );
+
+    return @data[ @indices ] if @indices;
+    return @data;
 }
 
 #--------------------------------------------------------------------
 sub setupDummyData {
     my $chart = shift;
 
-    my @dummyData = (
-        [ [   1 ..   5 ], [   11 ..  15 ] ],
-        [ [  11 ..  16 ], [   21 ..  26 ] ],
-        [ [ 101 .. 107 ], [  111 .. 117 ] ],
-    );
+    my @dummyData = testData();
 
     foreach ( @dummyData ) {
        $chart->addDataset( @{ $_ } );
-       print "===>", $chart->dataset->datasetCount,"\n";
     }
     
     my $palette = Chart::Magick::Palette->new( [
@@ -115,6 +173,7 @@ sub setupDummyData {
     $axis->draw;
 }
 
+#--------------------------------------------------------------------
 
 =head2 processDraw
 
@@ -127,13 +186,18 @@ sub registerDraw {
     my $object  = shift;
     my %args    = @_;
 
-    my $key     = exists $args{ stroke } ? $args{ stroke } : -1;
-    $key        =~ s{^#(\d+)$}{\1};
-    $key += 0;
     my $props   = {
         self    => $object,
         args    => \%args,
     };
+    
+    # Decode path 
+    @{ $props }{ qw{ x1 y1 x2 y2 } } = $args{ points } =~ m/^\s*M\s*(\d+),(\d+)\s*L\s*(\d+),(\d+)\s*$/i;
+
+    # Create lookup key
+    my $key     = exists $args{ stroke } ? $args{ stroke } : -1;
+    $key        =~ s{^#(\d+)$}{\1};
+    $key        += 0; #convert to number ( 000001 => 1 )
 
     if ( exists $store->{ $key } ) {
         push @{ $store->{ $key } }, $props;
@@ -143,19 +207,17 @@ sub registerDraw {
     }
 }
 
+#--------------------------------------------------------------------
 sub isConnected {
     my $ops = shift || diag( 'empty op list' ) && return 0;
 
     my $prev = [];
     foreach my $op (@$ops) {
-        my ($x1,$y1,$x2,$y2) = $op->{ points } =~ m/^\s*M\s*(\d+),(\d+)\s*L\s*(\d+),(\d+)\s*$/i;
-
         if ( $op != $ops->[0] ) {
-        print "tsjak";
-            return 0 unless $prev->[0] == $x1 && $prev->[1] == $y1;
+            return 0 unless $prev->[0] == $op->{ x1 } && $prev->[1] == $op->{ y1 };
         }
         
-        $prev = [ $x2, $y2 ];
+        $prev = [ $op->{ x2 }, $op->{ y2 } ];
     }
 
     return 1;
