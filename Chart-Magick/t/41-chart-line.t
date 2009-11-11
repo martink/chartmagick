@@ -123,7 +123,7 @@ BEGIN {
         my ($x, $y, $order) = @{ $_ }[ 0, 1, -1 ];
 
         $onTopOk = 
-            all     { $_->{ drawOrder } < $order } 
+            all     { $_->{ args }{ drawOrder } < $order } 
             grep    { 
                            ( $_->{ x1 } == $x && $_->{ y1 } == $y )
                         || ( $_->{ x2 } == $x && $_->{ y2 } == $y )
