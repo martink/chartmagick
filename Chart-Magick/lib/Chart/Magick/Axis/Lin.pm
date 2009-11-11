@@ -716,30 +716,28 @@ You'll probably never need to call this method manually.
 =cut
 
 sub plotAxes {
-    my $self = shift;
+    my $self    = shift;
+    my $path    = q{};
 
-    my ( $xStart, $xStop, $yStart, $yStop ) = ( 
-        $self->get('xStart'), $self->get('xStop'), $self->get('yStart'), $self->get('yStop') 
-    );
+    # Does the chart range include the x-axis?
+    if ( $self->get('yStart') * $self->get('yStart') <= 0 ) {
+        $path .= 
+              " M " . $self->toPx( [ $self->plotOption( 'xChartStart' ) ], [ 0 ] )
+            . " L " . $self->toPx( [ $self->plotOption( 'xChartStop'  ) ], [ 0 ] );
+    }
+    # Does the chart range include the y-axis?
+    if ( $self->get('xStart') * $self->get('xStart') <= 0 ) {
+        $path .= 
+              " M " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStart' ) ] )
+            . " L " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStop'  ) ] );
+    }
 
-    my $xFrom   = int $self->plotOption('chartAnchorX');
-    my $xTo     = $xFrom + $self->getChartWidth;
-    my $yFrom   = int $self->plotOption('chartAnchorY');
-    my $yTo     = $yFrom + $self->getChartHeight;
-    my $xYPos   = $yStart * $yStop <= 0     ? $self->toPxY( 0 )
-                : $yStart > 0               ? $yFrom
-                :                             $yTo;
-    my $yXPos   = $xStart * $yStop <= 0     ? $self->toPxX( 0 )
-                : $xStart > 0               ? $xFrom 
-                :                             $xTo;
+    return unless $path;
 
-    # Main axes
     $self->im->Draw(
         primitive   => 'Path',
         stroke      => $self->get('axisColor'),
-        points      =>
-               " M $xFrom,$xYPos L $xTo,$xYPos "
-             . " M $yXPos,$yFrom L $yXPos,$yTo ",
+        points      => $path,
         fill        => 'none',
     );
 }

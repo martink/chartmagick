@@ -56,6 +56,8 @@ my $axis = Chart::Magick::Axis::Lin->new( {
 
     # Custom format the x labels
     xLabelFormat    => '%.1fπ',
+
+    xTickOffset     => 1,
 } );
 
 # Add the chart to the coordinate system
