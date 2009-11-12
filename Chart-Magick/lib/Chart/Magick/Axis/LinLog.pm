@@ -1,6 +1,7 @@
 package Chart::Magick::Axis::LinLog;
 
 use strict;
+use warnings;
 
 use base qw{ Chart::Magick::Axis::Log };
 
@@ -40,6 +41,8 @@ sub draw {
     );
     
     $self->SUPER::draw( @_ );
+
+    return;
 }
 
 #--------------------------------------------------------------------

@@ -1,11 +1,13 @@
 package Chart::Magick::Axis::Lin;
 
 use strict;
+use warnings;
 
-use base qw{ Chart::Magick::Axis };
 use List::Util qw{ min max reduce };
 use Text::Wrap;
 use POSIX qw{ floor ceil };
+
+use base qw{ Chart::Magick::Axis };
 
 =head1 NAME
 
@@ -213,7 +215,7 @@ Iteratively tries to get the optimal sizes for margin and graph widths and heigh
 =cut
 #TODO: More pod.
 sub optimizeMargins {
-    my $self = shift;
+    my ( $self, @params ) = @_;
 
     my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
     my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
@@ -224,7 +226,7 @@ sub optimizeMargins {
 
     my $ready;
     while ( !$ready ) {
-        my ($minX, $maxX, $minY, $maxY) = @_;
+        my ($minX, $maxX, $minY, $maxY) = @params;
 
         # Calc current chart dimensions
         my $chartWidth  = floor( $baseWidth  - $yLabelWidth );
@@ -306,6 +308,8 @@ sub optimizeMargins {
         $prevXLabelHeight = $xLabelHeight;
         $prevYLabelWidth = $yLabelWidth;
     }
+
+    return;
 }
 
 
@@ -393,6 +397,8 @@ sub calcBaseMargins {
 
     # calc axisMarginTop
     $self->plotOption( axisMarginTop => 0 );
+
+    return;
 }
 
 #---------------------------------------------
@@ -601,6 +607,8 @@ sub preprocessData {
         - $self->plotOption('yTickOffset')
         + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
     );
+
+    return;
 }
 
 #---------------------------------------------
@@ -641,7 +649,7 @@ sub generateSubticks {
     my $count   = int( shift || 0 );
 
     return [] unless @{ $ticks };
-    return [] unless $count > 1;
+    return [] if     $count <= 1;
 
     my @subticks;
     for my $i ( 1 .. scalar( @{ $ticks } ) -1 ) {
@@ -733,6 +741,8 @@ sub plotAxes {
         points      => $path,
         fill        => 'none',
     );
+
+    return;
 }
 
 #---------------------------------------------
@@ -765,6 +775,7 @@ sub plotAxisTitles {
         rotate      => -90,
     );
 
+    return;
 }
 
 #---------------------------------------------
@@ -782,6 +793,8 @@ sub plotBox {
                " M $x1,$y1 L $x2,$y1 L $x2,$y2 L $x1,$y2 Z ",
         fill        => 'none',
     );
+
+    return;
 }
 
 
@@ -834,6 +847,8 @@ sub plotRulers {
             );
         }
     }
+
+    return;
 }
 
 
@@ -884,6 +899,8 @@ sub drawTick {
         y           => $isX ? $y1 + $self->get('xLabelTickOffset') : $y1,
         wrapWidth   => $args->{ wrap }
     );
+
+    return;
 }
 
 #---------------------------------------------
@@ -932,6 +949,8 @@ sub plotTicks {
         
         $self->drawTick( { x => $tick, subtick => 1 } );
     }
+
+    return;
 }
 
 #---------------------------------------------
@@ -953,6 +972,8 @@ sub plotFirst {
     $self->plotAxes if $self->get('plotAxes');
     $self->plotTicks;
     $self->plotBox if $self->get('plotBox'); 
+
+    return;
 }
 
 #---------------------------------------------
@@ -974,6 +995,7 @@ sub plotLast {
 
     $self->plotAxisTitles;
 
+    return;
 }
 
 #---------------------------------------------
@@ -989,9 +1011,6 @@ sub getPxPerXUnit {
     my $self = shift;
 
     return $self->plotOption( 'xPxPerUnit' );
-
-#    my $delta = $self->transformX( $self->get('xStop') ) - $self->transformX( $self->get('xStart') );
-#    return $self->getChartWidth / $delta;
 }
 
 #---------------------------------------------
@@ -1007,9 +1026,6 @@ sub getPxPerYUnit {
     my $self = shift;
 
     return $self->plotOption( 'yPxPerUnit' );
-
-#   my $delta = $self->transformY( $self->get('yStop') ) - $self->transformY( $self->get('yStart') ) || 1;
-#   return $self->getChartHeight / $delta;
 }
 
 #---------------------------------------------
@@ -1025,7 +1041,10 @@ The value to be transformed.
 =cut
 
 sub transformX {
-    return $_[1];
+    my $self    = shift;
+    my $x       = shift;
+
+    return $x;
 }
 
 #---------------------------------------------
@@ -1041,7 +1060,10 @@ The value to be transformed.
 =cut
 
 sub transformY {
-    return $_[1];
+    my $self    = shift;
+    my $y       = shift;
+
+    return $y;
 }
 
 #---------------------------------------------

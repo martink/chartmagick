@@ -186,7 +186,7 @@ sub logTransform {
     my $value   = shift || 0;
     my $base    = shift || 10;
 
-    return undef if ( $value <= 0 );
+    return if ( $value <= 0 );
 
     # The sprintf's below are necessary to prevent precision errors:
     # For instance log( 0.1 ) / log( 10 ) returns -0.99999999999999977795539507496869191527366638183594 which ceil
