@@ -854,8 +854,6 @@ sub plotRulers {
 sub drawTick {
     my $self    = shift;
     my $args    = shift;
-use Data::Dumper;
-print Dumper $args;
 
     my $isX     = exists $args->{ x };
     my $tick    = $isX ? $args->{ x } : $args->{ y };
@@ -949,126 +947,6 @@ sub plotTicks {
         $self->drawTick( { x => $tick, subtick => 1 } );
     }
 }
-##---------------------------------------------
-#
-#=head2 plotTicks ( )
-#
-#Draws the ticks and subticks.
-#
-#You'll probably never need to call this method manually.
-#
-#=cut
-#
-#sub plotTicks {
-#    my $self = shift;
-#
-#    my $ticksOutside = $self->get('ticksOutside');
-#
-#    my $xBase = $ticksOutside || $self->get('yStop') < 0 ? $self->plotOption('xChartStart') : 0;
-#    my $yBase = $ticksOutside || $self->get('xStop') < 0 ? $self->plotOption('yChartStart') : 0;
-#
-#    my $minY = $self->get('yStart');
-#    my $maxY = $self->get('yStop');
-#
-#    # Scale tick in/outsets to coord/values
-#    my ( $inset, $outset ) = map { $self->get( $_ ) / $self->getPxPerYUnit } qw{ yTickInset yTickOutset };
-#
-#    # Y Ticks
-#    foreach my $tick ( @{ $self->getYTicks } ) {
-#        next if $tick < $minY || $tick > $maxY;
-#
-#        my ($x1, $y1) = $self->project( [ $xBase - $outset ], [ $tick ] );
-#        my ($x2, $y2) = $self->project( [ $xBase + $outset ], [ $tick ] );
-#
-#        $self->im->Draw(
-#            primitive   => 'Path',
-#            stroke      => $self->get('yTickColor'),
-#            points      => "M $x1,$y1 L $x2,$y2 ",
-#            fill        => 'none',
-#        );
-#
-#        my $x = $outset - $self->get('yLabelTickOffset');
-#        $self->text(
-#            text        => $self->getTickLabel( $tick, 1 ),
-#            halign      => 'right',
-#            valign      => 'center',
-#            align       => 'Right',
-#            font        => $self->get('labelFont'),
-#            pointsize   => $self->get('labelFontSize'),
-#            style       => 'Normal',
-#            fill        => $self->get('labelColor'),
-#            x           => $x1,
-#            y           => $y1,
-#        );
-#    }
-#
-#    my ( $inset, $outset ) = map { $self->get( $_ ) / $self->getPxPerYUnit } qw{ yTickInset yTickOutset };
-#    foreach my $tick ( @{ $self->getYSubticks } ) {
-#        next if $tick < $minY || $tick > $maxY;
-#
-#        my ($x1, $y1) = $self->project( [ $xBase - $outset ], [ $tick ] );
-#        my ($x2, $y2) = $self->project( [ $xBase + $outset ], [ $tick ] );
-#
-#        $self->im->Draw(
-#            primitive   => 'Path',
-#            stroke      => $self->get('ySubtickColor'),
-#            points      => " M $x1,$y1 L $x2,$y2",
-#            fill        => 'none',
-#        );
-#    }
-#
-#    my $minX = $self->get('xStart');
-#    my $maxX = $self->get('xStop');
-#
-#    # X main ticks
-#    foreach my $tick ( @{ $self->getXTicks } ) {
-#        next if $tick < $minX || $tick > $maxX;
-#
-#        my $x = int $self->toPxX( $tick );
-#
-#        my $inset   = $yOffset - $self->get('xTickInset');
-#        my $outset  = $yOffset + $self->get('xTickOutset');
-#
-#        $self->im->Draw(
-#            primitive   => 'Path',
-#            stroke      => $self->get('xTickColor'),
-#            points      => " M $x,$outset L $x,$inset ",
-#            fill        => 'none',
-#        );
-#
-#        my $y = $outset + $self->get('xLabelTickOffset');
-#        $self->text(
-#            text        => $self->getTickLabel( $tick, 0 ),
-#            font        => $self->get('labelFont'),
-#            halign      => 'center',
-#            valign      => 'top',
-#            align       => 'Center',
-#            pointsize   => $self->get('labelFontSize'),
-#            style       => 'Normal',
-#            fill        => $self->get('labelColor'),
-#            x           => $x,
-#            y           => $y,
-#            wrapWidth   => $self->get('xTickWidth') * $self->plotOption( 'xPxPerUnit' ),
-#        );
-#    }
-#
-#    # X sub ticks
-#    foreach my $tick ( @{ $self->getXSubticks } ) {
-#        next if $tick < $minX || $tick > $maxX;
-#        
-#        my $x = int $self->toPxX( $tick );
-#
-#        my $inset   = $yOffset - $self->get('xSubtickInset');
-#        my $outset  = $yOffset + $self->get('xSubtickOutset');
-#
-#        $self->im->Draw(
-#            primitive   => 'Path',
-#            stroke      => $self->get('xSubtickColor'),
-#            points      => " M $x,$outset L $x,$inset ",
-#            fill        => 'none',
-#        );
-#    }
-#}
 
 #---------------------------------------------
 
