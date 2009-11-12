@@ -55,7 +55,7 @@ $axis->set( {
     yTitle          => 'zlomp!',
 
     xTickOffset     => 0,
-    ticksOutside    => 1,
+    ticksOutside    => 0,
     axisColor       => 'black',
 } );
 

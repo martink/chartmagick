@@ -268,9 +268,14 @@ sub optimizeMargins {
         $xLabelHeight   = ceil max map { int $self->getLabelDimensions( $_, $xTickWidth * $xPxPerUnit )->[1] } @xLabels; 
         $yLabelWidth    = ceil max map { int $self->getLabelDimensions( $_ )->[0]                            } @yLabels;
     
-        # Adjust label sizes to
+        # If labels are printed inside the graph then only count the part that lies outside of the chart area.
         unless ( $self->get('ticksOutside') ) {
-#            $xLabelHeight = ceil max 0, $xLabelHeight - ( $chartAnchorY + $chartHeight - $originY );
+            if ( $minY < 0 ) {
+                $xLabelHeight = ceil max 0, $self->transformY( $minY ) * $yPxPerUnit - $xLabelHeight;
+            }
+            if ( $minX < 0 ) {
+               $yLabelWidth  = ceil max 0, $self->transformY( $minX ) * $xPxPerUnit - $yLabelWidth;
+            }
         }
 
         if ( $prevXLabelHeight == $xLabelHeight && $prevYLabelWidth == $yLabelWidth ) {
@@ -321,7 +326,7 @@ sub getLabelDimensions {
     if ( $wrapWidth && $w > $wrapWidth ) {
         # This is not guaranteed to work in every case, but it'll do for now.
         local $Text::Wrap::columns = int( $wrapWidth / $w * length $label );
-      $properties{ text } = join qq{\n}, wrap( q{}, q{}, $label );
+        $properties{ text } = join qq{\n}, wrap( q{}, q{}, $label );
 
         ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
     }
