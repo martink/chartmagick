@@ -110,11 +110,6 @@ sub drawBar {
     my $right   = $left + $width;                       # x-location of right bar edge
     my $top     = $bottom + $length;
 
-    my @botLeft  = $axis->toPx( [ $left  ], [ $bottom ] );
-    my @topLeft  = $axis->toPx( [ $left  ], [ $top    ] );
-    my @topRight = $axis->toPx( [ $right ], [ $top    ] );
-    my @botRight = $axis->toPx( [ $right ], [ $bottom ] );
-
 	$axis->im->Draw(
 		primitive	=> 'Path',
 		stroke		=> $color->getStrokeColor,
@@ -123,7 +118,8 @@ sub drawBar {
 			  " M " . $axis->toPx( [ $left  ], [ $bottom ] )
 			. " L " . $axis->toPx( [ $left  ], [ $top    ] )
             . " L " . $axis->toPx( [ $right ], [ $top    ] )
-			. " L " . $axis->toPx( [ $right ], [ $bottom ] ),
+			. " L " . $axis->toPx( [ $right ], [ $bottom ] )
+            . " Z ",
 	);
     
 }
