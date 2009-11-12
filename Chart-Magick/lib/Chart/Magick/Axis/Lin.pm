@@ -727,13 +727,13 @@ sub plotAxes {
     my $path    = q{};
 
     # Does the chart range include the x-axis?
-    if ( $self->get('yStart') * $self->get('yStart') <= 0 ) {
+    if ( $self->get('yStart') * $self->get('yStop') <= 0 ) {
         $path .= 
               " M " . $self->toPx( [ $self->plotOption( 'xChartStart' ) ], [ 0 ] )
             . " L " . $self->toPx( [ $self->plotOption( 'xChartStop'  ) ], [ 0 ] );
     }
     # Does the chart range include the y-axis?
-    if ( $self->get('xStart') * $self->get('xStart') <= 0 ) {
+    if ( $self->get('xStart') * $self->get('xStop') <= 0 ) {
         $path .= 
               " M " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStart' ) ] )
             . " L " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStop'  ) ] );
