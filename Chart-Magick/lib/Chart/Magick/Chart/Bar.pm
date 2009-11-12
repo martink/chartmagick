@@ -145,8 +145,8 @@ sub getDataRange {
     foreach my $coord ( @{ $self->dataset->getCoords } ) {
         my @values = map { $self->dataset->getDataPoint( $coord, $_ ) } (0 .. $self->dataset->datasetCount - 1);
 
-        my $negSum = sum grep { $_ < 0 } map { $_ ? $_->[0] : 0 } @values;
-        my $posSum = sum grep { $_ > 0 } map { $_ ? $_->[0] : 0 } @values;
+        my $negSum = sum( grep { $_ < 0 } map { $_ ? $_->[0] : 0 } @values ) || 0;
+        my $posSum = sum( grep { $_ > 0 } map { $_ ? $_->[0] : 0 } @values ) || 0;
 
         $maxNeg = $negSum if $negSum < $maxNeg;
         $maxPos = $posSum if $posSum > $maxPos;

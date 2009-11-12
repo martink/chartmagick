@@ -640,6 +640,8 @@ sub text {
 	my $self    = shift;
 	my %prop    = @_;
 
+    return unless length $prop{ text };
+
     # Wrap text if necessary
     $prop{ text } = $self->wrapText( %prop ) if $prop{ wrapWidth };
 

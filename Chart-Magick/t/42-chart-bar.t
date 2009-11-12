@@ -113,12 +113,14 @@ BEGIN {
     cmp_ok( scalar( @range ),                            '==', 4, 'getDataRange(cumulative) returns an array with four elements' );
     cmp_ok( scalar( grep { ref $_ eq 'ARRAY' } @range ), '==', 4, 'getDataRange(cumulative) returns an array of only arrayrefs'  );
 
+    no warnings 'uninitialized';
     my %sums;
     foreach my $set ( @datasets ) {
         for ( 0 .. @{ $set->[0] } ) {
             $sums{ $set->[0][ $_ ] } += $set->[1][ $_ ];
         }
     }
+    use warnings 'uninitialized';
 
     cmp_deeply(
         \@range,
@@ -138,11 +140,10 @@ BEGIN {
 
     my $chart = setupDummyData();
 
-    my %args;
-    my $im;
-    *Image::Magick::Draw = sub { $im = shift; %args = @_ };
+    my ( $im, %args );
+    local *Image::Magick::Draw = sub { $im = shift; %args = @_ };
 
-    # col w h x x_off bottom
+    # col w h x x_off y
     my $color = $chart->getPalette->getNextColor;
     $chart->drawBar( $color, 2, 6, 4 );
     is( $im, $chart->axis->im, 'drawBar draws on the correct image magick object' );
