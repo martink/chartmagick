@@ -97,6 +97,8 @@ $axis = $canvas->getAxis( 2 );
 $axis->addChart( $logChart );
 $axis->set('ySubtickCount', 2);
 $axis->set('title', 'Logarithmic plot');
+$axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4ehuewh euqwhdiwhd uheuhu', 5 => 'overall' }, 1 );
+
 
 # Third chart
 $axis = $canvas->getAxis( 1 );
@@ -106,7 +108,7 @@ $axis->addChart( $lineChart );
 #$axis->set( $config );
 $axis->set('xTickOffset', 1);
 $axis->set('xSubtickCount', 0);
-$axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4', 5 => 'overall' } );
+$axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4', 5 => 'overall' }, 1 );
 
 # Fourth chart
 $axis = $canvas->getAxis( 3 );

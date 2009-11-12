@@ -208,7 +208,7 @@ sub getTickLabel {
 
 =head2 optimizeMargins ( )
 
-Iteratively tries toe get the optimal sizes for margin and graph widths and heights.
+Iteratively tries to get the optimal sizes for margin and graph widths and heights.
 
 =cut
 #TODO: More pod.
@@ -217,9 +217,9 @@ sub optimizeMargins {
 
     my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
     my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
-    my $yLabelWidth = 0;
-    my $xLabelWidth = 0;
-    my $prevXLabelWidth = 0;
+    my $yLabelWidth  = 0;
+    my $xLabelHeight = 0;
+    my $prevXLabelHeight = 0;
     my $prevYLabelWidth = 0;
 
     my $ready;
@@ -228,7 +228,7 @@ sub optimizeMargins {
 
         # Calc current chart dimensions
         my $chartWidth  = floor( $baseWidth  - $yLabelWidth );
-        my $chartHeight = floor( $baseHeight - $xLabelWidth );
+        my $chartHeight = floor( $baseHeight - $xLabelHeight );
 
         # Calc tick width
         my $xTickWidth = 
@@ -264,40 +264,26 @@ sub optimizeMargins {
         my $yAddUnit    = $self->get('yTickOffset');
         my $yPxPerUnit  = $chartHeight / ( $yUnits + $yAddUnit );
 
-#        # Determine the pixel location of (0,0) within the canvas.
-#        my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );           # left border of axis
-#        $originX       -= $self->get( 'xStart' ) * $self->getPxPerXUnit if $self->get( 'xStart' ) < 0;  # x position origin
-#        my $originY     = $self->plotOption( 'axisMarginTop'  ) + $self->get( 'marginTop'  );           # bottom border of axis
-#        $originY       += $self->get( 'yStop' )  * $self->getPxPerYUnit;                                # 
-        # Determine the pixel location of (0,0) within the canvas.
-        my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );           # left border of axis
-        $originX       -= $minX * $xPxPerUnit if $minX < 0;  # x position origin
-        my $originY     = $self->plotOption( 'axisMarginTop'  ) + $self->get( 'marginTop'  );           # bottom border of axis
-        $originY       += $maxY * $yPxPerUnit;                                                          # 
-
-        my $chartAnchorX = $self->get('marginLeft') + $self->plotOption('axisMarginLeft');
-        my $chartAnchorY = $self->get('marginTop' ) + $self->plotOption('axisMarginTop' );
-
-        $self->plotOption( originX      => $originX );
-        $self->plotOption( originY      => $originY );
-        $self->plotOption( chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft') );
-        $self->plotOption( chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ) );
-
         # Calc max label lengths
-        $xLabelWidth = ceil max map { int $self->getLabelDimensions( $_, $xTickWidth * $xPxPerUnit )->[1] } @xLabels; 
-        $yLabelWidth = ceil max map { int $self->getLabelDimensions( $_ )->[1] } @yLabels;
+        $xLabelHeight   = ceil max map { int $self->getLabelDimensions( $_, $xTickWidth * $xPxPerUnit )->[1] } @xLabels; 
+        $yLabelWidth    = ceil max map { int $self->getLabelDimensions( $_ )->[0]                            } @yLabels;
     
         # Adjust label sizes to
         unless ( $self->get('ticksOutside') ) {
-            $xLabelWidth = ceil max 0, $xLabelWidth - ( $chartAnchorY + $chartHeight - $originY );
+#            $xLabelHeight = ceil max 0, $xLabelHeight - ( $chartAnchorY + $chartHeight - $originY );
         }
 
-        if ( $prevXLabelWidth == $xLabelWidth && $prevYLabelWidth == $yLabelWidth ) {
+        if ( $prevXLabelHeight == $xLabelHeight && $prevYLabelWidth == $yLabelWidth ) {
             $ready = 1;
             $self->set( 
                 xTickWidth  => $xTickWidth,
                 yTickWidth  => $yTickWidth,
             );
+            # axisMarginLeft and bottom need to be set first.
+            $self->plotOption(
+                axisMarginLeft  => $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth,
+                axisMarginBottom=> $self->plotOption( 'axisMarginBottom' ) + $yLabelWidth, 
+            ); 
             $self->plotOption( 
                 chartWidth      => $chartWidth,
                 chartHeight     => $chartHeight,
@@ -305,14 +291,14 @@ sub optimizeMargins {
                 xTickOffset     => $xAddUnit / 2 * $xPxPerUnit,
                 yPxPerUnit      => $yPxPerUnit,
                 yTickOffset     => $yAddUnit / 2 * $yPxPerUnit,
-                axisMarginLeft  => $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth,
-                axisMarginBottom=> $self->plotOption( 'axisMarginBottom' ) + $yLabelWidth, 
+                chartAnchorX    => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
+                chartAnchorY    => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
             );
 
             return ($minX, $maxX, $minY, $maxY);
         }
 
-        $prevXLabelWidth = $xLabelWidth;
+        $prevXLabelHeight = $xLabelHeight;
         $prevYLabelWidth = $yLabelWidth;
     }
 }
@@ -335,7 +321,7 @@ sub getLabelDimensions {
     if ( $wrapWidth && $w > $wrapWidth ) {
         # This is not guaranteed to work in every case, but it'll do for now.
         local $Text::Wrap::columns = int( $wrapWidth / $w * length $label );
-        $properties{ text } = join qq{\n}, wrap( q{}, q{}, $label );
+      $properties{ text } = join qq{\n}, wrap( q{}, q{}, $label );
 
         ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
     }
@@ -344,9 +330,7 @@ sub getLabelDimensions {
 }
 
 
-#### TODO: Dit anders noemen...
 #---------------------------------------------
-
 =head2 calcBaseMargins ( )
 
 Calcs and sets the base margins of the axis.
@@ -357,38 +341,46 @@ sub calcBaseMargins {
     my $self = shift;
 
     # calc axisMarginLeft
-    my $yTitleWidth = ($self->im->QueryFontMetrics(
-        text        => $self->get('yTitle'),
-        font        => $self->get('yTitleFont'),
-        pointsize   => $self->get('yTitleFontSize'),
-        rotate      => -90,
-    ))[5];
-    $self->plotOption( yTitleWidth => $yTitleWidth      );
+    my $yTitleWidth = length $self->get('yTitle') == 0
+                    ? 0
+                    : ( $self->im->QueryFontMetrics(
+                            text        => $self->get('yTitle'),
+                            font        => $self->get('yTitleFont'),
+                            pointsize   => $self->get('yTitleFontSize'),
+                            rotate      => -90,
+                        ))[5]
+                    ;
 
     my $axisMarginLeft  = 
         $self->get('yTitleBorderOffset') + $self->get('yTitleLabelOffset') 
         + $self->get('yLabelTickOffset') + $self->get('yTickOutset') 
         + $yTitleWidth;
     
-    $self->plotOption( axisMarginLeft => $axisMarginLeft   );
+    $self->plotOption( 
+        axisMarginLeft  => $axisMarginLeft,
+        yTitleWidth     => $yTitleWidth,
+    );
 
     #------------------------------------
     # calc axisMarginBottom
-    my $xTitleHeight = $self->get('xTitle') 
-        ? ($self->im->QueryFontMetrics(
-                text        => $self->get('xTitle'),
-                font        => $self->get('xTitleFont'),
-                pointsize   => $self->get('xTitleFontSize'),
-          ) )[5]
-        : 0
-        ;
-    $self->plotOption( xTitleHeight => $xTitleHeight );
+    my $xTitleHeight    = length $self->get('xTitle') == 0
+                        ? 0
+                        : ( $self->im->QueryFontMetrics(
+                                text        => $self->get('xTitle'),
+                                font        => $self->get('xTitleFont'),
+                                pointsize   => $self->get('xTitleFontSize'),
+                          ))[5]
+                        ;
+
     my $axisMarginBottom = 
         $self->get('xTitleBorderOffset') + $self->get('xTitleLabelOffset') 
         + $self->get('xLabelTickOffset') + $self->get('xTickOutset') 
         + $xTitleHeight;
 
-    $self->plotOption( axisMarginBottom  => $axisMarginBottom );
+    $self->plotOption( 
+        axisMarginBottom    => $axisMarginBottom,
+        xTitleHeight        => $xTitleHeight,
+    );
 
     #-------------------------------------
     # calc axisMarginRight
@@ -587,20 +579,9 @@ sub preprocessData {
         yChartStart => $minY - $self->get('yTickOffset') / 2,
         xChartStop  => $maxX + $self->get('xTickOffset') / 2,
         xChartStart => $minX - $self->get('xTickOffset') / 2,
-    );
 
-
-    # Determine the pixel location of (0,0) within the canvas.
-    my $originX     = $self->plotOption( 'axisMarginLeft' ) + $self->get( 'marginLeft' );           # left border of axis
-    $originX       -= $self->get( 'xStart' ) * $self->getPxPerXUnit if $self->get( 'xStart' ) < 0;  # x position origin
-    my $originY     = $self->plotOption( 'axisMarginTop'  ) + $self->get( 'marginTop'  );           # bottom border of axis
-    $originY       += $self->get( 'yStop' )  * $self->getPxPerYUnit;                                # 
-
-    $self->plotOption( 
-        originX      => $originX, 
-        originY      => $originY,
-        chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
-        chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
+#        chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
+#        chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
     );
 
     # Precalc toPx offsets.
