@@ -644,7 +644,7 @@ sub text {
     $prop{ text } = $self->wrapText( %prop ) if $prop{ wrapWidth };
 
     # Find width and height of resulting text block
-    my ( $ascender, $width, $height ) = ( $self->im->QueryFontMetrics( %prop ) )[ 2, 4, 5 ];
+    my ( $ascender, $width, $height ) = ( $self->im->QueryMultilineFontMetrics( %prop ) )[ 2, 4, 5 ];
 
 	# Process horizontal alignment
     my $anchorX  =
@@ -675,15 +675,11 @@ sub text {
 
     # And from that angle we can translate the coordinates of the text block so that it will be alligned the way we
     # want it to.
-    my $offsetY = $r * sin( $theta + $rotation );
-    my $offsetX = $r * cos( $theta + $rotation );
+    $prop{ x } -= $r * cos( $theta + $rotation );
+    $prop{ y } -= $r * sin( $theta + $rotation );
 
-    $prop{ x } -= $offsetX;
-    $prop{ y } -= $offsetY;
-
-	# We must delete these keys or else placement can go wrong for some reason...
-#	delete($properties{halign});
-#	delete($properties{valign});
+    # Prevent Image::Magick from complaining about unrecognized options.
+    delete @prop{ qw( halign valign wrapWidth ) };
 
     $self->im->Annotate(
 		#Leave align => 'Left' here as a default or all text will be overcompensated.
@@ -691,7 +687,6 @@ sub text {
 		%prop,
 		gravity		=> 'Center', #'NorthWest',
 		antialias	=> 'true',
-#        undercolor  => 'red',
 	);
 }
 
