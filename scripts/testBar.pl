@@ -55,11 +55,11 @@ $axis->set( {
     yTitle          => 'zlomp!',
 
     xTickOffset     => 0,
-#    yTickWidth      => 2,
-#    axesOutside     => 0,
+    ticksOutside    => 1,
+    axisColor       => 'black',
 } );
 
-$axis->set( xSubtickCount => 10 );
+$axis->set( xSubtickCount => 10, ySubtickCount => 5 );
 # Setup chart
 my $chart   = Chart::Magick::Chart::Bar->new( );
 $chart->setData( $ds );
