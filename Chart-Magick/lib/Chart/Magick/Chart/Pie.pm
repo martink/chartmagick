@@ -3,7 +3,10 @@ package Chart::Magick::Chart::Pie;
 use strict;
 use constant pi => 3.14159265358979;
 
+use Data::Dumper;
+
 use base qw{ Chart::Magick::Chart };
+
 
 #### TODO: getXOffset en Y offset tov. axis anchor bepalen.
 sub getXOffset {
@@ -95,7 +98,7 @@ sub _mod2pi {
 	my $angle = shift;
 
 	if ($angle < 0) {
-#		return 2*pi + $angle - 2*pi*int($angle/(2*pi));
+		return 2*pi + $angle - 2*pi*int($angle/(2*pi));
 	} else {
 		return $angle - 2*pi*int($angle/(2*pi));
 	}
@@ -103,24 +106,15 @@ sub _mod2pi {
 
 #-------------------------------------------------------------------
 sub addSlice {
-	my (%slice, $leftMost, $rightMost, $center, $overallStartCorner, $overallEndCorner, 
-		$fillColor, $strokeColor, $sideColor);
 	my $self        = shift;
 	my $properties  = shift;
-
     my $slices      = $self->{_slices};
 
-	my $label = $properties->{label};
-	my $color = $properties->{color};
-
-
 	my $percentage  = $properties->{percentage};
-
     # Work around a bug in imagemagick where an A path with the same start and end point will segfault.
 	if ($percentage == 1) { 
 		$percentage = 0.999999999;
 	}
-
 
 	my $sliceStart  =  
           scalar @{ $slices }           ? $slices->[ -1 ]->{ stopAngle }
@@ -133,26 +127,23 @@ sub addSlice {
 	my $stopAngle   = _mod2pi( $startAngle + $angle         );
 	my $avgAngle    = _mod2pi( $startAngle + $angle  / 2    );
 
-	$fillColor      = $color->getFillColor;
-	$strokeColor    = $color->getStrokeColor;
-	
-	if ($self->get('shadedSides')) {
-		$sideColor = $color->darken->getFillColor;
-	} else {
-		$sideColor = $fillColor;
-	}
+	my $color       = $properties->{color};
+	my $fillColor   = $color->getFillColor;
+	my $strokeColor = $color->getStrokeColor;
+	my $sideColor   = $self->get('shadedSides') 
+                    ? $color->darken->getFillColor
+                    : $fillColor
+                    ;
 
-    my $sliceId     = scalar @{ $slices };
-
-	my %sliceData   = (
+	push @{ $slices }, {
 		# color properties
 		fillColor	    => $fillColor,
 		strokeColor	    => $strokeColor,
-		bottomColor	    => $fillColor, #$properties->{bottomColor} || $properties->{fillColor},
-		topColor	    => $fillColor, #$properties->{topColor} || $properties->{fillColor},
-		startPlaneColor	=> $sideColor, #$properties->{startPlaneColor} || $properties->{fillColor},
-		stopPlaneColor	=> $sideColor, #$properties->{stopPlaneColor} || $properties->{fillColor},
-		rimColor	    => $sideColor, #$properties->{rimColor} || $properties->{fillColor},
+		bottomColor	    => $fillColor,
+		topColor	    => $fillColor,
+		startPlaneColor	=> $sideColor,
+		stopPlaneColor	=> $sideColor,
+		rimColor	    => $sideColor,
 
 		# geometric properties
 		topHeight	    => $self->get('topHeight'),
@@ -161,151 +152,18 @@ sub addSlice {
 		scaleFactor	    => ($self->get('scaleFactor') - 1) * $percentage + 1,
 
 		# keep the slice number for debugging properties
-		sliceNr		    => $sliceId,
-		label		    => $label,
+		sliceNr		    => scalar @{ $slices },
+		label		    => $properties->{ label },
 		percentage	    => $percentage,
-	);
 
-	# parttion the slice if it crosses the x-axis
-	%slice = (
-		startAngle	=> $startAngle,
-		angle		=> $angle,
-		avgAngle	=> $avgAngle,
-		stopAngle	=> $stopAngle,
-		%sliceData
-	);
+        # angles
+		startAngle	    => $startAngle,
+		angle		    => $angle,
+		avgAngle	    => $avgAngle,
+		stopAngle	    => $stopAngle,
+	};
 
-	my $hopsa = $self->calcCoordinates(\%slice);
-	$sliceData{ overallStartCorner } = $hopsa->{startCorner};
-	$sliceData{ overallEndCorner   } = $hopsa->{endCorner};
-	$sliceData{ overallBigCircle   } = $hopsa->{bigCircle};
-	
-	my $leftIntersect   = pi;
-	my $rightIntersect  = $leftIntersect+pi;
-	
-	if ($startAngle < $leftIntersect) {
-		if ($stopAngle > $leftIntersect || $stopAngle < $startAngle) {
-			%slice = (
-				startAngle	    => $startAngle,
-				angle		    => $leftIntersect - $startAngle,
-				stopAngle	    => $leftIntersect,
-				avgAngle	    => $avgAngle,
-				####
-				drawStartPlane	=> 1,
-				drawStopPlane	=> 0,
-				drawTopPlane	=> 1,
-				id 		        => $sliceId,
-				%sliceData
-			);
-			$startAngle = $leftIntersect;
-
-			$leftMost = { %slice, %{$self->calcCoordinates(\%slice)} };
-			
-			push @{ $slices }, $leftMost;
-		}
-
-		if ($stopAngle < $startAngle) {
-			%slice = (
-				startAngle	    => $leftIntersect,
-				angle		    => pi,
-				stopAngle	    => $rightIntersect,
-				avgAngle	    => $avgAngle,
-				####
-				drawStartPlane	=> 0,
-				drawStopPlane	=> 0,
-				drawTopPlane	=> 0,
-				id 		        => $sliceId,
-				%sliceData
-			);
-			$startAngle = 0;
-
-			$center = { %slice, %{$self->calcCoordinates(\%slice)} };
-			
-			push @{ $slices }, $center;
-		}
-
-			
-		%slice = (
-			mainSlice	    => 1,
-			startAngle	    => $startAngle,
-			angle		    => $stopAngle - $startAngle,
-			stopAngle	    => $stopAngle,
-			avgAngle	    => $avgAngle,
-			####
-			drawStartPlane	=> !defined($leftMost->{drawStartPlane}),
-			drawStopPlane	=> 1,
-			drawTopPlane	=> !$leftMost->{drawTopPlane},
-			id 		        => $sliceId,
-			%sliceData
-		);
-		$rightMost = { %slice, %{$self->calcCoordinates(\%slice)} };
-	
-		push @{ $slices }, $rightMost;
-	} else {
-		if ($stopAngle < $leftIntersect || $stopAngle < $startAngle) {
-			%slice = (
-				startAngle	    => $startAngle,
-				angle		    => $rightIntersect - $startAngle,
-				stopAngle	    => $rightIntersect,
-				avgAngle	    => $avgAngle,
-				####
-				drawStartPlane	=> 1,
-				drawStopPlane	=> 0,
-				drawTopPlane	=> 0,
-				id 		        => $sliceId,
-				%sliceData
-			);
-			$startAngle = 0;
-
-			$leftMost = { %slice, %{$self->calcCoordinates(\%slice)} };
-			$overallStartCorner = $leftMost->{startCorner};
-			
-			push @{ $slices }, $leftMost;
-		}
-
-		if ($stopAngle < $startAngle && $stopAngle > $leftIntersect) {
-			%slice = (
-				startAngle	    => 0,
-				angle		    => pi,
-				stopAngle	    => $leftIntersect,
-				avgAngle	    => $avgAngle,
-				####
-				drawStartPlane	=> 0,
-				drawStopPlane	=> 0,
-				drawTopPlane	=> 0,
-				id 		        => $sliceId,
-				%sliceData
-			);
-			
-            $startAngle = $leftIntersect;
-
-			$center = { %slice, %{$self->calcCoordinates(\%slice)} };
-			
-			push @{ $slices }, $center;
-		}
-
-			
-		%slice = (
-			mainSlice	    => 1,
-			startAngle	    => $startAngle,
-			angle		    => $stopAngle - $startAngle,
-			stopAngle	    => $stopAngle,
-			avgAngle	    => $avgAngle,
-			####
-			drawStartPlane	=> !defined($leftMost->{drawStartPlane}),
-			drawStopPlane	=> 1,
-			drawTopPlane	=> !$leftMost->{drawTopPlane},
-			id 		        => $sliceId,
-			%sliceData
-		);
-		
-        $startAngle = $leftIntersect;
-
-		$rightMost = { %slice, %{$self->calcCoordinates(\%slice)} };
-		
-		push @{ $slices }, $rightMost;
-	}
-
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -334,11 +192,11 @@ sub calcCoordinates {
 	my $offsetX = $self->getXOffset;
 	my $offsetY = $self->getYOffset;
 
-	$offsetX += ( $radius    / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos($slice->{avgAngle} );
-	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin($slice->{avgAngle} );
+	$offsetX += ( $radius    / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos( $slice->{avgAngle} );
+	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin( $slice->{avgAngle} );
 
     my $coords = {
-        bigCircle   => $slice->{angle} > pi ? '1' : '0',
+        %{ $slice },
         tip         => {
             x   => $offsetX,
             y   => $offsetY,
@@ -356,6 +214,65 @@ sub calcCoordinates {
 	return $coords;
 }
 
+
+sub splitSlice {
+    my $self    = shift;
+    my %slice   = %{ shift || {} };
+
+    my ( $start, $stop, $angle ) = @slice{ qw( startAngle stopAngle angle ) };
+
+    my @parts       = ();
+    my $noLeft      = 0;
+
+    # slice crosses the left intersect (pi)
+    if ( $start < pi && $start + $angle > pi ) {
+        my $partAngle = pi - $start;
+
+        push @parts, $self->calcCoordinates( {
+            %slice,
+            angle           => $partAngle,
+            startAngle      => $start,
+            stopAngle       => pi,
+            noLeft          => 0,
+            noRight         => 1,
+        } );
+
+        $noLeft = 1;
+        $angle  -= $partAngle;
+        $start  = pi;
+    }
+
+    # slice crosses the right intersect (2*pi)
+    if ( $start >= pi && $start + $angle > 2 * pi ) {
+        my $partAngle   = 2 * pi - $start;
+        
+        push @parts, $self->calcCoordinates( {
+            %slice,
+            angle           => $partAngle,
+            startAngle      => $start,
+            stopAngle       => 2 * pi,
+            noLeft          => $noLeft,
+            noRight         => 1,
+        } );
+
+        $noLeft = 1;
+        $angle  -= $partAngle;
+        $start  = 0;
+    }
+
+    push @parts, $self->calcCoordinates( {
+        %slice,
+        angle       => $angle,
+        startAngle  => $start,
+        stopAngle   => $stop,
+        noLeft      => $noLeft,
+        noRight     => 0,
+    } );
+        
+    return @parts;
+}
+            
+
 #-------------------------------------------------------------------
 
 =head2 draw ( )
@@ -372,8 +289,9 @@ sub plot {
 	$self->processDataset;
 
 	# Draw slices in the correct order or you'll get an MC Escher.
-	my @slices = sort sortSlices @{$self->{_slices}};
-	
+	my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
+
+print Dumper \@slices;
 	# First draw the bottom planes and the labels behind the chart.
 	foreach my $sliceData (@slices) {
 		# Draw bottom
@@ -387,28 +305,35 @@ sub plot {
 	# Second draw the sides
 	# If angle == 0 do a 2d pie
 	if ($self->get('tiltAngle') != 0) {
-		foreach my $sliceData (@slices) {  #(sort sortSlices @{$self->{_slices}}) {
-			$leftPlaneVisible = (_mod2pi($sliceData->{startAngle}) <= 0.5*pi || _mod2pi($sliceData->{startAngle} >= 1.5*pi));
-			$rightPlaneVisible = (_mod2pi($sliceData->{stopAngle}) >= 0.5*pi && _mod2pi($sliceData->{stopAngle} <= 1.5*pi));
+        my @parts = 
+            sort    sortSlices                                          # sort slices in drwaing order
+            map     { $self->splitSlice( $_ ) }                         # split slices crossing the horizontal axis
+            @slices;
 
-			if ($leftPlaneVisible && $rightPlaneVisible) {
-				$self->drawRim($sliceData);
-				$self->drawRightSide($sliceData);
-				$self->drawLeftSide($sliceData);
-			} elsif ($leftPlaneVisible && !$rightPlaneVisible) {
+		foreach my $sliceData (@parts) {
+			$leftPlaneVisible  = ( _mod2pi( $sliceData->{startAngle} ) <= 0.5*pi || _mod2pi($sliceData->{startAngle} >= 1.5*pi));
+			$rightPlaneVisible = ( _mod2pi( $sliceData->{stopAngle}  ) >= 0.5*pi && _mod2pi($sliceData->{stopAngle} <= 1.5*pi));
+
+			if ( $leftPlaneVisible && $rightPlaneVisible ) {
+				$self->drawRim( $sliceData );
+				$self->drawRightSide( $sliceData );
+				$self->drawLeftSide( $sliceData );
+			} 
+            elsif ( $leftPlaneVisible && !$rightPlaneVisible ) {
 				# right plane invisible
-				$self->drawRightSide($sliceData);
-				$self->drawRim($sliceData);
-				$self->drawLeftSide($sliceData);
-			} elsif (!$leftPlaneVisible && $rightPlaneVisible) {
+				$self->drawRightSide( $sliceData );
+				$self->drawRim( $sliceData );
+				$self->drawLeftSide( $sliceData );
+			} 
+            elsif ( !$leftPlaneVisible && $rightPlaneVisible ) {
 				# left plane invisible
-				$self->drawLeftSide($sliceData);
-				$self->drawRim($sliceData);
-				$self->drawRightSide($sliceData);
+				$self->drawLeftSide( $sliceData );
+				$self->drawRim( $sliceData );
+				$self->drawRightSide( $sliceData );
 			} else {
-				$self->drawLeftSide($sliceData);
-				$self->drawRightSide($sliceData);
-				$self->drawRim($sliceData);
+				$self->drawLeftSide( $sliceData );
+				$self->drawRightSide( $sliceData );
+				$self->drawRim( $sliceData );
 			}
 		}
 	}
@@ -439,7 +364,7 @@ sub drawBottom {
 	my $self = shift;
 	my $slice = shift;
 
-	$self->drawPieSlice($slice, -1 * $slice->{bottomHeight}, $slice->{bottomColor})  if ($slice->{drawTopPlane});
+	$self->drawPieSlice($slice, -1 * $slice->{bottomHeight}, $slice->{bottomColor}); #  if ($slice->{drawTopPlane});
 }
 
 #-------------------------------------------------------------------
@@ -459,6 +384,8 @@ sub drawLabel {
 		$endPointX, $endPointY);
 	my $self    = shift;
 	my $slice   = shift;
+
+print " plop\n";
 
 	# Draw labels only once
 	return undef unless ($slice->{mainSlice});
@@ -558,10 +485,10 @@ A slice properties hashref.
 =cut
 
 sub drawLeftSide {
-	my $self = shift;
-	my $slice = shift;
+	my $self    = shift;
+	my $slice   = shift;
 	
-	$self->drawSide($slice) if ($slice->{drawStartPlane});
+	$self->drawSide( $slice ) unless ( $slice->{ noLeft } );
 }
 
 #-------------------------------------------------------------------
@@ -586,30 +513,28 @@ The color with which the slice should be filled.
 =cut
 
 sub drawPieSlice {
-	my (%tip, %startCorner, %endCorner, $pieWidth, $pieHeight, $bigCircle,
-		$strokePath);
-	my $self = shift;
-	my $slice = shift;
-	my $offset = shift || 0;
-	my $fillColor = shift;
+	my $self        = shift;
+	my $slice       = shift;
+	my $offset      = shift || 0;
+	my $fillColor   = shift;
 
-	%tip = (
+	my %tip = (
 		x	=> $slice->{tip}->{x},
 		y	=> $slice->{tip}->{y} - $offset,
 	);
-	%startCorner = (
-		x	=> $slice->{overallStartCorner}->{x},
-		y	=> $slice->{overallStartCorner}->{y} - $offset,
+	my %startCorner = (
+		x	=> $slice->{startCorner}->{x},
+		y	=> $slice->{startCorner}->{y} - $offset,
 	);
-	%endCorner = (
-		x	=> $slice->{overallEndCorner}->{x},
-		y	=> $slice->{overallEndCorner}->{y} - $offset,
+	my %endCorner = (
+		x	=> $slice->{endCorner}->{x},
+		y	=> $slice->{endCorner}->{y} - $offset,
 	);
 
     my $radius     = $self->get('radius') * $slice->{ scaleFactor  };
-	$pieWidth   = $radius; 
-	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$bigCircle  = $slice->{overallBigCircle};
+	my $pieWidth   = $radius; 
+	my $pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
+	my $bigCircle  = $slice->{ angle } >= pi ? '1' : '0';
 
 	$self->im->Draw(
 		primitive	=> 'Path',
@@ -639,7 +564,7 @@ sub drawRightSide {
 	my $self = shift;
 	my $slice = shift;
 	
-	$self->drawSide($slice, 'endCorner', $slice->{stopPlaneColor}) if ($slice->{drawStopPlane});
+	$self->drawSide( $slice, 'endCorner', $slice->{stopPlaneColor} ) unless ( $slice->{ noRight } );
 }
 
 #-------------------------------------------------------------------
@@ -680,7 +605,7 @@ sub drawRim {
     my $radius  = $self->get('radius') * $slice->{ scaleFactor };
 	$pieWidth   = $radius;
 	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$bigCircle  = $slice->{bigCircle};
+	$bigCircle  = $slice->{ angle } >= pi ? '1' : '0';
 	
 	# Draw curvature
 	$self->im->Draw(
@@ -743,17 +668,17 @@ sub drawSide {
 		y	=> $slice->{$cornerName}->{y} + $slice->{bottomHeight}
 	);
 
-	$self->im->Draw(
-		primitive       => 'Path',
-		stroke          => $slice->{strokeColor},
-		points		=> 
-			" M $tipBottom{x},$tipBottom{y} ". 
-			" L $rimBottom{x},$rimBottom{y} ".
-			" L $rimTop{x},$rimTop{y} ".
-			" L $tipTop{x},$tipTop{y} ".
-			" Z ",
-		fill		=> $color,
-	);
+    $self->im->Draw(
+        primitive   => 'Path',
+        stroke      => $slice->{strokeColor},
+        points      =>
+            " M $tipBottom{x},$tipBottom{y} ". 
+            " L $rimBottom{x},$rimBottom{y} ".
+            " L $rimTop{x},$rimTop{y} ".
+            " L $tipTop{x},$tipTop{y} ".
+            " Z ",
+        fill        => $color,
+    );
 }
 
 #-------------------------------------------------------------------
@@ -772,42 +697,7 @@ sub drawTop {
 	my $self = shift;
 	my $slice = shift;
 
-	$self->drawPieSlice($slice, $slice->{topHeight}, $slice->{topColor}) if ($slice->{drawTopPlane});
-}
-
-#-------------------------------------------------------------------
-
-=head2 formNamespace ( )
-
-Extends the form namespace for this object. See WebGUI::Image::Graph for
-documentation.
-
-=cut
-
-sub formNamespace {
-	my $self = shift;
-
-	return $self->SUPER::formNamespace.'_Pie';
-}
-
-#-------------------------------------------------------------------
-
-=head2 getSlice ( [ sliceNumber ] )
-
-Returns the sliceNumber'th slice properties hashref. Defaults to the slice last
-added.
-
-=head3 sliceNumber
-
-The index of the slice you want.
-
-=cut
-
-sub getSlice {
-	my $self = shift;
-	my $slice = shift || (scalar(@{$self->{_slices}}) - 1);
-
-	return $self->{_slices}->[$slice];
+	$self->drawPieSlice($slice, $slice->{topHeight}, $slice->{topColor}); # if ($slice->{drawTopPlane});
 }
 
 #-------------------------------------------------------------------
@@ -870,28 +760,27 @@ the sort command.
 =cut
 
 sub sortSlices {
-	my ($startA, $stopA, $startB, $stopB, $distA, $distB);
 	my $self = shift;
 
-	my $aStartAngle = $a->{startAngle};
-	my $aStopAngle = $a->{stopAngle};
-	my $bStartAngle = $b->{startAngle};
-	my $bStopAngle = $b->{stopAngle};
+	my $aStart = $a->{startAngle};
+	my $aStop  = $a->{stopAngle};
+	my $bStart = $b->{startAngle};
+	my $bStop  = $b->{stopAngle};
 
 	# If sliceA and sliceB are in different halfplanes sorting is easy...
-	return -1 if ($aStartAngle < pi && $bStartAngle >= pi);
-	return 1 if ($aStartAngle >= pi && $bStartAngle < pi);
+	return -1 if ( $aStart  < pi && $bStart >= pi );
+	return  1 if ( $aStart >= pi && $bStart < pi  );
 
-	if ($aStartAngle < pi) {
-		if ($aStopAngle <= 0.5*pi && $bStopAngle <= 0.5* pi) {
+	if ($aStart < pi) {
+		if ($aStop <= 0.5*pi && $bStop <= 0.5* pi) {
 			# A and B in quadrant I
-			return 1 if ($aStartAngle < $bStartAngle);
+			return 1 if ($aStart < $bStart);
 			return -1;
-		} elsif ($aStartAngle >= 0.5*pi && $bStartAngle >= 0.5*pi) {
+		} elsif ($aStart >= 0.5*pi && $bStart >= 0.5*pi) {
 			# A and B in quadrant II
-			return 1 if ($aStartAngle > $bStartAngle);
+			return 1 if ($aStart > $bStart);
 			return -1;
-		} elsif ($aStartAngle < 0.5*pi && $aStopAngle >= 0.5*pi) {
+		} elsif ($aStart < 0.5*pi && $aStop >= 0.5*pi) {
 			# A in both quadrant I and II
 			return -1;
 		} else {
@@ -899,15 +788,15 @@ sub sortSlices {
 			return 1;
 		}
 	} else {
-		if ($aStopAngle <= 1.5*pi && $bStopAngle <= 1.5*pi) {
+		if ($aStop <= 1.5*pi && $bStop <= 1.5*pi) {
 			# A and B in quadrant III
-			return 1 if ($aStopAngle > $bStopAngle);
+			return 1 if ($aStop > $bStop);
 			return -1;
-		} elsif ($aStartAngle >= 1.5*pi && $bStartAngle >= 1.5*pi) {
+		} elsif ($aStart >= 1.5*pi && $bStart >= 1.5*pi) {
 			# A and B in quadrant IV
-			return 1 if ($aStartAngle < $bStartAngle);
+			return 1 if ($aStart < $bStart);
 			return -1;
-		} elsif ($aStartAngle <= 1.5*pi && $aStopAngle >= 1.5*pi) {
+		} elsif ($aStart <= 1.5*pi && $aStop >= 1.5*pi) {
 			# A in both quadrant III and IV
 			return 1;
 		} else {
