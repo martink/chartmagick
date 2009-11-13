@@ -1,6 +1,8 @@
 package Chart::Magick::Palette;
 
 use strict;
+use warnings;
+
 use Chart::Magick::Color;
 use Class::InsideOut qw{ :std };
 use Carp;
@@ -25,6 +27,8 @@ sub addColor {
 	my $color   = shift;
 	
 	push @{ $colors{ id $self } }, $color;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -72,7 +76,7 @@ sub getColorIndex {
 		return $index if ( $self->getColor( $index ) eq $color );
 	}
 
-	return undef;
+	return;
 }
 
 #-------------------------------------------------------------------
@@ -105,7 +109,7 @@ sub getNextColor {
 	my $self = shift;
 
 	my $index   = $self->getPaletteIndex( 1 );
-    $index      = -1 unless defined $index && $index < $self->getNumberOfColors - 1;
+    $index      = -1 if !defined $index || $index >= $self->getNumberOfColors - 1;
 
 	$self->setPaletteIndex( $index + 1);
     
@@ -163,7 +167,7 @@ sub getPreviousColor {
     my $colorCount = $self->getNumberOfColors;
 
 	my $index   = $self->getPaletteIndex( 1 );
-    $index      = $colorCount  unless defined $index && $index > 0;
+    $index      = $colorCount if !defined $index || $index <= 0;
 
 	$self->setPaletteIndex( $index - 1);
 
@@ -212,7 +216,7 @@ sub removeColor {
 	my $index   = shift;
 
     # Check index
-	return undef if !defined $index || $index < 0 || $index >= $self->getNumberOfColors;
+	return if !defined $index || $index < 0 || $index >= $self->getNumberOfColors;
 	
     # Remove color from array
 	splice @{ $colors{ id $self } }, $index, 1;
@@ -249,12 +253,14 @@ sub setColor {
 	my $index = shift;
 
     # Make sure the index is within bounds
-	return undef if $index >= $self->getNumberOfColors;
-	return undef if $index < 0;
-	return undef unless defined $index;
-	return undef unless defined $color;
+	return if $index >= $self->getNumberOfColors;
+	return if $index < 0;
+	return unless defined $index;
+	return unless defined $color;
 
 	$colors{ id $self }->[ $index ] = $color;
+
+    return;
 }
 
 #### TODO: Sanitiy checks
@@ -271,12 +277,14 @@ sub setPaletteIndex {
     my $self = shift;
     my $index = shift;
 	
-    return undef unless (defined $index);
+    return unless (defined $index);
 	
     $index = ($self->getNumberOfColors - 1) if ($index >= $self->getNumberOfColors);
     $index = 0 if ($index < 0);
 	
     $paletteIndex{ id $self } = $index;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -305,6 +313,8 @@ sub swapColors {
 
 	$self->setColor($colorB, $indexA );
 	$self->setColor($colorA, $indexB );
+
+    return;
 }
 
 1;

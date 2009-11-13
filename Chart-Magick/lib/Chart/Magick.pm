@@ -2,7 +2,7 @@ package Chart::Magick;
 
 use strict;
 use Image::Magick;
-use Chart::Magick::Axis::LinLog;
+#use Chart::Magick::Axis::LinLog;
 
 our $VERSION = '0.1.0';
 
@@ -68,7 +68,7 @@ sub matrix {
 
         foreach my $type ( @$row ) {
             my $class = "Chart::Magick::Axis::$type";
-            eval { "use $class" };
+            my $ok = eval { require $class };
 
             $self->addAxis(
                 $class->new( { width => $axisWidth, height => $axisHeight } ),

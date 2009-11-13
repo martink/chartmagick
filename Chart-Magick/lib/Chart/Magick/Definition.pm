@@ -1,6 +1,7 @@
 package Chart::Magick::Definition;
 
 use strict;
+use warnings;
 
 use Carp;
 use Class::InsideOut qw{ :std };
@@ -55,6 +56,8 @@ sub initializeProperties {
 
     $properties{ id $self }  = $self->definition;
     $self->set( @overrides ) if @overrides;
+
+    return;
 }
 
 #--------------------------------------------------------------------
@@ -80,6 +83,8 @@ sub set {
 
         $properties->{ $key } = $value;
     }
+
+    return;
 }
 
 1;

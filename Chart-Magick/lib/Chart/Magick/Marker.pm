@@ -1,6 +1,7 @@
 package Chart::Magick::Marker;
 
 use strict;
+use warnings;
 
 use Class::InsideOut qw{ :std };
 use Carp;
@@ -48,13 +49,13 @@ sub isDefaultMarker {
 
 #---------------------------------------------
 sub new {
-    my $class       = shift;
-    my $marker      = shift || q{};
-    my $size        = shift || 5;
-    my $axis        = shift;
-    my $properties  = shift || {};
+    my $class   = shift;
+    my $marker  = shift || q{};
+    my $size    = shift || 5;
+    my $axis    = shift;
+    my $args    = shift || {};
     
-    my $self = bless {}, $class;
+    my $self    = bless {}, $class;
     register $self;
 
     my $id = id $self;
@@ -63,7 +64,7 @@ sub new {
     $size{ $id }    = $size;
     $im{ $id }  = 
           ( $self->isDefaultMarker( $marker ) ) ? 
-            $self->createMarkerFromDefault( $marker, @{ $properties }{ 'strokeColor', 'fillColor' } )
+            $self->createMarkerFromDefault( $marker, $args->{ strokeColor }, $args->{ fillColor } )
 
         : ( blessed( $marker ) && $marker->isa('Image::Magick') ) ? 
             $self->createMarkerFromIM( $marker )
@@ -81,8 +82,6 @@ sub draw {
     my $self    = shift;
     my $x       = shift;
     my $y       = shift;
-    my $color   = shift || 'lightgray';
-    my $id      = id $self;
 
     $self->axis->im->Composite(
         image   => $self->im,
@@ -90,6 +89,8 @@ sub draw {
         x       => $x - $self->anchorX,
         y       => $y - $self->anchorY,
     ); 
+
+    return;
 }
 
 #---------------------------------------------

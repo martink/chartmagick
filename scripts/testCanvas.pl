@@ -44,7 +44,7 @@ my @ds5 = (
 my $pieChart = Chart::Magick::Chart::Pie->new();
 $pieChart->dataset->addDataset( @ds1 );
 $pieChart->set(
-    tiltAngle   => 80,
+    tiltAngle   => 0,
     stickLength => 30,
 );
 
@@ -61,7 +61,6 @@ $barChart->set(
     barSpacing  => 3,
     drawMode    => 'stacked',
 );
-
 
 my $logChart = Chart::Magick::Chart::Line->new( );
 $logChart->dataset->addDataset( @ds2 );

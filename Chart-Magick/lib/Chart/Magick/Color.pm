@@ -1,15 +1,17 @@
 package Chart::Magick::Color;
 
 use strict;
+use warnings;
+
 #use Color::Calc;
 use Class::InsideOut qw{ :std };
 
 public  strokeTriplet   => my %strokeTriplet, {
-    set_hook => sub { s/^#?([0-9a-f]+)$/$1/gi }
+    set_hook => sub { s{ ^[#]? ([0-9a-f]+) $ }{$1}xgi }
 };
 public  strokeAlpha     => my %strokeAlpha;
 public  fillTriplet     => my %fillTriplet, {
-    set_hook => sub { s/^#?([0-9a-f]+)$/$1/gi }
+    set_hook => sub { s{ ^[#]? ([0-9a-f]+) $ }{$1}xgi }
 };
 public  fillAlpha       => my %fillAlpha;
 

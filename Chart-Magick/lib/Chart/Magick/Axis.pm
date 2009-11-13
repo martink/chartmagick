@@ -1,6 +1,8 @@
 package Chart::Magick::Axis;
 
 use strict;
+use warnings;
+
 use Class::InsideOut qw{ :std };
 use Image::Magick;
 use List::Util qw{ min max };
@@ -97,6 +99,8 @@ sub addLabels {
         %{ $currentLabels   },
         %{ $newLabels       },
     };
+
+    return;
 }
 
 #----------------------------------------------
@@ -155,7 +159,7 @@ sub getLabels {
 
     return { %{ $labels } }     unless defined $coord;
     return $labels->{ $coord }  if exists $labels->{ $coord };
-    return undef;
+    return;
 }
 
 #----------------------------------------------
@@ -226,6 +230,8 @@ sub addChart {
             unless $chart->isa('Chart::Magick::Chart');
         push @{ $charts{ id $self } }, $chart;
     }
+
+    return;
 }
 
 #---------------------------------------------
@@ -378,6 +384,8 @@ sub draw {
     }
 
     $self->plotLast;
+
+    return;
 }
 
 #---------------------------------------------
@@ -420,6 +428,7 @@ You'll probably never call this method by yourself.
 =cut
 
 sub plotFirst {
+    return;
 }
 
 #---------------------------------------------
@@ -437,6 +446,8 @@ sub plotLast {
     my $self = shift;
 
     $self->plotTitle;
+
+    return;
 };
 
 #---------------------------------------------
@@ -460,6 +471,8 @@ sub plotTitle {
         halign      => 'center',
         valign      => 'top',
     );
+
+    return;
 }
 
 #---------------------------------------------
@@ -509,6 +522,8 @@ sub preprocessData {
         axisAnchorX  => $self->get('marginLeft'),
         axisAnchorY  => $self->get('marginTop'),
     );
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -530,8 +545,10 @@ Array ref containing the values of the spot to be projected.
 
 sub toPx {
     my $self    = shift;
+    my $coord   = shift;
+    my $value   = shift;
     
-    return join ",", map { int } $self->project( @_ );
+    return join ",", map { int } $self->project( $coord, $value );
 }
 
 #---------------------------------------------
@@ -554,21 +571,22 @@ Plot option value.
 =cut
 
 sub plotOption {
-    my $self    = shift;
+    my ( $self, @options ) = @_;
 
     # No params? Return a safe copy of all plot options.
-    return { %{ $self->{ _plotOptions } } } unless scalar @_;
+    return { %{ $self->{ _plotOptions } } } unless scalar @options;
 
     # More than one param? Apply the passed key/value pairs on the plot options.
-    if ( scalar @_ > 1 ) {
-        $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @_ };
+    if ( scalar @options > 1 ) {
+        $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @options };
         return ;
     }
 
-    # Uncomment line below when debuggingis finished.
-    # return $self->{ _plotOptions }->{ $_[0] };
+    my $option = $options[0];
 
-    my $option = shift;
+    # Uncomment line below when debuggingis finished.
+    # return $self->{ _plotOptions }->{ $option };
+
     croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
     
     return $self->{ _plotOptions }->{ $option };
@@ -640,6 +658,7 @@ sub text {
 	my $self    = shift;
 	my %prop    = @_;
 
+    # Don't bother to draw an empty string...
     return unless length $prop{ text };
 
     # Wrap text if necessary
@@ -650,7 +669,8 @@ sub text {
 
 	# Process horizontal alignment
     my $anchorX  =
-          $prop{ halign } eq 'center'   ? $width / 2
+          !defined $prop{ halign }      ? 0
+        : $prop{ halign } eq 'center'   ? $width / 2
         : $prop{ halign } eq 'right'    ? $width
         : 0;
 
@@ -664,7 +684,8 @@ sub text {
 
     # IM aparently always anchors at the baseline of the first line of a text block, let's take that into account.
     my $anchorY =
-          $prop{ valign } eq 'center'   ? $ascender - $height / 2
+          !defined $prop{ valign }      ? $ascender
+        : $prop{ valign } eq 'center'   ? $ascender - $height / 2
         : $prop{ valign } eq 'bottom'   ? $ascender - $height
         : $ascender;
 
@@ -684,12 +705,14 @@ sub text {
     delete @prop{ qw( halign valign wrapWidth ) };
 
     $self->im->Annotate(
-		#Leave align => 'Left' here as a default or all text will be overcompensated.
-		align		=> 'Left',
-		%prop,
-		gravity		=> 'Center', #'NorthWest',
-		antialias	=> 'true',
+        #Leave align => 'Left' here as a default or all text will be overcompensated.
+        align       => 'Left',
+        %prop,
+        gravity     => 'Center', #'NorthWest',
+        antialias   => 'true',
 	);
+
+    return;
 }
 
 1;

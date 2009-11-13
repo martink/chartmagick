@@ -1,6 +1,7 @@
 package Chart::Magick::Chart;
 
 use strict;
+use warnings;
 
 use Class::InsideOut    qw{ :std };
 use List::Util          qw{ min max };
@@ -50,6 +51,8 @@ sub addDataset {
 
     $self->dataset->addDataset( $coords, $values );
     $self->setMarker( $self->dataset->datasetCount - 1, $marker, $markerSize ) if $marker;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -185,7 +188,7 @@ Override this method to do any preprocessing before the drawing phase begins.
 =cut
 
 sub preprocessData {
-
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -208,6 +211,8 @@ sub setAxis {
         unless $axis && $axis->isa( 'Chart::Magick::Axis' );
 
     $axis{ id $self } = $axis;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -230,6 +235,8 @@ sub setData {
         unless $data && $data->isa( 'Chart::Magick::Data' );
 
     $dataset{ id $self } = $data;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -280,6 +287,8 @@ sub setMarker {
     };
 
     $markers{ id $self }->[ $index ] = $def;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -302,6 +311,8 @@ sub setPalette {
     croak "Palette must be a Chart::Magick::Palette" unless $palette->isa( 'Chart::Magick::Palette' );
 
     $palette{ id $self } = $palette;
+
+    return;
 }
 
 1;
