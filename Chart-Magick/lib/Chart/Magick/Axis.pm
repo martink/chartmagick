@@ -182,7 +182,7 @@ sub im {
     my $magick  = Image::Magick->new(
         size        => $width.'x'.$height,
     );
-    $magick->Read('xc:white');
+    $magick->Read('xc:grey40');
     $magick{ id $self } = $magick;
 
     return $magick;

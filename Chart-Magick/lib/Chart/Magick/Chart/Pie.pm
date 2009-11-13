@@ -108,44 +108,51 @@ sub addSlice {
 	my $self        = shift;
 	my $properties  = shift;
 
+    my $slices      = $self->{_slices};
+
+	my $label = $properties->{label};
+	my $color = $properties->{color};
+
+
 	my $percentage  = $properties->{percentage};
 
-	# Work around a bug in imagemagick where an A path with the same start and end point will segfault.
+    # Work around a bug in imagemagick where an A path with the same start and end point will segfault.
 	if ($percentage == 1) { 
 		$percentage = 0.999999999;
 	}
 
-	my $label = $properties->{label};
-	my $color = $properties->{color};
-	
-	my $angle       = 2*pi*$percentage;
-	my $startAngle  = _mod2pi( $self->{_currentAngle}) || _mod2pi(2*pi*$self->get('startAngle')/360) || 0; 
-	my $stopAngle   = _mod2pi( $startAngle + $angle);
-	my $avgAngle    = _mod2pi((2 * $startAngle + $angle) / 2);
 
-	$self->{_currentAngle} = $stopAngle;
+	my $sliceStart  =  
+          scalar @{ $slices }           ? $slices->[ -1 ]->{ stopAngle }
+        : $self->get('startAngle')      ? 2 * pi * $self->get('startAngle') / 360
+        : 0
+        ;
 
-	my $mainStartDraw = 1;
-	my $mainStopDraw = 1;
+    my $angle       = _mod2pi( 2 * pi * $percentage         );
+    my $startAngle  = _mod2pi( $sliceStart                  );
+	my $stopAngle   = _mod2pi( $startAngle + $angle         );
+	my $avgAngle    = _mod2pi( $startAngle + $angle  / 2    );
 
-	$fillColor = $color->getFillColor;
-	$strokeColor = $color->getStrokeColor;
+	$fillColor      = $color->getFillColor;
+	$strokeColor    = $color->getStrokeColor;
 	
 	if ($self->get('shadedSides')) {
 		$sideColor = $color->darken->getFillColor;
 	} else {
 		$sideColor = $fillColor;
 	}
-	
-	my %sliceData = (
+
+    my $sliceId     = scalar @{ $slices };
+
+	my %sliceData   = (
 		# color properties
-		fillColor	=> $fillColor,
-		strokeColor	=> $strokeColor,
-		bottomColor	=> $fillColor, #$properties->{bottomColor} || $properties->{fillColor},
-		topColor	=> $fillColor, #$properties->{topColor} || $properties->{fillColor},
+		fillColor	    => $fillColor,
+		strokeColor	    => $strokeColor,
+		bottomColor	    => $fillColor, #$properties->{bottomColor} || $properties->{fillColor},
+		topColor	    => $fillColor, #$properties->{topColor} || $properties->{fillColor},
 		startPlaneColor	=> $sideColor, #$properties->{startPlaneColor} || $properties->{fillColor},
 		stopPlaneColor	=> $sideColor, #$properties->{stopPlaneColor} || $properties->{fillColor},
-		rimColor	=> $sideColor, #$properties->{rimColor} || $properties->{fillColor},
+		rimColor	    => $sideColor, #$properties->{rimColor} || $properties->{fillColor},
 
 		# geometric properties
 		topHeight	    => $self->get('topHeight'),
@@ -154,9 +161,9 @@ sub addSlice {
 		scaleFactor	    => ($self->get('scaleFactor') - 1) * $percentage + 1,
 
 		# keep the slice number for debugging properties
-		sliceNr		=> scalar(@{$self->{_slices}}),
-		label		=> $label,
-		percentage	=> $percentage,
+		sliceNr		    => $sliceId,
+		label		    => $label,
+		percentage	    => $percentage,
 	);
 
 	# parttion the slice if it crosses the x-axis
@@ -169,138 +176,134 @@ sub addSlice {
 	);
 
 	my $hopsa = $self->calcCoordinates(\%slice);
-	$sliceData{overallStartCorner} = $hopsa->{startCorner};
-	$sliceData{overallEndCorner} = $hopsa->{endCorner};
-	$sliceData{overallBigCircle} = $hopsa->{bigCircle};
+	$sliceData{ overallStartCorner } = $hopsa->{startCorner};
+	$sliceData{ overallEndCorner   } = $hopsa->{endCorner};
+	$sliceData{ overallBigCircle   } = $hopsa->{bigCircle};
 	
-	my $leftIntersect = pi;
-	my $rightIntersect = $leftIntersect+pi;
+	my $leftIntersect   = pi;
+	my $rightIntersect  = $leftIntersect+pi;
 	
 	if ($startAngle < $leftIntersect) {
 		if ($stopAngle > $leftIntersect || $stopAngle < $startAngle) {
 			%slice = (
-				startAngle	=> $startAngle,
-				angle		=> $leftIntersect - $startAngle,
-				stopAngle	=> $leftIntersect,
-				avgAngle	=> $avgAngle,
+				startAngle	    => $startAngle,
+				angle		    => $leftIntersect - $startAngle,
+				stopAngle	    => $leftIntersect,
+				avgAngle	    => $avgAngle,
 				####
 				drawStartPlane	=> 1,
 				drawStopPlane	=> 0,
 				drawTopPlane	=> 1,
-				id 		=> scalar(@{$self->{_slices}}),
+				id 		        => $sliceId,
 				%sliceData
 			);
-			$mainStopDraw = 0;
 			$startAngle = $leftIntersect;
 
 			$leftMost = { %slice, %{$self->calcCoordinates(\%slice)} };
 			
-			push (@{$self->{_slices}}, $leftMost);
+			push @{ $slices }, $leftMost;
 		}
 
 		if ($stopAngle < $startAngle) {
 			%slice = (
-				startAngle	=> $leftIntersect,
-				angle		=> pi,
-				stopAngle	=> $rightIntersect,
-				avgAngle	=> $avgAngle,
+				startAngle	    => $leftIntersect,
+				angle		    => pi,
+				stopAngle	    => $rightIntersect,
+				avgAngle	    => $avgAngle,
 				####
 				drawStartPlane	=> 0,
 				drawStopPlane	=> 0,
 				drawTopPlane	=> 0,
-				id 		=> scalar(@{$self->{_slices}}),
+				id 		        => $sliceId,
 				%sliceData
 			);
-			$mainStopDraw = 0;
 			$startAngle = 0;
 
 			$center = { %slice, %{$self->calcCoordinates(\%slice)} };
 			
-			push (@{$self->{_slices}}, $center);
+			push @{ $slices }, $center;
 		}
 
 			
 		%slice = (
-			mainSlice	=> 1,
-			startAngle	=> $startAngle,
-			angle		=> $stopAngle - $startAngle,
-			stopAngle	=> $stopAngle,
-			avgAngle	=> $avgAngle,
+			mainSlice	    => 1,
+			startAngle	    => $startAngle,
+			angle		    => $stopAngle - $startAngle,
+			stopAngle	    => $stopAngle,
+			avgAngle	    => $avgAngle,
 			####
 			drawStartPlane	=> !defined($leftMost->{drawStartPlane}),
 			drawStopPlane	=> 1,
 			drawTopPlane	=> !$leftMost->{drawTopPlane},
-			id 		=> scalar(@{$self->{_slices}}),
+			id 		        => $sliceId,
 			%sliceData
 		);
-		$mainStopDraw = 0;
 		$rightMost = { %slice, %{$self->calcCoordinates(\%slice)} };
 	
-		push (@{$self->{_slices}}, $rightMost );
+		push @{ $slices }, $rightMost;
 	} else {
 		if ($stopAngle < $leftIntersect || $stopAngle < $startAngle) {
 			%slice = (
-				startAngle	=> $startAngle,
-				angle		=> $rightIntersect - $startAngle,
-				stopAngle	=> $rightIntersect,
-				avgAngle	=> $avgAngle,
+				startAngle	    => $startAngle,
+				angle		    => $rightIntersect - $startAngle,
+				stopAngle	    => $rightIntersect,
+				avgAngle	    => $avgAngle,
 				####
 				drawStartPlane	=> 1,
 				drawStopPlane	=> 0,
 				drawTopPlane	=> 0,
-				id 		=> scalar(@{$self->{_slices}}),
+				id 		        => $sliceId,
 				%sliceData
 			);
-			$mainStopDraw = 0;
 			$startAngle = 0;
 
 			$leftMost = { %slice, %{$self->calcCoordinates(\%slice)} };
 			$overallStartCorner = $leftMost->{startCorner};
 			
-			push (@{$self->{_slices}}, $leftMost);
+			push @{ $slices }, $leftMost;
 		}
 
 		if ($stopAngle < $startAngle && $stopAngle > $leftIntersect) {
 			%slice = (
-				startAngle	=> 0,
-				angle		=> pi,
-				stopAngle	=> $leftIntersect,
-				avgAngle	=> $avgAngle,
+				startAngle	    => 0,
+				angle		    => pi,
+				stopAngle	    => $leftIntersect,
+				avgAngle	    => $avgAngle,
 				####
 				drawStartPlane	=> 0,
 				drawStopPlane	=> 0,
 				drawTopPlane	=> 0,
-				id 		=> scalar(@{$self->{_slices}}),
+				id 		        => $sliceId,
 				%sliceData
 			);
-			$mainStopDraw = 0;
-			$startAngle = $leftIntersect;
+			
+            $startAngle = $leftIntersect;
 
 			$center = { %slice, %{$self->calcCoordinates(\%slice)} };
 			
-			push (@{$self->{_slices}}, $center);
+			push @{ $slices }, $center;
 		}
 
 			
 		%slice = (
-			mainSlice	=> 1,
-			startAngle	=> $startAngle,
-			angle		=> $stopAngle - $startAngle,
-			stopAngle	=> $stopAngle,
-			avgAngle	=> $avgAngle,
+			mainSlice	    => 1,
+			startAngle	    => $startAngle,
+			angle		    => $stopAngle - $startAngle,
+			stopAngle	    => $stopAngle,
+			avgAngle	    => $avgAngle,
 			####
 			drawStartPlane	=> !defined($leftMost->{drawStartPlane}),
 			drawStopPlane	=> 1,
 			drawTopPlane	=> !$leftMost->{drawTopPlane},
-			id 		=> scalar(@{$self->{_slices}}),
+			id 		        => $sliceId,
 			%sliceData
 		);
-		$mainStopDraw = 0;
-		$startAngle = $leftIntersect;
+		
+        $startAngle = $leftIntersect;
 
 		$rightMost = { %slice, %{$self->calcCoordinates(\%slice)} };
 		
-		push (@{$self->{_slices}}, $rightMost);
+		push @{ $slices }, $rightMost;
 	}
 
 }
@@ -319,29 +322,36 @@ like the slices built by addSlice.
 =cut
 
 sub calcCoordinates {
-	my ($pieHeight, $pieWidth, $offsetX, $offsetY, $coords);
-	my $self = shift;
-	my $slice = shift;
+	my $self    = shift;
+	my $slice   = shift;
 
     my $radius = $self->get('radius') * $slice->{ scaleFactor };
 
-	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$pieWidth   = $radius;
+	my $pieHeight  = $radius * cos( 2 * pi * $self->get('tiltAngle') / 360 );
+	my $pieWidth   = $radius;
 	
 	# Translate the origin from the top corner to the center of the image.
-	$offsetX = $self->getXOffset;
-	$offsetY = $self->getYOffset;
+	my $offsetX = $self->getXOffset;
+	my $offsetY = $self->getYOffset;
 
 	$offsetX += ( $radius    / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos($slice->{avgAngle} );
 	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin($slice->{avgAngle} );
 
-	$coords->{bigCircle} = ($slice->{angle} > pi) ? '1' : '0';
-	$coords->{tip}->{x} = $offsetX;
-	$coords->{tip}->{y} = $offsetY;
-	$coords->{startCorner}->{x} = $offsetX + $pieWidth  * cos $slice->{ startAngle };
-	$coords->{startCorner}->{y} = $offsetY - $pieHeight * sin $slice->{ startAngle };
-	$coords->{endCorner}->{x}   = $offsetX + $pieWidth  * cos $slice->{ stopAngle };
-	$coords->{endCorner}->{y}   = $offsetY - $pieHeight * sin $slice->{ stopAngle };
+    my $coords = {
+        bigCircle   => $slice->{angle} > pi ? '1' : '0',
+        tip         => {
+            x   => $offsetX,
+            y   => $offsetY,
+        },
+        startCorner => {
+            x   => $offsetX + $pieWidth  * cos $slice->{ startAngle },
+            y   => $offsetY - $pieHeight * sin $slice->{ startAngle },
+        },
+        endCorner   => {
+            x   => $offsetX + $pieWidth  * cos $slice->{ stopAngle },
+            y   => $offsetY - $pieHeight * sin $slice->{ stopAngle },
+        },
+    };
 
 	return $coords;
 }
