@@ -68,7 +68,9 @@ sub matrix {
 
         foreach my $type ( @$row ) {
             my $class = "Chart::Magick::Axis::$type";
-            my $ok = eval { require $class };
+
+            my $ok = eval "require $class; 1";
+            die "Cannot instanciate axis class $class because: $@" if !$ok || $@;
 
             $self->addAxis(
                 $class->new( { width => $axisWidth, height => $axisHeight } ),
