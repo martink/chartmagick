@@ -105,10 +105,10 @@ sub _mod2pi {
 sub addSlice {
 	my (%slice, $leftMost, $rightMost, $center, $overallStartCorner, $overallEndCorner, 
 		$fillColor, $strokeColor, $sideColor);
-	my $self = shift;
-	my $properties = shift;
+	my $self        = shift;
+	my $properties  = shift;
 
-	my $percentage = $properties->{percentage};
+	my $percentage  = $properties->{percentage};
 
 	# Work around a bug in imagemagick where an A path with the same start and end point will segfault.
 	if ($percentage == 1) { 
@@ -118,10 +118,10 @@ sub addSlice {
 	my $label = $properties->{label};
 	my $color = $properties->{color};
 	
-	my $angle = 2*pi*$percentage;
-	my $startAngle = _mod2pi($self->{_currentAngle}) || _mod2pi(2*pi*$self->get('startAngle')/360) || 0; 
-	my $stopAngle = _mod2pi($startAngle + $angle);
-	my $avgAngle = _mod2pi((2 * $startAngle + $angle) / 2);
+	my $angle       = 2*pi*$percentage;
+	my $startAngle  = _mod2pi( $self->{_currentAngle}) || _mod2pi(2*pi*$self->get('startAngle')/360) || 0; 
+	my $stopAngle   = _mod2pi( $startAngle + $angle);
+	my $avgAngle    = _mod2pi((2 * $startAngle + $angle) / 2);
 
 	$self->{_currentAngle} = $stopAngle;
 
@@ -447,20 +447,20 @@ A slice properties hashref.
 sub drawLabel {
 	my ($startRadius, $stopRadius, $pieHeight, $pieWidth, $startPointX, $startPointY, 
 		$endPointX, $endPointY);
-	my $self = shift;
-	my $slice = shift;
+	my $self    = shift;
+	my $slice   = shift;
 
 	# Draw labels only once
 	return undef unless ($slice->{mainSlice});
 
-	$startRadius = $self->get('radius') * $slice->{scaleFactor}+ $self->get('stickOffset');
-	$stopRadius = $startRadius + $self->get('stickLength');
+	$startRadius    = $self->get('radius') * $slice->{ scaleFactor } + $self->get('stickOffset');
+	$stopRadius     = $startRadius + $self->get('stickLength');
 
-	$pieHeight = $self->get('radius') * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$pieWidth = $self->get('radius');
+	$pieHeight      = $self->get('radius') * cos(2 * pi * $self->get('tiltAngle') / 360);
+	$pieWidth       = $self->get('radius');
 
-	$startPointX = $self->getXOffset + ($slice->{explosionLength}*$pieWidth/($pieHeight+$pieWidth)+$startRadius) * cos($slice->{avgAngle});
-	$startPointY = 
+	$startPointX    = $self->getXOffset + ($slice->{explosionLength}*$pieWidth/($pieHeight+$pieWidth)+$startRadius) * cos($slice->{avgAngle});
+	$startPointY    = 
         $self->getYOffset - ($slice->{explosionLength}*$pieHeight/($pieHeight+$pieWidth)+$startRadius) * sin($slice->{avgAngle}) * cos(2 * pi * $self->get('tiltAngle') / 360);
 	$endPointX = $self->getXOffset + ($slice->{explosionLength}*$pieWidth/($pieHeight+$pieWidth)+$stopRadius) * cos($slice->{avgAngle});
 	$endPointY = $self->getYOffset - ($slice->{explosionLength}*$pieHeight/($pieHeight+$pieWidth)+$stopRadius) *
