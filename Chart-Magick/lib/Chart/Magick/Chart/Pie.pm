@@ -214,6 +214,18 @@ sub calcCoordinates {
 	return $coords;
 }
 
+sub bigCircle {
+    my $self    = shift;
+    my $angle   = shift;
+    my $tilt    = $self->get('tiltAngle');
+
+    return 
+          $tilt <= 90 && $angle  < pi   ? '0'
+        : $tilt <= 90 && $angle >= pi   ? '1'
+        : $tilt >  90 && $angle  < pi   ? '1'
+        : $tilt >  90 && $angle >= pi   ? '0'
+        : 0;
+}
 
 sub splitSlice {
     my $self    = shift;
@@ -291,11 +303,15 @@ sub plot {
 	# Draw slices in the correct order or you'll get an MC Escher.
 	my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
 
-print Dumper \@slices;
 	# First draw the bottom planes and the labels behind the chart.
 	foreach my $sliceData (@slices) {
 		# Draw bottom
-		$self->drawBottom($sliceData);
+		if ( $self->get('tiltAngle') <= 90 ) {
+            $self->drawBottom( $sliceData );
+        }
+        else {
+            $self->drawTop( $sliceData );
+        }
 
 		if (_mod2pi($sliceData->{avgAngle}) > 0 && _mod2pi($sliceData->{avgAngle}) <= pi) {
 			$self->drawLabel($sliceData);
@@ -340,7 +356,12 @@ print Dumper \@slices;
 
 	# Finally draw the top planes of each slice and the labels that are in front of the chart.
 	foreach my $sliceData (@slices) {
-		$self->drawTop($sliceData) if ($self->get('tiltAngle') != 0);
+        if ( $self->get('tiltAngle') <= 90 ) {
+    		$self->drawTop($sliceData) if ($self->get('tiltAngle') != 0);
+        }
+        else {
+             $self->drawBottom( $sliceData);
+        }
 
 		if (_mod2pi($sliceData->{avgAngle}) > pi) {
 			$self->drawLabel($sliceData);
@@ -513,7 +534,8 @@ The color with which the slice should be filled.
 =cut
 
 sub drawPieSlice {
-	my $self        = shift;
+return;
+    my $self        = shift;
 	my $slice       = shift;
 	my $offset      = shift || 0;
 	my $fillColor   = shift;
@@ -534,7 +556,7 @@ sub drawPieSlice {
     my $radius     = $self->get('radius') * $slice->{ scaleFactor  };
 	my $pieWidth   = $radius; 
 	my $pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
-	my $bigCircle  = $slice->{ angle } >= pi ? '1' : '0';
+	my $bigCircle  = $self->bigCircle( $slice->{ angle } );
 
 	$self->im->Draw(
 		primitive	=> 'Path',
@@ -605,7 +627,7 @@ sub drawRim {
     my $radius  = $self->get('radius') * $slice->{ scaleFactor };
 	$pieWidth   = $radius;
 	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$bigCircle  = $slice->{ angle } >= pi ? '1' : '0';
+	$bigCircle  = $self->bigCircle( $slice->{ angle } );
 	
 	# Draw curvature
 	$self->im->Draw(
