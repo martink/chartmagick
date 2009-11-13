@@ -156,6 +156,20 @@ sub getPalette {
 
 #-------------------------------------------------------------------
 
+=head2 im ( )
+
+Returns the Image::Magick object of the axis tied to chart.
+
+=cut
+
+sub im {
+    my $self = shift;
+
+    return $self->axis->im;
+}
+
+#-------------------------------------------------------------------
+
 =head2 new ( )
 
 Constructor.

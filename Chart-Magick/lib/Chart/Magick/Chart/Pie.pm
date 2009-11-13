@@ -23,12 +23,6 @@ sub getYOffset {
     return $axis->getChartHeight / 2 + $axis->get('marginTop');
 }
 
-sub im {
-    my $self = shift;
-
-    return $self->axis->im;
-}
-
 sub definition {
     my $self    = shift;
     my %options = %{ $self->SUPER::definition };
@@ -166,6 +160,21 @@ sub addSlice {
     return;
 }
 
+#--------------------------------------------------------------------
+
+sub bigCircle {
+    my $self    = shift;
+    my $angle   = shift;
+    my $tilt    = $self->get('tiltAngle');
+
+    return 
+          $tilt <= 90 && $angle  < pi   ? '0'
+        : $tilt <= 90 && $angle >= pi   ? '1'
+        : $tilt >  90 && $angle  < pi   ? '1'
+        : $tilt >  90 && $angle >= pi   ? '0'
+        : 0;
+}
+
 #-------------------------------------------------------------------
 
 =head2 calcCoordinates ( slice )
@@ -183,10 +192,9 @@ sub calcCoordinates {
 	my $self    = shift;
 	my $slice   = shift;
 
-    my $radius = $self->get('radius') * $slice->{ scaleFactor };
-
-	my $pieHeight  = $radius * cos( 2 * pi * $self->get('tiltAngle') / 360 );
-	my $pieWidth   = $radius;
+    my $radius      = $self->get('radius') * $slice->{ scaleFactor };
+	my $pieHeight   = $radius * cos( 2 * pi * $self->get('tiltAngle') / 360 );
+	my $pieWidth    = $radius;
 	
 	# Translate the origin from the top corner to the center of the image.
 	my $offsetX = $self->getXOffset;
@@ -214,19 +222,7 @@ sub calcCoordinates {
 	return $coords;
 }
 
-sub bigCircle {
-    my $self    = shift;
-    my $angle   = shift;
-    my $tilt    = $self->get('tiltAngle');
-
-    return 
-          $tilt <= 90 && $angle  < pi   ? '0'
-        : $tilt <= 90 && $angle >= pi   ? '1'
-        : $tilt >  90 && $angle  < pi   ? '1'
-        : $tilt >  90 && $angle >= pi   ? '0'
-        : 0;
-}
-
+#--------------------------------------------------------------------
 sub splitSlice {
     my $self    = shift;
     my %slice   = %{ shift || {} };
@@ -382,8 +378,8 @@ A slice hashref. See addSlice for more information.
 =cut
 
 sub drawBottom {
-	my $self = shift;
-	my $slice = shift;
+	my $self    = shift;
+	my $slice   = shift;
 
 	$self->drawPieSlice($slice, -1 * $slice->{bottomHeight}, $slice->{bottomColor}); #  if ($slice->{drawTopPlane});
 }
@@ -405,11 +401,6 @@ sub drawLabel {
 		$endPointX, $endPointY);
 	my $self    = shift;
 	my $slice   = shift;
-
-print " plop\n";
-
-	# Draw labels only once
-	return undef unless ($slice->{mainSlice});
 
 	$startRadius    = $self->get('radius') * $slice->{ scaleFactor } + $self->get('stickOffset');
 	$stopRadius     = $startRadius + $self->get('stickLength');
@@ -534,7 +525,6 @@ The color with which the slice should be filled.
 =cut
 
 sub drawPieSlice {
-return;
     my $self        = shift;
 	my $slice       = shift;
 	my $offset      = shift || 0;
