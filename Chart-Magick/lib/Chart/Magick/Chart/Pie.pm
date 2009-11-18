@@ -131,12 +131,9 @@ sub addSlice {
                     ;
 
     my $explosionRadius =
-          $self->get('explosionLength')     ? $self->get('explosionLength')
-        : $self->get('explosionWidth')
-          && sin( $angle / 2 )                      ? $self->get('explosionWidth') / sin( $angle  / 2 )
+          $self->get('explosionLength')                     ? $self->get('explosionLength')
+        : $self->get('explosionWidth') && sin( $angle / 2 ) ? $self->get('explosionWidth') / sin( $angle  / 2 )
         : 0;
-print "--->$explosionRadius<---\n";
-print Dumper [ $self->get('explosionLength'), $self->get('explosionWidth'), sin( $angle / 2 ) ];
 
 	push @{ $slices }, {
 		# color properties
@@ -152,6 +149,7 @@ print Dumper [ $self->get('explosionLength'), $self->get('explosionWidth'), sin(
 		topHeight	    => $self->get('topHeight'),
 		bottomHeight	=> $self->get('bottomHeight'),
         explosionRadius => $explosionRadius,
+        widthReduction  => $explosionRadius * sin( $angle / 2 ),
 		scaleFactor	    => ($self->get('scaleFactor') - 1) * $percentage + 1,
 
 		# keep the slice number for debugging properties
@@ -212,9 +210,12 @@ sub calcCoordinates {
 #	$offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos( $slice->{avgAngle} );
 #	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin( $slice->{avgAngle} );
 
-    $offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
-	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
+#    $offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
+#	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
+    $offsetX += 2 * ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
+	$offsetY -= 2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
 
+    my $angleAdjust = atan2 $slice->{widthReduction}, $self->get('radius');
 
     my $coords = {
         %{ $slice },
@@ -223,12 +224,12 @@ sub calcCoordinates {
             y   => $offsetY,
         },
         startCorner => {
-            x   => $offsetX + $pieWidth  * cos $slice->{ startAngle },
-            y   => $offsetY - $pieHeight * sin $slice->{ startAngle },
+            x   => $self->getXOffset + $pieWidth * cos( $slice->{ startAngle } + $angleAdjust ),
+            y   => $self->getYOffset - $pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
         },
         endCorner   => {
-            x   => $offsetX + $pieWidth  * cos $slice->{ stopAngle },
-            y   => $offsetY - $pieHeight * sin $slice->{ stopAngle },
+            x   => $self->getXOffset + $pieWidth * cos( $slice->{ stopAngle } - $angleAdjust ),
+            y   => $self->getYOffset - $pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
         },
     };
 
@@ -308,7 +309,7 @@ sub plot {
     my $axis = $self->axis;
 
 	$self->processDataset;
-
+   
 	# Draw slices in the correct order or you'll get an MC Escher.
 	my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
 
@@ -429,8 +430,8 @@ sub drawLabel {
 	my $pieHeight   = $radius * $tiltScale;
 	my $pieWidth    = $radius;
 
-    my $explodeX    = $slice->{explosionRadius} * $pieWidth  / ( $pieHeight + $pieWidth );
-    my $explodeY    = $slice->{explosionRadius} * $pieHeight / ( $pieHeight + $pieWidth );
+    my $explodeX    = 0; #$slice->{explosionRadius} * $pieWidth  / ( $pieHeight + $pieWidth );
+    my $explodeY    = 0; #$slice->{explosionRadius} * $pieHeight / ( $pieHeight + $pieWidth );
 	my $startPointX = $self->getXOffset + ( $explodeX + $startRadius ) * cos $angle;
 	my $startPointY = $self->getYOffset - ( $explodeY + $startRadius ) * $tiltScale * sin $angle;
 	my $endPointX   = $self->getXOffset + ( $explodeX + $stopRadius  ) * cos $angle;
