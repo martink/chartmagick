@@ -11,9 +11,13 @@ use Chart::Magick;
 use Image::Magick;
 use Data::Dumper;
 
+#my @ds1 = (
+#    [ qw( 1 2 3 4 5 ) ],
+#    [ qw( 1 3 6 3 2 ) ],
+#);
 my @ds1 = (
-    [ qw( 1 2 3 4 5 ) ],
-    [ qw( 1 3 6 3 2 ) ],
+    [ qw( 1 2 3 4  ) ],
+    [ qw( 1 1 3 1  ) ],
 );
 my @ds2 = (
     [ qw( 1 10 100 1000 9003 ) ],
@@ -46,6 +50,9 @@ $pieChart->dataset->addDataset( @ds1 );
 $pieChart->set(
     tiltAngle   => 0,
     stickLength => 30,
+    #tiltAngle   => 20,
+    explosionLength => 20,
+    radius      => 90
 );
 
 my $gauge = Chart::Magick::Chart::Gauge->new();
@@ -113,7 +120,9 @@ $axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4', 5 => 'overall' }
 $axis = $canvas->getAxis( 3 );
 $axis->addChart( $pieChart );
 $axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
-$axis->set('title', 'Pie!');
+$axis->set(
+    title       =>  'Pie!',
+    );
 
 $axis = $canvas->getAxis( 4 );
 $axis->addChart( $gauge );

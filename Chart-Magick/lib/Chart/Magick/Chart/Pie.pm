@@ -200,7 +200,7 @@ sub calcCoordinates {
 	my $offsetX = $self->getXOffset;
 	my $offsetY = $self->getYOffset;
 
-	$offsetX += ( $radius    / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos( $slice->{avgAngle} );
+	$offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos( $slice->{avgAngle} );
 	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin( $slice->{avgAngle} );
 
     my $coords = {
@@ -397,38 +397,41 @@ A slice properties hashref.
 =cut
 
 sub drawLabel {
-	my ($startRadius, $stopRadius, $pieHeight, $pieWidth, $startPointX, $startPointY, 
-		$endPointX, $endPointY);
 	my $self    = shift;
 	my $slice   = shift;
+    
+    my $tiltScale   = cos( 2 * pi * $self->get('tiltAngle') / 360 );
+	my $angle       = $slice->{avgAngle};
+    my $radius      = $self->get('radius');
 
-	$startRadius    = $self->get('radius') * $slice->{ scaleFactor } + $self->get('stickOffset');
-	$stopRadius     = $startRadius + $self->get('stickLength');
+	my $startRadius = $radius * $slice->{ scaleFactor } + $self->get('stickOffset');
+	my $stopRadius  = $startRadius + $self->get('stickLength');
 
-	$pieHeight      = $self->get('radius') * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$pieWidth       = $self->get('radius');
+    $self->im->Draw(
+        primitive   => 'Line',
+        points      => $self->getXOffset ."," . $self->getYOffset . " " .$self->getXOffset ."," .$self->getYOffset,
+        stroke      => 'white',
+    );
 
-	$startPointX    = $self->getXOffset + ($slice->{explosionLength}*$pieWidth/($pieHeight+$pieWidth)+$startRadius) * cos($slice->{avgAngle});
-	$startPointY    = 
-        $self->getYOffset - ($slice->{explosionLength}*$pieHeight/($pieHeight+$pieWidth)+$startRadius) * sin($slice->{avgAngle}) * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$endPointX = $self->getXOffset + ($slice->{explosionLength}*$pieWidth/($pieHeight+$pieWidth)+$stopRadius) * cos($slice->{avgAngle});
-	$endPointY = $self->getYOffset - ($slice->{explosionLength}*$pieHeight/($pieHeight+$pieWidth)+$stopRadius) *
-    sin($slice->{avgAngle}) * cos(2 * pi * $self->get('tiltAngle') / 360);
+	my $pieHeight   = $radius * $tiltScale;
+	my $pieWidth    = $radius;
+
+    my $explodeX    = $slice->{explosionLength} * $pieWidth  / ( $pieHeight + $pieWidth );
+    my $explodeY    = $slice->{explosionLength} * $pieHeight / ( $pieHeight + $pieWidth );
+	my $startPointX = $self->getXOffset + ( $explodeX + $startRadius ) * cos $angle;
+	my $startPointY = $self->getYOffset - ( $explodeY + $startRadius ) * $tiltScale * sin $angle;
+	my $endPointX   = $self->getXOffset + ( $explodeX + $stopRadius  ) * cos $angle;
+	my $endPointY   = $self->getYOffset - ( $explodeY + $stopRadius  ) * $tiltScale * sin $angle;
 
 	if ($self->get('tiltAngle')) {
-		if ($self->get('labelPosition') eq 'center') {
-			$startPointY -= ($slice->{topHeight} - $slice->{bottomHeight}) / 2;
-			$endPointY -= ($slice->{topHeight} - $slice->{bottomHeight}) / 2;
-		}
-		elsif ($self->get('labelPosition') eq 'top') {
-			$startPointY -= $slice->{topHeight};
-			$endPointY -= $slice->{topHeight};
-		}
-		elsif ($self->get('labelPosition') eq 'bottom') {
-			$startPointY += $slice->{bottomHeight};
-			$endPointY += $slice->{bottomHeight};
-		}
+        my $position     = $self->get('labelPosition');
+        my $labelOffsetY =
+              $position eq 'top'        ? $slice->{topHeight}
+            : $position eq 'bottom'     ? $slice->{bottomHeight}
+            :                           ( $slice->{topHeight} - $slice->{bottomHeight} ) / 2;
 
+        $startPointY    -= $labelOffsetY;
+        $endPointY      -= $labelOffsetY;
 	}
 
 	# Draw the stick
@@ -445,25 +448,21 @@ sub drawLabel {
 	}
 	
 	# Process the textlabel
-	my $horizontalAlign = 'center';
-	my $align = 'Center';
-	if ($slice->{avgAngle} > 0.5 * pi && $slice->{avgAngle} < 1.5 * pi) {
-		$horizontalAlign = 'right';
-		$align = 'Right';
-	}
-	elsif ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi) {
-		$horizontalAlign = 'left';
-		$align = 'Left';
-	}
-
-	my $verticalAlign = 'center';
-	#$verticalAlign = 'bottom' if ($slice->{avgAngle} == 0.5 * pi);
-	#$verticalAlign = 'top' if ($slice->{avgAngle} == 1.5 * pi);
-	$verticalAlign = 'bottom' if ($slice->{avgAngle} < pi);
-	$verticalAlign = 'top' if ($slice->{avgAngle} > pi);
-
-	my $anchorX = $endPointX + $self->get('labelOffset');
-	$anchorX = $endPointX - $self->get('labelOffset') if ($horizontalAlign eq 'right');
+    my $horizontalAlign =
+          $angle > 0.5 * pi && $angle < 1.5 * pi    ? 'right'
+        : $angle < 1.5 * pi || $angle > 1.5 * pi    ? 'left'
+        : 'center';
+        
+    my $verticalAlign    = 
+          $angle < pi   ? 'bottom'
+        : $angle > pi   ? 'top'
+        : 'center';
+        
+	my $anchorX 
+        = $horizontalAlign eq 'right'  
+	    ? $endPointX - $self->get('labelOffset')
+        : $endPointX + $self->get('labelOffset')
+        ;
 
 	my $text = $slice->{label} || sprintf('%.1f', $slice->{percentage}*100).' %';
 
@@ -471,9 +470,9 @@ sub drawLabel {
 	$maxWidth = $self->axis->get('width') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
    
 	$self->axis->text(
-        text            => $text, #$self->wrapLabelToWidth( $text, $maxWidth ),
+        text            => $text,
 		halign          => $horizontalAlign,
-		align           => $align,
+		align           => ucfirst $horizontalAlign,
 		valign          => $verticalAlign,
 		x               => $anchorX,
 		y               => $endPointY,
