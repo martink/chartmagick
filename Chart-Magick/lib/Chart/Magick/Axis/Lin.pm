@@ -1102,20 +1102,21 @@ sub toPxY {
 }
 
 
-=head2 project ( x, y )
+=head2 project ( coord, value )
 
-Projects a coord/value pair onto the canvas and returns the x/y pixel values of the projection.
+See Chart::Magick::Axis::project. The Lin Axis plugin only takes into account the first elements of both the coord
+and value arrayrefs.
 
 =cut
 
 sub project {
     my $self    = shift;
-    my $coords  = shift;
-    my $values  = shift;
+    my $coord   = shift;
+    my $value   = shift;
 
     return ( 
-        $self->toPxX( $coords->[0] ), 
-        $self->toPxY( $values->[0] ) 
+        $self->toPxX( $coord->[0] ), 
+        $self->toPxY( $value->[0] ) 
     );
 }
 

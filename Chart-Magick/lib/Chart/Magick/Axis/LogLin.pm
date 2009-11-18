@@ -19,6 +19,12 @@ The following methods are available from this class:
 
 #--------------------------------------------------------------------
 
+=head2 adjustXRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustXRangeToOrigin.
+
+=cut
+
 sub adjustXRangeToOrigin {
     my $self = shift;
 
@@ -61,9 +67,9 @@ sub getXTicks {
 
 #--------------------------------------------------------------------
 
-=head2 transformY ( y )
+=head2 transformX ( y )
 
-See Chart::Magick::Axis::transformY.
+See Chart::Magick::Axis::transformX.
 
 =cut
 

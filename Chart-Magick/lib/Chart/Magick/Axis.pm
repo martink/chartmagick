@@ -594,6 +594,22 @@ sub plotOption {
 
 #-------------------------------------------------------------------
 
+=head2 project ( coord, value )
+
+Projects a coord/value pair onto the canvas and returns the x/y pixel values of the projection.
+
+Each Axis plugin must overload this method.
+
+=head3 coord
+
+Arrayref containing the coord.
+
+=head3 value
+
+Arrayref containge the value, corresponding to the coord.
+
+=cut
+
 sub project {
     croak "Chart::Magick::Axis->project must be overloaded by sub class";
 }
