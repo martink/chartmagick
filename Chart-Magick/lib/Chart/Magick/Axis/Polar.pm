@@ -6,6 +6,14 @@ use base qw{ Chart::Magick::Axis::Lin };
 use constant pi => 3.141528;
 
 
+#--------------------------------------------------------------------
+
+=head2 plotAxes ( )
+
+See Chart::Magick::Axis::Lin::plotAxes.
+
+=cut
+
 sub plotAxes {
     my $self = shift;
 
@@ -25,6 +33,13 @@ sub plotAxes {
     );
 }
     
+#--------------------------------------------------------------------
+
+=head2 plotBox ( )
+
+See Chart::Magick::Axis::Lin::plotBox.
+
+=cut
 
 sub plotBox {
     my $self = shift;
@@ -36,6 +51,14 @@ sub plotBox {
         fill        => 'none',
     );
 }
+
+#--------------------------------------------------------------------
+
+=head2 plotRulers ( )
+
+See Chart::Magick::Axis::Lin::plotRulers.
+
+=cut
 
 sub plotRulers {
     my $self = shift;
@@ -69,6 +92,15 @@ sub plotRulers {
         );
     }
 }
+
+#--------------------------------------------------------------------
+
+=head2 plotTicks ( )
+
+See Chart::Magick::Axis::Lin::plotTicks.
+
+=cut
+
 sub plotTicks {
     my $self = shift;
     

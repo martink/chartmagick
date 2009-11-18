@@ -163,11 +163,23 @@ sub getChartHeight {
 
 #---------------------------------------------
 
+=head2 getCoordDimension ()
+
+See Chart::Magick::Axis::getCoordDimension.
+
+=cut
+
 sub getCoordDimension {
     return 1;
 }
 
 #---------------------------------------------
+
+=head2 getValueDimension ()
+
+See Chart::Magick::Axis::getValueDimension.
+
+=cut
 
 sub getValueDimension {
     return 1;
@@ -340,6 +352,7 @@ sub getLabelDimensions {
 
 
 #---------------------------------------------
+
 =head2 calcBaseMargins ( )
 
 Calcs and sets the base margins of the axis.
@@ -500,27 +513,80 @@ sub calcTickWidth {
     return $tickWidth * $unit;
 }
 
-sub adjustXRangeToOrigin {
+#--------------------------------------------------------------------
+
+=head2 adjustXRange ()
+
+Adjusts the range of the x axis. Invokes extendRangeToOrigin if necessary.
+
+=cut
+
+sub adjustXRange {
     my $self    = shift;
     my $min     = shift;
     my $max     = shift;
 
     return ( $min, $max ) if $self->get('xNoAdjustRange') && !$self->get('xIncludeOrigin');
 
-    return $self->adjustRangeToOrigin( $min, $max, $self->get('xIncludeOrigin') );
+    return $self->extendRangeToOrigin( $min, $max, $self->get('xIncludeOrigin') );
 }
 
-sub adjustYRangeToOrigin {
+#--------------------------------------------------------------------
+
+=head2 adjustYRange ()
+
+Adjusts the range of the x axis. Invokes extendRangeToOrigin if necessary.
+
+=cut
+
+sub adjustYRange {
     my $self    = shift;
     my $min     = shift;
     my $max     = shift;
 
     return ( $min, $max ) if $self->get('yNoAdjustRange') && !$self->get('yIncludeOrigin');
 
-    return $self->adjustRangeToOrigin( $min, $max, $self->get('yIncludeOrigin') );
+    return $self->extendRangeToOrigin( $min, $max, $self->get('yIncludeOrigin') );
 }
 
-sub adjustRangeToOrigin {
+#--------------------------------------------------------------------
+
+=head2 extendRangeToOrigin ( min, max, override )
+
+Adjusts the passed range in such way that the origin (ie. 0) is included in it. The origin is only included if one
+of the following criteria is met:
+
+=over 4
+
+=item * 
+    
+    The override parameter is true
+
+=item *
+
+    The range has zero length (ie. the minimum of the range is equal to its maximum).
+
+=item *
+
+    The range is large compared to its distance to the origin.
+
+=back
+
+=head3 min
+    
+The minimum of the range.
+
+=head3 max
+
+The maximum of the range.
+
+=head3 override
+
+If set to a true value the origin will allways be included in the range.
+
+=cut
+
+sub extendRangeToOrigin {
     my $self        = shift;
     my $min         = shift;
     my $max         = shift;
@@ -566,8 +632,8 @@ sub preprocessData {
     # Get the extreme values of the data, so we can determine what values the axis should at leat span.
     my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
 
-    ($minX, $maxX) = $self->adjustXRangeToOrigin( $minX, $maxX );
-    ($minY, $maxY) = $self->adjustYRangeToOrigin( $minY, $maxY );
+    ($minX, $maxX) = $self->adjustXRange( $minX, $maxX );
+    ($minY, $maxY) = $self->adjustYRange( $minY, $maxY );
 
     # Determine the space occupied by margin stuff like labels and the like. This als sets the chart width and
     # height in terms of pixels that can be used to draw charts on.
@@ -627,7 +693,7 @@ sub getXTicks {
 
 #---------------------------------------------
 
-=head2 generateSubTicks ( ticks, count )
+=head2 generateSubticks ( ticks, count )
 
 Returns an array ref containing the locations of subticks for a given series of tick locations and a number of
 subtick per tick interval.
@@ -746,6 +812,13 @@ sub plotAxes {
 }
 
 #---------------------------------------------
+
+=head2 plotAxisTitles ( )
+
+Plots the titles of the x and y axis.
+
+=cut
+
 sub plotAxisTitles {
     my $self = shift;
 
@@ -779,6 +852,13 @@ sub plotAxisTitles {
 }
 
 #---------------------------------------------
+
+=head2 plotBox ( )
+
+Plots the box or frame around the chartin area.
+
+=cut
+
 sub plotBox {
     my $self = shift;
 
@@ -851,6 +931,34 @@ sub plotRulers {
     return;
 }
 
+
+#--------------------------------------------------------------------
+
+=head2 drawTick ( args )
+
+Plots a tick.
+
+=head3 args
+
+Hashref containing the properties to draw this tick. The following properties are available:
+
+=over 4
+
+=item x
+
+    The location of the tick base for x ticks. This should be in chart coordinates, not pixels.
+
+=item y
+
+    The location of the tick base for y ticks. This should be in chart coordinates, not pixels.
+
+=item subtick
+
+    If set to a true value the tick will be drawn as a subtick.
+
+=back
+
+=cut
 
 sub drawTick {
     my $self    = shift;
@@ -1101,21 +1209,23 @@ sub toPxY {
     return int $y;
 }
 
+#--------------------------------------------------------------------
 
-=head2 project ( x, y )
+=head2 project ( coord, value )
 
-Projects a coord/value pair onto the canvas and returns the x/y pixel values of the projection.
+See Chart::Magick::Axis::project. The Lin Axis plugin only takes into account the first elements of both the coord
+and value arrayrefs.
 
 =cut
 
 sub project {
     my $self    = shift;
-    my $coords  = shift;
-    my $values  = shift;
+    my $coord   = shift;
+    my $value   = shift;
 
     return ( 
-        $self->toPxX( $coords->[0] ), 
-        $self->toPxY( $values->[0] ) 
+        $self->toPxX( $coord->[0] ), 
+        $self->toPxY( $value->[0] ) 
     );
 }
 

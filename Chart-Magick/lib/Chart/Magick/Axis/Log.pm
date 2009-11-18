@@ -21,6 +21,12 @@ The following methods are available from this class:
 
 #--------------------------------------------------------------------
 
+=head2 adjustXRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustXRangeToOrigin.
+
+=cut
+
 sub adjustXRangeToOrigin {
     my $self = shift;
     return @_;
@@ -28,12 +34,16 @@ sub adjustXRangeToOrigin {
 
 #--------------------------------------------------------------------
 
+=head2 adjustYRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustYRangeToOrigin.
+
+=cut
+
 sub adjustYRangeToOrigin {
     my $self = shift;
     return @_;
 }
-
-
 
 #--------------------------------------------------------------------
 
@@ -166,6 +176,7 @@ sub getYTicks {
 }
 
 #--------------------------------------------------------------------
+
 =head2 logTransform ( value, base )
 
 Returns the base n logarithm of value. Defaults to base 10. Output is formatted to have 5 decimals.

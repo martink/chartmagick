@@ -19,6 +19,12 @@ The following methods are available from this class:
 
 #--------------------------------------------------------------------
 
+=head2 adjustYRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustYRangeToOrigin.
+
+=cut
+
 sub adjustYRangeToOrigin {
     my $self = shift;
 
