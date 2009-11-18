@@ -55,9 +55,11 @@ my $pieChart = Chart::Magick::Chart::Pie->new();
 $pieChart->dataset->addDataset( @ds1 );
 $pieChart->set(
     tiltAngle   => 0,
+    startAngle  => -60,
     stickLength => 30,
     #tiltAngle   => 20,
-    explosionLength => 20,
+    explosionLength=> 5,
+    explosionWidth => 3,
     radius      => 90
 );
 
