@@ -30,6 +30,7 @@ sub definition {
     my %overrides = (
         bottomHeight        => 0, 
         explosionLength     => 0,
+        explosionWidth      => 0,
         labelPosition       => 'top',
         labelOffset         => 10,
         pieMode             => 'normal',
@@ -129,6 +130,14 @@ sub addSlice {
                     : $fillColor
                     ;
 
+    my $explosionRadius =
+          $self->get('explosionLength')     ? $self->get('explosionLength')
+        : $self->get('explosionWidth')
+          && sin( $angle / 2 )                      ? $self->get('explosionWidth') / sin( $angle  / 2 )
+        : 0;
+print "--->$explosionRadius<---\n";
+print Dumper [ $self->get('explosionLength'), $self->get('explosionWidth'), sin( $angle / 2 ) ];
+
 	push @{ $slices }, {
 		# color properties
 		fillColor	    => $fillColor,
@@ -142,7 +151,7 @@ sub addSlice {
 		# geometric properties
 		topHeight	    => $self->get('topHeight'),
 		bottomHeight	=> $self->get('bottomHeight'),
-		explosionLength	=> $self->get('explosionLength'),
+        explosionRadius => $explosionRadius,
 		scaleFactor	    => ($self->get('scaleFactor') - 1) * $percentage + 1,
 
 		# keep the slice number for debugging properties
@@ -200,8 +209,12 @@ sub calcCoordinates {
 	my $offsetX = $self->getXOffset;
 	my $offsetY = $self->getYOffset;
 
-	$offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos( $slice->{avgAngle} );
-	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin( $slice->{avgAngle} );
+#	$offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos( $slice->{avgAngle} );
+#	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin( $slice->{avgAngle} );
+
+    $offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
+	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
+
 
     my $coords = {
         %{ $slice },
@@ -416,8 +429,8 @@ sub drawLabel {
 	my $pieHeight   = $radius * $tiltScale;
 	my $pieWidth    = $radius;
 
-    my $explodeX    = $slice->{explosionLength} * $pieWidth  / ( $pieHeight + $pieWidth );
-    my $explodeY    = $slice->{explosionLength} * $pieHeight / ( $pieHeight + $pieWidth );
+    my $explodeX    = $slice->{explosionRadius} * $pieWidth  / ( $pieHeight + $pieWidth );
+    my $explodeY    = $slice->{explosionRadius} * $pieHeight / ( $pieHeight + $pieWidth );
 	my $startPointX = $self->getXOffset + ( $explodeX + $startRadius ) * cos $angle;
 	my $startPointY = $self->getYOffset - ( $explodeY + $startRadius ) * $tiltScale * sin $angle;
 	my $endPointX   = $self->getXOffset + ( $explodeX + $stopRadius  ) * cos $angle;
