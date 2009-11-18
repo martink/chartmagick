@@ -10,6 +10,7 @@ use Chart::Magick::Chart::Gauge;
 use Chart::Magick;
 use Image::Magick;
 use Data::Dumper;
+use Time::HiRes qw( gettimeofday tv_interval );
 
 my @ds1 = (
     [ qw( 1 2 3 4 5 ) ],
@@ -30,7 +31,7 @@ my @ds4 = (
 
 use constant pi => 3.14159265358979;
 
-my $pxCount = 2000;
+my $pxCount = 1000;
 my $dsx = [ map { pi / $pxCount * $_  - 0.5 * pi      } (0..$pxCount) ];
 my $dsx = [ map { pi / $pxCount * $_                  } (-$pxCount/2..$pxCount/2) ];
 my $dsy = [ map { 1.1 + sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
@@ -38,7 +39,12 @@ my @ds5 = (
     $dsx,
     $dsy,
 );
-    
+
+
+
+# Timekeeping
+my $time = [ gettimeofday ];
+
 
 # Set up chart objects
 my $pieChart = Chart::Magick::Chart::Pie->new();
@@ -139,7 +145,16 @@ $canvas->draw;
 #    );
 #}
 
+# More timekeeping
+my $runtime1 = tv_interval( $time );
+
 $canvas->im->Write('canvas.png');
+
+# More timekeeping
+my $runtime = tv_interval( $time );
+
+print "___>$runtime1<___\n";
+print "___>$runtime<___\n";
 
 #print $barChart->dataset->dumpData;
 
