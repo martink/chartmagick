@@ -175,10 +175,10 @@ sub bigCircle {
     my $tilt    = $self->get('tiltAngle');
 
     return 
-          $tilt <= 90 && $angle  < pi   ? '0'
-        : $tilt <= 90 && $angle >= pi   ? '1'
-        : $tilt >  90 && $angle  < pi   ? '1'
-        : $tilt >  90 && $angle >= pi   ? '0'
+          $tilt <= 90 && $angle <= pi   ? '0'
+        : $tilt <= 90 && $angle >  pi   ? '1'
+        : $tilt >  90 && $angle <= pi   ? '1'
+        : $tilt >  90 && $angle >  pi   ? '0'
         : 0;
 }
 
@@ -207,11 +207,6 @@ sub calcCoordinates {
 	my $offsetX = $self->getXOffset;
 	my $offsetY = $self->getYOffset;
 
-#	$offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * cos( $slice->{avgAngle} );
-#	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionLength} * sin( $slice->{avgAngle} );
-
-#    $offsetX += ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
-#	$offsetY -= ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
     $offsetX += 2 * ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
 	$offsetY -= 2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
 
