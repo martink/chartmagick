@@ -4,30 +4,6 @@ use strict;
 
 use base qw{ Chart::Magick::Axis };
 
-=head2 getChartHeight ( )
-
-See Chart::Magick::Axis::getChartHeight.
-
-=cut
-
-sub getChartHeight {
-    my $self = shift;
-
-    return $self->plotOption( 'axisHeight' );
-}
-
-=head2 getChartWidth ( )
-
-See Chart::Magick::Axis::getChartWidth.
-
-=cut
-
-sub getChartWidth {
-    my $self = shift;
-
-    return $self->plotOption( 'axisWidth' );
-}
-
 =head2 getCoordDimension ( )
 
 See Chart::Magick::Axis::getCoordDimension.
@@ -55,9 +31,11 @@ See Chart::Magick::Axis::project.
 =cut
 
 sub project {
-    my $self = shift;
+    my $self    = shift;
+    my $x       = shift;
+    my $y       = shift;
 
-    return ($_[0]->[0], $_[1]->[0]);
+    return ($x->[0], $y->[0]);
 }
 
 1;

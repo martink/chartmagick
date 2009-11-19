@@ -85,7 +85,6 @@ sub getAxis {
     return $axis;
 }
 
-
 #-------------------------------------------------------------------
 
 =head2 getData ( )
@@ -123,6 +122,20 @@ sub getDataRange {
 
 #-------------------------------------------------------------------
 
+=head2 getHeight ( )
+
+Returns the height in pixels of the area available for the chart.
+
+=cut
+
+sub getHeight {
+    my $self = shift;
+
+    return $self->axis->getChartHeight;
+}
+
+#-------------------------------------------------------------------
+
 =head2 getPalette ( )
 
 Returns the Chart::Magick::Palette object associated with this plugin. If none is set, will create a default
@@ -152,6 +165,20 @@ sub getPalette {
     $palette{ $id } = $palette;
 
     return $palette;
+}
+
+#-------------------------------------------------------------------
+
+=head2 getWidth ( )
+
+Returns the width in pixels of the area available for the chart.
+
+=cut
+
+sub getWidth {
+    my $self = shift;
+
+    return $self->axis->getChartWidth;
 }
 
 #-------------------------------------------------------------------

@@ -127,6 +127,20 @@ sub checkFont {
     return -e $self->im->QueryFont( $font );
 }
 
+#--------------------------------------------------------------------
+sub getChartHeight {
+    my $self = shift;
+
+    return $self->plotOption( 'axisHeight' ) - $self->get('marginTop') - $self->get('marginBottom');
+}
+
+#--------------------------------------------------------------------
+sub getChartWidth {
+    my $self = shift;
+
+    return $self->plotOption( 'axisWidth' ) - $self->get('marginLeft') - $self->get('marginRight');
+}
+
 
 #----------------------------------------------
 
