@@ -137,31 +137,31 @@ sub addSlice {
 
     push @{ $slices }, {
         # color properties
-        fillColor	    => $fillColor,
-        strokeColor	    => $strokeColor,
-        bottomColor	    => $fillColor,
-        topColor	    => $fillColor,
-        startPlaneColor	=> $sideColor,
-        stopPlaneColor	=> $sideColor,
-        rimColor	    => $sideColor,
+        fillColor       => $fillColor,
+        strokeColor     => $strokeColor,
+        bottomColor     => $fillColor,
+        topColor        => $fillColor,
+        startPlaneColor => $sideColor,
+        stopPlaneColor  => $sideColor,
+        rimColor        => $sideColor,
 
         # geometric properties
-        topHeight	    => $self->get('topHeight'),
-        bottomHeight	=> $self->get('bottomHeight'),
+        topHeight       => $self->get('topHeight'),
+        bottomHeight    => $self->get('bottomHeight'),
         explosionRadius => $explosionRadius,
         widthReduction  => $explosionRadius * sin( $angle / 2 ),
-        scaleFactor	    => ($self->get('scaleFactor') - 1) * $percentage + 1,
+        scaleFactor     => ($self->get('scaleFactor') - 1) * $percentage + 1,
 
         # keep the slice number for debugging properties
-        sliceNr		    => scalar @{ $slices },
-        label		    => $properties->{ label },
-        percentage	    => $percentage,
+        sliceNr         => scalar @{ $slices },
+        label           => $properties->{ label },
+        percentage      => $percentage,
 
         # angles
-        startAngle	    => $startAngle,
-        angle		    => $angle,
-        avgAngle	    => $avgAngle,
-        stopAngle	    => $stopAngle,
+        startAngle      => $startAngle,
+        angle           => $angle,
+        avgAngle        => $avgAngle,
+        stopAngle       => $stopAngle,
     };
 
     return;
@@ -423,13 +423,13 @@ sub drawLabel {
     # Draw the stick
     if ($self->get('stickLength')){
         $self->im->Draw(
-            primitive	=> 'Path',
-            stroke		=> $self->get('stickColor'),
-            strokewidth	=> 3,
-            points		=> 
+            primitive   => 'Path',
+            stroke      => $self->get('stickColor'),
+            strokewidth => 3,
+            points      => 
                 " M $startPointX,$startPointY ".
                 " L $endPointX,$endPointY ",
-            fill		=> 'none',
+            fill        => 'none',
         );
     }
     
@@ -516,30 +516,30 @@ sub drawPieSlice {
     my $fillColor   = shift;
 
     my %tip = (
-        x	=> $slice->{tip}->{x},
-        y	=> $slice->{tip}->{y} - $offset,
+        x   => $slice->{tip}->{x},
+        y   => $slice->{tip}->{y} - $offset,
     );
     my %startCorner = (
-        x	=> $slice->{startCorner}->{x},
-        y	=> $slice->{startCorner}->{y} - $offset,
+        x   => $slice->{startCorner}->{x},
+        y   => $slice->{startCorner}->{y} - $offset,
     );
     my %endCorner = (
-        x	=> $slice->{endCorner}->{x},
-        y	=> $slice->{endCorner}->{y} - $offset,
+        x   => $slice->{endCorner}->{x},
+        y   => $slice->{endCorner}->{y} - $offset,
     );
 
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
     my $bigCircle                = $self->bigCircle( $slice->{ angle } );
 
     $self->im->Draw(
-        primitive	=> 'Path',
-        stroke		=> $slice->{strokeColor},
-        points		=> 
+        primitive   => 'Path',
+        stroke      => $slice->{strokeColor},
+        points      => 
             " M $tip{x},$tip{y} ".
             " L $startCorner{x},$startCorner{y} ".
             " A $pieWidth,$pieHeight 0 $bigCircle,0 $endCorner{x},$endCorner{y} ".
             " Z ",
-        fill		=> $fillColor,
+        fill        => $fillColor,
     );
 }
 
@@ -579,20 +579,20 @@ sub drawRim {
     my $slice = shift;
     
     my %startSideTop = (
-        x	=> $slice->{startCorner}->{x},
-        y	=> $slice->{startCorner}->{y} - $slice->{topHeight}
+        x   => $slice->{startCorner}->{x},
+        y   => $slice->{startCorner}->{y} - $slice->{topHeight}
     );
     my %startSideBottom = (
-        x	=> $slice->{startCorner}->{x},
-        y	=> $slice->{startCorner}->{y} + $slice->{bottomHeight}
+        x   => $slice->{startCorner}->{x},
+        y   => $slice->{startCorner}->{y} + $slice->{bottomHeight}
     );
     my %endSideTop = (
-        x	=> $slice->{endCorner}->{x},
-        y	=> $slice->{endCorner}->{y} - $slice->{topHeight}
+        x   => $slice->{endCorner}->{x},
+        y   => $slice->{endCorner}->{y} - $slice->{topHeight}
     );
     my %endSideBottom = (
-        x	=> $slice->{endCorner}->{x},
-        y	=> $slice->{endCorner}->{y} + $slice->{bottomHeight}
+        x   => $slice->{endCorner}->{x},
+        y   => $slice->{endCorner}->{y} + $slice->{bottomHeight}
     );
 
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
@@ -602,13 +602,13 @@ sub drawRim {
     $self->im->Draw(
         primitive       => 'Path',
         stroke          => $slice->{strokeColor},
-        points		=> 
+        points      => 
             " M $startSideBottom{x},$startSideBottom{y} ".
             " A $pieWidth,$pieHeight 0 $bigCircle,0 $endSideBottom{x},$endSideBottom{y} ".
             " L $endSideTop{x}, $endSideTop{y} ".
             " A $pieWidth,$pieHeight 0 $bigCircle,1 $startSideTop{x},$startSideTop{y}".
             " Z",
-        fill		=> $slice->{rimColor},
+        fill        => $slice->{rimColor},
     );
 }
 
@@ -643,20 +643,20 @@ sub drawSide {
     my $color = shift || $slice->{startPlaneColor};
     
     %tipTop = (
-        x	=> $slice->{tip}->{x},
-        y	=> $slice->{tip}->{y} - $slice->{topHeight}
+        x   => $slice->{tip}->{x},
+        y   => $slice->{tip}->{y} - $slice->{topHeight}
     );
     %tipBottom = (
-        x	=> $slice->{tip}->{x},
-        y	=> $slice->{tip}->{y} + $slice->{bottomHeight}
+        x   => $slice->{tip}->{x},
+        y   => $slice->{tip}->{y} + $slice->{bottomHeight}
     );
     %rimTop = (
-        x	=> $slice->{$cornerName}->{x},
-        y	=> $slice->{$cornerName}->{y} - $slice->{topHeight}
+        x   => $slice->{$cornerName}->{x},
+        y   => $slice->{$cornerName}->{y} - $slice->{topHeight}
     );
     %rimBottom = (
-        x	=> $slice->{$cornerName}->{x},
-        y	=> $slice->{$cornerName}->{y} + $slice->{bottomHeight}
+        x   => $slice->{$cornerName}->{x},
+        y   => $slice->{$cornerName}->{y} + $slice->{bottomHeight}
     );
 
     $self->im->Draw(
@@ -745,9 +745,9 @@ sub processDataset {
         next unless $y >= 0;
 
         $self->addSlice( {
-            percentage	=> $y / $total, 
-            label		=> $self->axis->getLabels( 0, $x ) || $x,
-            color		=> $self->getPalette->getNextColor,
+            percentage  => $y / $total, 
+            label       => $self->axis->getLabels( 0, $x ) || $x,
+            color       => $self->getPalette->getNextColor,
         } );
         
         $self->set('topHeight', $self->get('topHeight') - $stepsize) if ($self->get('pieMode') eq 'stepped');
