@@ -35,7 +35,10 @@ sub project {
     my $x       = shift;
     my $y       = shift;
 
-    return ($x->[0], $y->[0]);
+    my $offsetX = $self->get('marginLeft');
+    my $offsetY = $self->get('marginTop');
+
+    return ( $x->[0] + $offsetX, $y->[0] + $offsetY );
 }
 
 1;

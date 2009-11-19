@@ -2,9 +2,9 @@ package Chart::Magick::Chart::Pie;
 
 use strict;
 use warnings;
-
 use constant pi => 3.14159265358979;
 
+use List::Util qw{ min };
 use Data::Dumper;
 
 use base qw{ Chart::Magick::Chart };
@@ -114,7 +114,7 @@ sub addSlice {
     }
 
     my $sliceStart  =
-        scalar @{ $slices }           ? $slices->[ -1 ]->{ stopAngle }
+          scalar @{ $slices }           ? $slices->[ -1 ]->{ stopAngle }
         : $self->get('startAngle')      ? 2 * pi * $self->get('startAngle') / 360
         : 0
         ;
@@ -133,7 +133,7 @@ sub addSlice {
                     ;
 
     my $explosionRadius =
-        $self->get('explosionLength')                     ? $self->get('explosionLength')
+          $self->get('explosionLength')                     ? $self->get('explosionLength')
         : $self->get('explosionWidth') && sin( $angle / 2 ) ? $self->get('explosionWidth') / sin( $angle  / 2 )
         : 0;
 
@@ -752,7 +752,17 @@ Takes the dataset and takes the necesarry steps for the pie to be drawn.
 sub processDataset {
     my $self    = shift;
 
-    my $total = $self->dataset->datasetData->[0]->{ total }->[ 0 ] || 1;
+    my $tiltScale = cos( 2 * pi * $self->get('tiltAngle') / 360 );
+    my $stickSize = $self->get('stickLength') + $self->get('stickOffset') + $self->get('labelOffset') + 10;
+
+    my $radius  = min ( 
+        $self->getWidth  - 2 * $stickSize,
+        ($self->getHeight - $tiltScale * 2 * $stickSize) / $tiltScale,
+    );
+
+    $self->set( radius => $radius );
+
+    my $total       = $self->dataset->datasetData->[0]->{ total }->[ 0 ] || 1;
 
     my $divisor     = $self->dataset->datasetData->[0]->{ coordCount }; # avoid division by zero
     my $stepsize    = ( $self->get('topHeight') + $self->get('bottomHeight') ) / $divisor;

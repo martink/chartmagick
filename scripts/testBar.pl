@@ -21,7 +21,7 @@ $ds->addDataset(
     [ qw( 1 3 5.9 3 2 ) ],
 );
 $ds->addDataset(
-    [ qw( 1 2 3 4 5 ) ],
+    [ qw( 1 2 3 4 6 ) ],
     [ qw( 7 -4 6 1 9 ) ],
 );
 $ds->addDataset(

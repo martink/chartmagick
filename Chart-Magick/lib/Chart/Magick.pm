@@ -95,7 +95,7 @@ sub new {
     my $magick  = Image::Magick->new(
         size        => $w.'x'.$h,
     );
-    $magick->Read('xc:white');
+    $magick->Read('xc:grey40');
 
     my $options = {
         width   => $w,

@@ -38,10 +38,10 @@ for ( 0 .. 7 ) {
 
     my $chart = Chart::Magick::Chart::Pie->new( { 
         tiltAngle       => 15 * $_,
-        stickLength     => 30,
+        stickLength     => 10,
         #startAngle      => 315,
         #explosionLength => 20,
-        explosionWidth  => 5,
+        explosionWidth  => 2,
     #   scaleFactor => 2,
 #        radius      => 100,
     } );
