@@ -203,30 +203,42 @@ sub getIntersect {
     my $x0      = shift;
     my $y0      = shift;
 
-    my $sinA    = sprintf( '%.6f', sin( $angle ) / cos( $angle ) );
-    my $sinA2   = sprintf( '%.6f', $sinA ** 2 );
+    my $dx      = $radius * cos( $angle );
+    my $dy      = $radius * sin( $angle );
+    my $dr      = sqrt( $dx ** 2 + $dy ** 2 );
+    my $D       = $x0 * ($y0 + $dy) - $y0 * ($x0 + $dx);
+   
+    my $sgn     = $dy < 0 ? -1 : 1;
+    print "dx: $dx, dy: $dy, dr: $dr, D: $D \n";
+    my $x       = ( $D * $dy + $dx * $sgn * sqrt( $radius ** 2 * $dr ** 2 - $D ** 2 ) )/ ($dr**2);
+    my $x_2     = ( $D * $dy - $dx * $sgn * sqrt( $radius ** 2 * $dr ** 2 - $D ** 2 ) ) / ($dr**2);
+    my $y       = ( -$D * $dx + $sgn * abs($dy) * sqrt( $radius ** 2 * $dr ** 2 - $D ** 2 ) )/ ($dr**2);
+print "Found x = $x and $x_2\n";
 
-#    if ( $sinA > 1000000 ) { 
-#        return (
-#            sqrt( $radius ** 2 - $y ** 2 ), 
-#            $y
-#        );
-#    };
-
-
-    my $a = 1 + $sinA2;
-    my $b = -2 * $sinA * ( $y0 + $x0 );
-    my $c = ($x0 ** 2) * $sinA2 + 2 * $x0 * $y0 * $sinA + $y0 ** 2 - $radius ** 2;
-
-print "r: $radius, ang: ", $angle / pi, ", x: $x0, y: $y0\n";
-print "tana: $sinA, tana2: $sinA2 a: $a, b: $b, c: $c\n";
-
-    my $posNeg = ($angle > 0.5*pi && $angle < 1.5*pi) ? -1 : 1;
-#    my $posNeg = $angle >= 0.5*pi || ( $angle >pi &&$angle < 1.5*pi) ? -1 : 1;
-
-
-    my $x = ( -$b + $posNeg * sqrt( $b ** 2 - 4 * $a * $c ) ) / ( 2 * $a );
-    my $y = sqrt( $radius ** 2 - $x ** 2 ) * ( $angle > pi ? 1 : -1 );#$sinA * ( $x0 - $x ) + $y0;
+#    my $sinA    = sprintf( '%.6f', sin( $angle ) / cos( $angle ) );
+#    my $sinA2   = sprintf( '%.6f', $sinA ** 2 );
+#
+##    if ( $sinA > 1000000 ) { 
+##        return (
+##            sqrt( $radius ** 2 - $y ** 2 ), 
+##            $y
+##        );
+##    };
+#
+#
+#    my $a = 1 + $sinA2;
+#    my $b = -2 * $sinA * ( $y0 + $x0 );
+#    my $c = ($x0 ** 2) * $sinA2 + 2 * $x0 * $y0 * $sinA + $y0 ** 2 - $radius ** 2;
+#
+#print "r: $radius, ang: ", $angle / pi, ", x: $x0, y: $y0\n";
+#print "tana: $sinA, tana2: $sinA2 a: $a, b: $b, c: $c\n";
+#
+#    my $posNeg = ($angle > 0.5*pi && $angle < 1.5*pi) ? -1 : 1;
+##    my $posNeg = $angle >= 0.5*pi || ( $angle >pi &&$angle < 1.5*pi) ? -1 : 1;
+#
+#
+#    my $x = ( -$b + $posNeg * sqrt( $b ** 2 - 4 * $a * $c ) ) / ( 2 * $a );
+#    my $y; # = sqrt( $radius ** 2 - $x ** 2 ) * ( $angle > pi ? 1 : -1 );#$sinA * ( $x0 - $x ) + $y0;
 
     return ( $x, $y );
 }
@@ -266,11 +278,11 @@ sub calcCoordinates {
         -2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} ),
     );
 
-    my ( $startX, $startY ) =  $self->project(
+    my ( $startX, $startY ) =  (#$self->project(
          $pieWidth  * cos( $slice->{ startAngle } + $angleAdjust ),
         -$pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
     );
-    my ( $endX, $endY )     =  $self->project(
+    my ( $endX, $endY )     = (# $self->project(
          $pieWidth  * cos( $slice->{ stopAngle } - $angleAdjust ),
         -$pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
     );
@@ -280,17 +292,17 @@ sub calcCoordinates {
     print 
         "start: [", 
         join( '][', $startX, $startY, 
-            $self->project( 
+    #        $self->project( 
                 $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY ) 
-            ) 
+     #       ) 
         ) ,
         "]\n";
     print 
         "stop: [", 
         join( '][', $endX, $endY, 
-            $self->project( 
+    #        $self->project( 
                 $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY ) 
-            ) 
+    #        ) 
         ),
         "]\n";
     my ( $startX, $startY ) =  $self->project(
