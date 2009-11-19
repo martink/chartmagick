@@ -340,7 +340,7 @@ sub definition {
         height          => 300,
 
         # Image margins
-        margin          => 30,
+        margin          => 0,
         marginLeft      => sub { $_[0]->get('margin') },
         marginTop       => sub { $_[0]->get('margin') }, 
         marginRight     => sub { $_[0]->get('margin') },
@@ -512,13 +512,13 @@ sub preprocessData {
    
     # Calc title height
     my $minTitleMargin  = $self->get('minTitleMargin');
-    my $titleHeight = [ 
-        $self->im->QueryFontMetrics( 
-            text        => $self->get('title'),
-            font        => $self->get('titleFont'),
-            pointsize   => $self->get('titleFontSize'),
-        )
-    ]->[ 5 ];
+    my $titleHeight = $self->get('title')
+        ? ( $self->im->QueryFontMetrics( 
+                text        => $self->get('title'),
+                font        => $self->get('titleFont'),
+                pointsize   => $self->get('titleFontSize'),
+          ) )[ 5 ]
+        : 0;
 
     # Adjust top margin to fit title
     my $marginTop   = max $self->get('marginTop'), $titleHeight + 2 * $minTitleMargin;
@@ -621,7 +621,7 @@ Arrayref containing the coord.
 
 =head3 value
 
-Arrayref containge the value, corresponding to the coord.
+Arrayref containing the value, corresponding to the coord.
 
 =cut
 
