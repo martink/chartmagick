@@ -1,6 +1,8 @@
 package Chart::Magick::Chart::Pie;
 
 use strict;
+use warnings;
+
 use constant pi => 3.14159265358979;
 
 use Data::Dumper;
@@ -28,7 +30,7 @@ sub definition {
     my %options = %{ $self->SUPER::definition };
 
     my %overrides = (
-        bottomHeight        => 0, 
+        bottomHeight        => 0,
         explosionLength     => 0,
         explosionWidth      => 0,
         labelPosition       => 'top',
@@ -42,8 +44,8 @@ sub definition {
         stickLength         => 0,
         stickOffset         => 0,
         tiltAngle           => 55,
-        topHeight           => 20, 
-    );  
+        topHeight           => 20,
+    );
 
     return { %options, %overrides };
 }
@@ -107,11 +109,11 @@ sub addSlice {
 
     my $percentage  = $properties->{percentage};
     # Work around a bug in imagemagick where an A path with the same start and end point will segfault.
-    if ($percentage == 1) { 
+    if ($percentage == 1) {
         $percentage = 0.999999999;
     }
 
-    my $sliceStart  =  
+    my $sliceStart  =
         scalar @{ $slices }           ? $slices->[ -1 ]->{ stopAngle }
         : $self->get('startAngle')      ? 2 * pi * $self->get('startAngle') / 360
         : 0
@@ -125,7 +127,7 @@ sub addSlice {
     my $color       = $properties->{color};
     my $fillColor   = $color->getFillColor;
     my $strokeColor = $color->getStrokeColor;
-    my $sideColor   = $self->get('shadedSides') 
+    my $sideColor   = $self->get('shadedSides')
                     ? $color->darken->getFillColor
                     : $fillColor
                     ;
@@ -174,8 +176,8 @@ sub bigCircle {
     my $angle   = shift;
     my $tilt    = $self->get('tiltAngle');
 
-    return 
-        $tilt <= 90 && $angle <= pi   ? '0'
+    return
+          $tilt <= 90 && $angle <= pi   ? '0'
         : $tilt <= 90 && $angle >  pi   ? '1'
         : $tilt >  90 && $angle <= pi   ? '1'
         : $tilt >  90 && $angle >  pi   ? '0'
@@ -199,8 +201,8 @@ sub calcCoordinates {
     my $self    = shift;
     my $slice   = shift;
 
-    my( $pieWidth, $pieHeight ) = $self->getPieDimensions( $slice->{ scaleFactor } ); 
-    
+    my( $pieWidth, $pieHeight ) = $self->getPieDimensions( $slice->{ scaleFactor } );
+
     # Translate the origin from the top corner to the center of the image.
     my $offsetX = $self->getXOffset;
     my $offsetY = $self->getYOffset;
@@ -262,7 +264,7 @@ sub splitSlice {
     # slice crosses the right intersect (2*pi)
     if ( $start >= pi && $start + $angle > 2 * pi ) {
         my $partAngle   = 2 * pi - $start;
-        
+
         push @parts, $self->calcCoordinates( {
             %slice,
             angle           => $partAngle,
@@ -285,10 +287,10 @@ sub splitSlice {
         noLeft      => $noLeft,
         noRight     => 0,
     } );
-        
+
     return @parts;
 }
-            
+
 
 #-------------------------------------------------------------------
 
@@ -325,7 +327,7 @@ sub plot {
     # Secondly draw the sides
     # Only 3d pies have sides
     if ($self->get('tiltAngle') != 0) {
-        my @parts = 
+        my @parts =
             sort    sortSlices                                          # sort slices in drwaing order
             map     { $self->splitSlice( $_ ) }                         # split slices crossing the horizontal axis
             @slices;
@@ -340,7 +342,7 @@ sub plot {
                 : !$leftVisible &&  $rightVisible   ? qw{ drawLeftSide      drawRim         drawRightSide   }
                 :                                     qw{ drawLeftSide      drawRightSide   drawRim         }
                 ;
-                
+
             for my $method ( @order ) {
                 $self->$method( $slice );
             }
@@ -360,6 +362,8 @@ sub plot {
             $self->drawLabel($slice);
         }
     }
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -379,6 +383,8 @@ sub drawBottom {
     my $slice   = shift;
 
     $self->drawPieSlice($slice, -1 * $slice->{bottomHeight}, $slice->{bottomColor});
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -396,7 +402,7 @@ A slice properties hashref.
 sub drawLabel {
     my $self    = shift;
     my $slice   = shift;
-    
+
     my $tiltScale   = cos( 2 * pi * $self->get('tiltAngle') / 360 );
     my $angle       = $slice->{avgAngle};
     my $radius      = $self->get('radius');
@@ -426,26 +432,26 @@ sub drawLabel {
             primitive   => 'Path',
             stroke      => $self->get('stickColor'),
             strokewidth => 3,
-            points      => 
+            points      =>
                 " M $startPointX,$startPointY ".
                 " L $endPointX,$endPointY ",
             fill        => 'none',
         );
     }
-    
+
     # Process the textlabel
     my $horizontalAlign =
         $angle > 0.5 * pi && $angle < 1.5 * pi    ? 'right'
         : $angle < 1.5 * pi || $angle > 1.5 * pi    ? 'left'
         : 'center';
-        
-    my $verticalAlign    = 
+
+    my $verticalAlign    =
         $angle < pi   ? 'bottom'
         : $angle > pi   ? 'top'
         : 'center';
-        
-    my $anchorX 
-        = $horizontalAlign eq 'right'  
+
+    my $anchorX
+        = $horizontalAlign eq 'right'
         ? $endPointX - $self->get('labelOffset')
         : $endPointX + $self->get('labelOffset')
         ;
@@ -467,6 +473,8 @@ sub drawLabel {
         fill            => $self->axis->get('labelColor'),
         wrapWidth       => $maxWidth,
     );
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -484,8 +492,10 @@ A slice properties hashref.
 sub drawLeftSide {
     my $self    = shift;
     my $slice   = shift;
-    
+
     $self->drawSide( $slice ) unless $slice->{ noLeft };
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -534,13 +544,15 @@ sub drawPieSlice {
     $self->im->Draw(
         primitive   => 'Path',
         stroke      => $slice->{strokeColor},
-        points      => 
+        points      =>
             " M $tip{x},$tip{y} ".
             " L $startCorner{x},$startCorner{y} ".
             " A $pieWidth,$pieHeight 0 $bigCircle,0 $endCorner{x},$endCorner{y} ".
             " Z ",
         fill        => $fillColor,
     );
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -558,8 +570,10 @@ A slice properties hashref.
 sub drawRightSide {
     my $self = shift;
     my $slice = shift;
-    
+
     $self->drawSide( $slice, 'endCorner', $slice->{stopPlaneColor} ) unless ( $slice->{ noRight } );
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -577,7 +591,7 @@ A slice properties hashref.
 sub drawRim {
     my $self = shift;
     my $slice = shift;
-    
+
     my %startSideTop = (
         x   => $slice->{startCorner}->{x},
         y   => $slice->{startCorner}->{y} - $slice->{topHeight}
@@ -597,12 +611,12 @@ sub drawRim {
 
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
     my $bigCircle                = $self->bigCircle( $slice->{ angle } );
-    
+
     # Draw curvature
     $self->im->Draw(
         primitive       => 'Path',
         stroke          => $slice->{strokeColor},
-        points      => 
+        points      =>
             " M $startSideBottom{x},$startSideBottom{y} ".
             " A $pieWidth,$pieHeight 0 $bigCircle,0 $endSideBottom{x},$endSideBottom{y} ".
             " L $endSideTop{x}, $endSideTop{y} ".
@@ -610,6 +624,8 @@ sub drawRim {
             " Z",
         fill        => $slice->{rimColor},
     );
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -641,7 +657,7 @@ sub drawSide {
     my $slice = shift;
     my $cornerName = shift || 'startCorner';
     my $color = shift || $slice->{startPlaneColor};
-    
+
     %tipTop = (
         x   => $slice->{tip}->{x},
         y   => $slice->{tip}->{y} - $slice->{topHeight}
@@ -663,13 +679,15 @@ sub drawSide {
         primitive   => 'Path',
         stroke      => $slice->{strokeColor},
         points      =>
-            " M $tipBottom{x},$tipBottom{y} ". 
+            " M $tipBottom{x},$tipBottom{y} ".
             " L $rimBottom{x},$rimBottom{y} ".
             " L $rimTop{x},$rimTop{y} ".
             " L $tipTop{x},$tipTop{y} ".
             " Z ",
         fill        => $color,
     );
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -688,7 +706,9 @@ sub drawTop {
     my $self = shift;
     my $slice = shift;
 
-    $self->drawPieSlice($slice, $slice->{topHeight}, $slice->{topColor}); # if ($slice->{drawTopPlane});
+    $self->drawPieSlice($slice, $slice->{topHeight}, $slice->{topColor});
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -698,7 +718,7 @@ sub getPieDimensions {
     my $scale   = shift;
 
     my $radius      = $self->get('radius') * $scale;
-    my $pieWidth    = $radius; 
+    my $pieWidth    = $radius;
     my $pieHeight   = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
 
     return ( $pieWidth, $pieHeight );
@@ -714,7 +734,7 @@ Contstructor. See SUPER classes for additional parameters.
 
 sub new {
     my $class = shift;
-    
+
     my $self = $class->SUPER::new(@_);
     $self->{_slices} = [];
 
@@ -742,16 +762,18 @@ sub processDataset {
         my $y = $self->dataset->getDataPoint( $coord, 0 )->[0];
 
         # Skip undef or negative values
-        next unless $y >= 0;
+        next if !defined $y || $y < 0;
 
         $self->addSlice( {
-            percentage  => $y / $total, 
+            percentage  => $y / $total,
             label       => $self->axis->getLabels( 0, $x ) || $x,
             color       => $self->getPalette->getNextColor,
         } );
-        
+
         $self->set('topHeight', $self->get('topHeight') - $stepsize) if ($self->get('pieMode') eq 'stepped');
     }
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -808,7 +830,7 @@ sub sortSlices {
             return -1;
         }
     }
-    
+
     return 0;
 }
 
