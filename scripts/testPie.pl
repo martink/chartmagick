@@ -33,7 +33,7 @@ my $palette = Chart::Magick::Palette->new( [
     {fillTriplet    => 'ffff00' },
 ] );    
 
-for ( 0 .. 7 ) {
+for ( 0 .. 6 ) {
     print "\n\n\nPie $_\n\n";
 
     my $chart = Chart::Magick::Chart::Pie->new( { 
@@ -41,7 +41,7 @@ for ( 0 .. 7 ) {
         stickLength     => 10,
         #startAngle      => 315,
         #explosionLength => 20,
-        explosionWidth  => 2,
+        explosionWidth  => 10,
     #   scaleFactor => 2,
 #        radius      => 100,
     } );

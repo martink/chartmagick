@@ -25,6 +25,18 @@ sub getYOffset {
     return $axis->getChartHeight / 2 + $axis->get('marginTop');
 }
 
+sub project {
+    my $self    = shift;
+    my $x       = shift;
+    my $y       = shift;
+
+    return $self->axis->project(
+        [ $x + $self->getWidth  / 2 ],
+        [ $y + $self->getHeight / 2 ],
+    );
+
+}
+
 sub definition {
     my $self    = shift;
     my %options = %{ $self->SUPER::definition };
@@ -202,29 +214,43 @@ sub calcCoordinates {
     my $slice   = shift;
 
     my( $pieWidth, $pieHeight ) = $self->getPieDimensions( $slice->{ scaleFactor } );
+    my $angleAdjust = atan2 $slice->{widthReduction}, $self->get('radius');
 
     # Translate the origin from the top corner to the center of the image.
-    my $offsetX = $self->getXOffset;
-    my $offsetY = $self->getYOffset;
+#    my $offsetX = $self->getXOffset;
+#    my $offsetY = $self->getYOffset;
+#
+#    $offsetX += 2 * ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
+#    $offsetY -= 2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
 
-    $offsetX += 2 * ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
-    $offsetY -= 2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
+    my ( $tipX, $tipY )     = $self->project(
+         2 * ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} ),
+        -2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} ),
+    );
 
-    my $angleAdjust = atan2 $slice->{widthReduction}, $self->get('radius');
+    my ( $startX, $startY ) = $self->project(
+         $pieWidth  * cos( $slice->{ startAngle } + $angleAdjust ),
+        -$pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
+    );
+    my ( $endX, $endY )     = $self->project(
+         $pieWidth  * cos( $slice->{ stopAngle } - $angleAdjust ),
+        -$pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
+    );
+
 
     my $coords = {
         %{ $slice },
         tip         => {
-            x   => $offsetX,
-            y   => $offsetY,
+            x   => $tipX, #$offsetX,
+            y   => $tipY, #$offsetY,
         },
         startCorner => {
-            x   => $self->getXOffset + $pieWidth * cos( $slice->{ startAngle } + $angleAdjust ),
-            y   => $self->getYOffset - $pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
+            x   => $startX, #$self->getXOffset + $pieWidth * cos( $slice->{ startAngle } + $angleAdjust ),
+            y   => $startY, #$self->getYOffset - $pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
         },
         endCorner   => {
-            x   => $self->getXOffset + $pieWidth * cos( $slice->{ stopAngle } - $angleAdjust ),
-            y   => $self->getYOffset - $pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
+            x   => $endX, #$self->getXOffset + $pieWidth * cos( $slice->{ stopAngle } - $angleAdjust ),
+            y   => $endY, #$self->getYOffset - $pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
         },
         width       => $pieWidth,
         height      => $pieHeight,
@@ -308,6 +334,7 @@ sub plot {
 
     # Draw slices in the correct order or you'll get an MC Escher.
     my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
+print "------>bot\n";
 
     # First draw the bottom planes and the labels behind the chart.
     foreach my $slice (@slices) {
@@ -323,6 +350,7 @@ sub plot {
             $self->drawLabel($slice);
         }
     }
+print "---------->bot done\n";
 
     # Secondly draw the sides
     # Only 3d pies have sides
@@ -348,6 +376,7 @@ sub plot {
             }
         }
     }
+print "----------->sides done\n";
 
     # Finally draw the top planes of each slice and the labels that are in front of the chart.
     foreach my $slice (@slices) {
@@ -362,6 +391,8 @@ sub plot {
             $self->drawLabel( $slice );
         }
     }
+
+print "--------->top done\n";
 
     return;
 }
@@ -755,12 +786,12 @@ sub processDataset {
     my $tiltScale = cos( 2 * pi * $self->get('tiltAngle') / 360 );
     my $stickSize = $self->get('stickLength') + $self->get('stickOffset') + $self->get('labelOffset') + 10;
 
-    my $radius  = min ( 
+    my $diameter  = min ( 
         $self->getWidth  - 2 * $stickSize,
         ($self->getHeight - $tiltScale * 2 * $stickSize) / $tiltScale,
     );
 
-    $self->set( radius => $radius );
+    $self->set( radius => int( $diameter / 2 ));
 
     my $total       = $self->dataset->datasetData->[0]->{ total }->[ 0 ] || 1;
 
