@@ -182,7 +182,7 @@ sub im {
     my $magick  = Image::Magick->new(
         size        => $width.'x'.$height,
     );
-    $magick->Read('xc:grey40');
+    $magick->Read( $self->get('background') );
     $magick{ id $self } = $magick;
 
     return $magick;
@@ -348,7 +348,8 @@ sub definition {
         labelFont       => sub { $_[0]->get('font') }, 
         labelFontSize   => sub { $_[0]->get('fontSize') },
         labelColor      => sub { $_[0]->get('fontColor') },
-        
+
+        background      => 'xc:white',
     );
 
     return \%options;
