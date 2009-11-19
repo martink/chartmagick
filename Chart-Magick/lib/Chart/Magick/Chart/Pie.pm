@@ -352,14 +352,14 @@ sub plot {
     # Finally draw the top planes of each slice and the labels that are in front of the chart.
     foreach my $slice (@slices) {
         if ( $self->get('tiltAngle') <= 90 ) {
-            $self->drawTop($slice) if ($self->get('tiltAngle') != 0);
+            $self->drawTop( $slice ) if $self->get('tiltAngle') != 0;
         }
         else {
-            $self->drawBottom( $slice);
+            $self->drawBottom( $slice );
         }
 
         if ( $slice->{avgAngle} > pi ) {
-            $self->drawLabel($slice);
+            $self->drawLabel( $slice );
         }
     }
 
@@ -798,37 +798,19 @@ sub sortSlices {
     return  1 if ( $aStart >= pi && $bStart < pi  );
 
     if ($aStart < pi) {
-        if ($aStop <= 0.5*pi && $bStop <= 0.5* pi) {
-            # A and B in quadrant I
-            return 1 if ($aStart < $bStart);
-            return -1;
-        } elsif ($aStart >= 0.5*pi && $bStart >= 0.5*pi) {
-            # A and B in quadrant II
-            return 1 if ($aStart > $bStart);
-            return -1;
-        } elsif ($aStart < 0.5*pi && $aStop >= 0.5*pi) {
-            # A in both quadrant I and II
-            return -1;
-        } else {
-            # B in both quadrant I and II
-            return 1;
-        }
+        return
+              $aStop  <= 0.5 * pi && $bStop  <= 0.5 * pi    ? $bStart <=> $aStart   # A and B in quadrant I
+            : $aStart >= 0.5 * pi && $bStart >= 0.5 * pi    ? $aStart <=> $bStart   # A and B in quadrant II
+            : $aStart <  0.5 * pi && $aStop  >= 0.5 * pi    ? -1                    # A in quadrants I and II
+            : 1
+            ;
     } else {
-        if ($aStop <= 1.5*pi && $bStop <= 1.5*pi) {
-            # A and B in quadrant III
-            return 1 if ($aStop > $bStop);
-            return -1;
-        } elsif ($aStart >= 1.5*pi && $bStart >= 1.5*pi) {
-            # A and B in quadrant IV
-            return 1 if ($aStart < $bStart);
-            return -1;
-        } elsif ($aStart <= 1.5*pi && $aStop >= 1.5*pi) {
-            # A in both quadrant III and IV
-            return 1;
-        } else {
-            # B in both quadrant III and IV
-            return -1;
-        }
+        return
+              $aStop  <= 1.5 * pi && $bStop  <= 1.5 * pi    ? $aStop  <=> $bStop    # A and B in quadrant III
+            : $aStart >= 1.5 * pi && $bStart >= 1.5 * pi    ? $bStart <=> $aStart   # A and B in quadrant IV
+            : $aStart <= 1.5 * pi && $aStop  >= 1.5 * pi    ? 1                     # A in both quadrants III and IV
+            : -1                                                                    # B in both quadrants III and IV
+            ;
     }
 
     return 0;
