@@ -177,9 +177,9 @@ sub new {
 #	$strokeAlpha{ $id }     => $properties->{ strokeAlpha   } || '00';
 
 	$self->fillTriplet(   $properties->{ fillTriplet   } || '000000'  );
-	$self->fillAlpha(     $properties->{ fillAlpha     } || '00'       );
+	$self->fillAlpha(     $properties->{ fillAlpha     } || 'ff'      );
 	$self->strokeTriplet( $properties->{ strokeTriplet } || '000000'  );
-	$self->strokeAlpha(   $properties->{ strokeAlpha   } || '00'       );
+	$self->strokeAlpha(   $properties->{ strokeAlpha   } || 'ff'      );
 		
     return $self;
 }
