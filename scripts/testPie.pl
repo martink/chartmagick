@@ -18,7 +18,7 @@ my @data = (
 
 my @data2 = (
     [ qw( 1 2 3 4 ) ],
-    [ qw( 1 1 3 1 ) ],
+    [ qw( 1 3 1 1 ) ],
 );
 
 my @data3 = ( [ 1, 2 ], [ 90, 270 ] );
@@ -39,13 +39,13 @@ for ( 0 .. 6 ) {
     my $chart = Chart::Magick::Chart::Pie->new( { 
         tiltAngle       => 15 * $_,
         stickLength     => 10,
-        #startAngle      => 315,
-        #explosionLength => 20,
+        #startAngle      => 15,
+#        explosionLength => 10,
         explosionWidth  => 10,
     #   scaleFactor => 2,
 #        radius      => 100,
     } );
-    $chart->setPalette( $palette );
+#    $chart->setPalette( $palette );
     $chart->addDataset( @data2 );
 
     my $axis = $canvas->getAxis( $_ );
