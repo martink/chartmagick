@@ -199,9 +199,7 @@ sub calcCoordinates {
 	my $self    = shift;
 	my $slice   = shift;
 
-    my $radius      = $self->get('radius') * $slice->{ scaleFactor };
-	my $pieHeight   = $radius * cos( 2 * pi * $self->get('tiltAngle') / 360 );
-	my $pieWidth    = $radius;
+    my( $pieWidth, $pieHeight ) = $self->getPieDimensions( $slice->{ scaleFactor } ); 
 	
 	# Translate the origin from the top corner to the center of the image.
 	my $offsetX = $self->getXOffset;
@@ -226,6 +224,8 @@ sub calcCoordinates {
             x   => $self->getXOffset + $pieWidth * cos( $slice->{ stopAngle } - $angleAdjust ),
             y   => $self->getYOffset - $pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
         },
+        width       => $pieWidth,
+        height      => $pieHeight,
     };
 
 	return $coords;
@@ -299,7 +299,6 @@ Draws the pie chart.
 =cut
 
 sub plot {
-	my ($currentSlice, $coordinates, $leftPlaneVisible, $rightPlaneVisible);
 	my $self = shift;
     my $axis = $self->axis;
 
@@ -309,67 +308,56 @@ sub plot {
 	my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
 
 	# First draw the bottom planes and the labels behind the chart.
-	foreach my $sliceData (@slices) {
+	foreach my $slice (@slices) {
 		# Draw bottom
 		if ( $self->get('tiltAngle') <= 90 ) {
-            $self->drawBottom( $sliceData );
+            $self->drawBottom( $slice );
         }
         else {
-            $self->drawTop( $sliceData );
+            $self->drawTop( $slice );
         }
 
-		if (_mod2pi($sliceData->{avgAngle}) > 0 && _mod2pi($sliceData->{avgAngle}) <= pi) {
-			$self->drawLabel($sliceData);
+		if ( $slice->{avgAngle} > 0 && $slice->{avgAngle} <= pi ) {
+			$self->drawLabel($slice);
 		}
 	}
 
-	# Second draw the sides
-	# If angle == 0 do a 2d pie
+	# Secondly draw the sides
+	# Only 3d pies have sides
 	if ($self->get('tiltAngle') != 0) {
         my @parts = 
             sort    sortSlices                                          # sort slices in drwaing order
             map     { $self->splitSlice( $_ ) }                         # split slices crossing the horizontal axis
             @slices;
 
-		foreach my $sliceData (@parts) {
-			$leftPlaneVisible  = ( _mod2pi( $sliceData->{startAngle} ) <= 0.5*pi || _mod2pi($sliceData->{startAngle} >= 1.5*pi));
-			$rightPlaneVisible = ( _mod2pi( $sliceData->{stopAngle}  ) >= 0.5*pi && _mod2pi($sliceData->{stopAngle} <= 1.5*pi));
+		foreach my $slice (@parts) {
+			my $leftVisible  = ( $slice->{startAngle} <= 0.5 * pi || $slice->{startAngle} >= 1.5 * pi );
+			my $rightVisible = ( $slice->{stopAngle}  >= 0.5 * pi && $slice->{stopAngle}  <= 1.5 * pi );
 
-			if ( $leftPlaneVisible && $rightPlaneVisible ) {
-				$self->drawRim( $sliceData );
-				$self->drawRightSide( $sliceData );
-				$self->drawLeftSide( $sliceData );
-			} 
-            elsif ( $leftPlaneVisible && !$rightPlaneVisible ) {
-				# right plane invisible
-				$self->drawRightSide( $sliceData );
-				$self->drawRim( $sliceData );
-				$self->drawLeftSide( $sliceData );
-			} 
-            elsif ( !$leftPlaneVisible && $rightPlaneVisible ) {
-				# left plane invisible
-				$self->drawLeftSide( $sliceData );
-				$self->drawRim( $sliceData );
-				$self->drawRightSide( $sliceData );
-			} else {
-				$self->drawLeftSide( $sliceData );
-				$self->drawRightSide( $sliceData );
-				$self->drawRim( $sliceData );
-			}
+            my @order =
+                   $leftVisible &&  $rightVisible   ? qw{ drawRim           drawRightSide   drawLeftSide    }
+                :  $leftVisible && !$rightVisible   ? qw{ drawRightSide     drawRim         drawLeftSide    }
+                : !$leftVisible &&  $rightVisible   ? qw{ drawLeftSide      drawRim         drawRightSide   }
+                :                                     qw{ drawLeftSide      drawRightSide   drawRim         }
+                ;
+                
+            for my $method ( @order ) {
+                $self->$method( $slice );
+            }
 		}
 	}
 
 	# Finally draw the top planes of each slice and the labels that are in front of the chart.
-	foreach my $sliceData (@slices) {
+	foreach my $slice (@slices) {
         if ( $self->get('tiltAngle') <= 90 ) {
-    		$self->drawTop($sliceData) if ($self->get('tiltAngle') != 0);
+    		$self->drawTop($slice) if ($self->get('tiltAngle') != 0);
         }
         else {
-             $self->drawBottom( $sliceData);
+             $self->drawBottom( $slice);
         }
 
-		if (_mod2pi($sliceData->{avgAngle}) > pi) {
-			$self->drawLabel($sliceData);
+		if ( $slice->{avgAngle} > pi ) {
+			$self->drawLabel($slice);
 		}
 	}
 }
@@ -390,7 +378,7 @@ sub drawBottom {
 	my $self    = shift;
 	my $slice   = shift;
 
-	$self->drawPieSlice($slice, -1 * $slice->{bottomHeight}, $slice->{bottomColor}); #  if ($slice->{drawTopPlane});
+	$self->drawPieSlice($slice, -1 * $slice->{bottomHeight}, $slice->{bottomColor});
 }
 
 #-------------------------------------------------------------------
@@ -416,21 +404,10 @@ sub drawLabel {
 	my $startRadius = $radius * $slice->{ scaleFactor } + $self->get('stickOffset');
 	my $stopRadius  = $startRadius + $self->get('stickLength');
 
-    $self->im->Draw(
-        primitive   => 'Line',
-        points      => $self->getXOffset ."," . $self->getYOffset . " " .$self->getXOffset ."," .$self->getYOffset,
-        stroke      => 'white',
-    );
-
-	my $pieHeight   = $radius * $tiltScale;
-	my $pieWidth    = $radius;
-
-    my $explodeX    = 0; #$slice->{explosionRadius} * $pieWidth  / ( $pieHeight + $pieWidth );
-    my $explodeY    = 0; #$slice->{explosionRadius} * $pieHeight / ( $pieHeight + $pieWidth );
-	my $startPointX = $self->getXOffset + ( $explodeX + $startRadius ) * cos $angle;
-	my $startPointY = $self->getYOffset - ( $explodeY + $startRadius ) * $tiltScale * sin $angle;
-	my $endPointX   = $self->getXOffset + ( $explodeX + $stopRadius  ) * cos $angle;
-	my $endPointY   = $self->getYOffset - ( $explodeY + $stopRadius  ) * $tiltScale * sin $angle;
+	my $startPointX = $self->getXOffset + $startRadius * cos $angle;
+	my $startPointY = $self->getYOffset - $startRadius * $tiltScale * sin $angle;
+	my $endPointX   = $self->getXOffset + $stopRadius  * cos $angle;
+	my $endPointY   = $self->getYOffset - $stopRadius  * $tiltScale * sin $angle;
 
 	if ($self->get('tiltAngle')) {
         my $position     = $self->get('labelPosition');
@@ -508,7 +485,7 @@ sub drawLeftSide {
 	my $self    = shift;
 	my $slice   = shift;
 	
-	$self->drawSide( $slice ) unless ( $slice->{ noLeft } );
+	$self->drawSide( $slice ) unless $slice->{ noLeft };
 }
 
 #-------------------------------------------------------------------
@@ -551,10 +528,8 @@ sub drawPieSlice {
 		y	=> $slice->{endCorner}->{y} - $offset,
 	);
 
-    my $radius     = $self->get('radius') * $slice->{ scaleFactor  };
-	my $pieWidth   = $radius; 
-	my $pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
-	my $bigCircle  = $self->bigCircle( $slice->{ angle } );
+    my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
+	my $bigCircle                = $self->bigCircle( $slice->{ angle } );
 
 	$self->im->Draw(
 		primitive	=> 'Path',
@@ -600,32 +575,28 @@ A slice properties hashref.
 =cut
 
 sub drawRim {
-	my (%startSideTop, %startSideBottom, %endSideTop, %endSideBottom,
-		$pieWidth, $pieHeight, $bigCircle);
 	my $self = shift;
 	my $slice = shift;
 	
-	%startSideTop = (
+	my %startSideTop = (
 		x	=> $slice->{startCorner}->{x},
 		y	=> $slice->{startCorner}->{y} - $slice->{topHeight}
 	);
-	%startSideBottom = (
+	my %startSideBottom = (
 		x	=> $slice->{startCorner}->{x},
 		y	=> $slice->{startCorner}->{y} + $slice->{bottomHeight}
 	);
-	%endSideTop = (
+	my %endSideTop = (
 		x	=> $slice->{endCorner}->{x},
 		y	=> $slice->{endCorner}->{y} - $slice->{topHeight}
 	);
-	%endSideBottom = (
+	my %endSideBottom = (
 		x	=> $slice->{endCorner}->{x},
 		y	=> $slice->{endCorner}->{y} + $slice->{bottomHeight}
 	);
 
-    my $radius  = $self->get('radius') * $slice->{ scaleFactor };
-	$pieWidth   = $radius;
-	$pieHeight  = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
-	$bigCircle  = $self->bigCircle( $slice->{ angle } );
+    my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
+	my $bigCircle                = $self->bigCircle( $slice->{ angle } );
 	
 	# Draw curvature
 	$self->im->Draw(
@@ -718,6 +689,19 @@ sub drawTop {
 	my $slice = shift;
 
 	$self->drawPieSlice($slice, $slice->{topHeight}, $slice->{topColor}); # if ($slice->{drawTopPlane});
+}
+
+#-------------------------------------------------------------------
+
+sub getPieDimensions {
+    my $self    = shift;
+    my $scale   = shift;
+
+    my $radius      = $self->get('radius') * $scale;
+	my $pieWidth    = $radius; 
+	my $pieHeight   = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
+
+    return ( $pieWidth, $pieHeight );
 }
 
 #-------------------------------------------------------------------
