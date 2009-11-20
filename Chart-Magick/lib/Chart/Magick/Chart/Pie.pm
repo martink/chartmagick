@@ -160,8 +160,8 @@ sub addSlice {
         rimColor        => $sideColor,
 
         # geometric properties
-        topHeight       => $self->get('topHeight'),
-        bottomHeight    => $self->get('bottomHeight'),
+        topHeight       => $self->get('topHeight') * sin(2 * pi * $self->get('tiltAngle') / 360),
+        bottomHeight    => $self->get('bottomHeight') * sin(2 * pi * $self->get('tiltAngle') / 360),
         explosionRadius => $explosionRadius,
         widthReduction  => $explosionRadius * sin( $angle / 2 ),
         scaleFactor     => ($self->get('scaleFactor') - 1) * $percentage + 1,
