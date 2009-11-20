@@ -57,6 +57,12 @@ sub addDataset {
 
 #-------------------------------------------------------------------
 
+sub autoRange {
+    return;
+}
+
+#-------------------------------------------------------------------
+
 =head2 definition 
 
 Defines the properties of your plugin as well as their default values.

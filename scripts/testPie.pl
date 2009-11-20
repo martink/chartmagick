@@ -41,7 +41,9 @@ for ( 0 .. 6 ) {
         stickLength     => 10,
         startAngle      => 1,
 #        explosionLength => 10,
-#        explosionWidth  => 10,
+        explosionWidth  => 5,
+        pieMode        => 'stepped',
+
     #   scaleFactor => 2,
 #        radius      => 100,
     } );

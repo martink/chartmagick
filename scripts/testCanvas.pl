@@ -54,9 +54,9 @@ my $time = [ gettimeofday ];
 my $pieChart = Chart::Magick::Chart::Pie->new();
 $pieChart->dataset->addDataset( @ds1 );
 $pieChart->set(
-    tiltAngle   => 0,
+    tiltAngle   => 70,
     startAngle  => -60,
-    stickLength => 30,
+    stickLength => 10,
     #tiltAngle   => 20,
     explosionLength=> 5,
     explosionWidth => 3,
@@ -90,12 +90,16 @@ $lineChart1->dataset->addDataset( @ds5 );
 my $canvas = Chart::Magick->new( 800, 750 );
 $canvas->matrix( [ 'Lin' ], [ 'Lin', 'LinLog' ], [ 'None', 'None' ] );
 
+my $config = {
+    margin          => 15,
+};
+
 # First chart
 my $axis = $canvas->getAxis( 0 );
 $axis->addChart( $lineChart1 );
-$axis->set('xSubtickCount', 1);
-my $config = $axis->get;
+$axis->set( $config );
 $axis->set(
+    xSubtickCount   => 1, 
     title           => '1.1 + sin 50Θ + sin 61Θ',
     font            => '/usr/share/fonts/truetype/ttf-dejavu/DejaVuSans.ttf',
     xLabelUnits     => pi,
@@ -109,6 +113,7 @@ $axis->set(
 # Second chart
 $axis = $canvas->getAxis( 2 );
 $axis->addChart( $logChart );
+$axis->set( $config );
 $axis->set('ySubtickCount', 2);
 $axis->set('title', 'Logarithmic plot');
 $axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4ehuewh euqwhdiwhd uheuhu', 5 => 'overall' }, 1 );
@@ -118,6 +123,7 @@ $axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4ehuewh euqwhdiwhd u
 $axis = $canvas->getAxis( 1 );
 $axis->addChart( $barChart );
 $axis->addChart( $lineChart );
+$axis->set( $config );
 #$axis->set('title', 'Multiple chart types on one axis');
 #$axis->set( $config );
 $axis->set('xTickOffset', 1);

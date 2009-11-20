@@ -326,31 +326,6 @@ sub optimizeMargins {
 
 
 
-sub getLabelDimensions {
-    my $self        = shift;
-    my $label       = shift;
-    my $wrapWidth   = shift;
-
-    my %properties = (
-        text        => $label,
-        font        => $self->get('labelFont'),
-        pointsize   => $self->get('labelFontSize'),
-    );
-
-    my ($w, $h) = ( $self->im->QueryFontMetrics( %properties ) )[4,5];
-    
-    if ( $wrapWidth && $w > $wrapWidth ) {
-        # This is not guaranteed to work in every case, but it'll do for now.
-        local $Text::Wrap::columns = int( $wrapWidth / $w * length $label );
-        $properties{ text } = join qq{\n}, wrap( q{}, q{}, $label );
-
-        ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
-    }
-
-    return [ $w, $h ];
-}
-
-
 #---------------------------------------------
 
 =head2 calcBaseMargins ( )
