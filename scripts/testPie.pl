@@ -18,7 +18,7 @@ my @data = (
 
 my @data2 = (
     [ qw( 1 2 3 4 ) ],
-    [ qw( 1 3 1 1 ) ],
+    [ qw( 1.5 1 3 1 ) ],
 );
 
 my @data3 = ( [ 1, 2 ], [ 90, 270 ] );
@@ -33,13 +33,13 @@ my $palette = Chart::Magick::Palette->new( [
     {fillTriplet    => 'ffff00' },
 ] );    
 
-for ( 0 .. 0 ) {
+for ( 0 .. 6 ) {
     print "\n\n\nPie $_\n\n";
 
     my $chart = Chart::Magick::Chart::Pie->new( { 
         tiltAngle       => 15 * $_,
         stickLength     => 10,
-        #startAngle      => 15,
+        startAngle      => 1,
 #        explosionLength => 10,
         explosionWidth  => 10,
     #   scaleFactor => 2,
