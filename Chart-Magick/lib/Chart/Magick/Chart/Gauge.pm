@@ -8,32 +8,42 @@ use POSIX qw{ floor ceil };
 
 use base qw{ Chart::Magick::Chart };
 
-
-sub getXOffset {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    return $axis->getChartWidth / 2 + $axis->get('marginLeft');
-}
-
-sub getYOffset {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    return $axis->getChartHeight / 2 + $axis->get('marginTop');
-}
-
-sub project {
+sub projectValue {
     my $self    = shift;
     my $value   = shift;
     my $radius  = shift;
 
-    my $angle   = ( $self->get('startAngle') + $value * $self->axis->plotOption('anglePerUnit') ) / 180 * pi;
 
-    return (
-        $radius * cos( $angle ) + $self->getWidth  / 2,
-        $radius * sin( $angle ) + $self->getHeight  / 2,
+    my $rad = $self->transformValue( $value ) / 180 * pi;
+    return $self->project(
+         $radius * cos( $rad ),
+        -$radius * sin( $rad ),
     );
+}
+
+sub project {
+    my $self = shift;
+    my $x    = shift;
+    my $y    = shift;
+
+    return $self->axis->project(
+        [ $x + $self->getWidth  / 2 ],
+        [ $y + $self->getHeight / 2 ],
+    );
+}
+
+sub transformValue {
+    my $self    = shift;
+    my $value   = shift;
+
+    my $startValue  = $self->get('ticks')->[0];
+
+    my $cw      = 1;
+    my $angle   = $self->get('startAngle') + ( $value - $startValue ) * $self->axis->plotOption('anglePerUnit');
+    $angle      *= -1 if $cw;
+    $angle      -= 90;
+
+    return $angle;
 }
 
 #-------------------------------------------------------------------
@@ -51,12 +61,12 @@ sub definition {
         startAngle          => 45,
         stopAngle           => 315,
         scaleRadius         => 80,
-        labelSpacing        => 5,
+        labelSpacing        => 10,
         tickOutset          => 10,
         tickInset           => 5,
         axisColor           => '#333333',
         radius              => 0,
-        rimMargin           => 5,
+        rimMargin           => 10,
         minTickWidth        => 40,
         ticks               => [],
     };
@@ -78,13 +88,12 @@ sub plot {
         $self->drawNeedle( $self->dataset->getDataPoint( $coord, 0 )->[0] , $palette->getNextColor ); 
     }
 
+    # Center dot.
     $axis->im->Draw(
         primitive   => 'circle',
-        points      => '0,0 0,2',
+        points      => join( ',', $self->project(0,0) ) . ' ' . join( ',', $self->project(0,2) ),
         fill        => '#dddddd',
         stroke      => '#bbbbbb',
-      # translate   => $self->getXOffset.','.$self->getYOffset,
-        affine      => [ 1, 0, 0, 1, $self->getXOffset, $self->getYOffset ],
     );
 }
 
@@ -98,26 +107,22 @@ sub drawAxes {
 
     # Draw scale rim
     if ( $self->get('drawAxis') ) {
-        $self->axis->im->Draw(
-            primitive   => 'Ellipse',
+        my $cw  = '1';
+        my $big = ( $maxAngle - $minAngle ) > 180 ? '1' : '0';
+
+        my ( $fromX, $fromY ) = $self->projectValue( $self->get('ticks')->[0],  $scaleRadius  );
+        my ( $toX,   $toY   ) = $self->projectValue( $self->get('ticks')->[-1], $scaleRadius );
+
+        $self->im->Draw(
+            primitive   => 'Path',
             stroke      => $self->get('axisColor'),
             strokewidth => 2,
             fill        => 'none',
             points      => 
-                        '0,0'                                   # Center
-                .' ' .  "$scaleRadius,$scaleRadius"             # Width, height
-                .' ' .  (($minAngle < $maxAngle)                # Angles
-                        ? "$minAngle,$maxAngle"
-                        : "$maxAngle,$minAngle"), 
-            translate   => $self->getXOffset . ',' . $self->getYOffset,
-            rotate      => 90,
-            affine      => [ 1, 0, 0, 1, $self->getXOffset, $self->getYOffset ],
-
+                 " M $fromX,$fromY "
+                ." A $scaleRadius,$scaleRadius 0 $big,$cw $toX,$toY ",
         );
     }
-
-    # Draw labels
-#    $self->drawLabels;
 
     # Draw ticks
     my $tickAngle   = ($maxAngle - $minAngle) / ( @{ $self->get('ticks') } - 1 );
@@ -125,23 +130,21 @@ sub drawAxes {
     my $outset      = $self->get('tickOutset');
     my $subTicks    = $self->get('numberOfSubTicks');
 
-    my $angle = $minAngle;
-
+    my $previousTick;
     for my $tick ( @{ $self->get('ticks') } ) {
-        # Draw tick
-        $self->drawTick( $scaleRadius, $angle, $inset, $outset );
-        $self->drawLabel( $tick, $angle );
-
-        # Do we need to draw sub ticks?
-        if ( $subTicks && $angle < $maxAngle ) {
+        if ( defined $previousTick ) {
             # Draw sub ticks
-            my $subTickAngle = $tickAngle / $subTicks;
-            for my $subTick (1 .. $subTicks) {
-                $self->drawTick( $scaleRadius, $angle + $subTick * $subTickAngle, $inset / 5, $outset / 5 );
+            my $subTickValue = ( $tick - $previousTick ) / $subTicks;
+            for my $subTick ( 1 .. $subTicks - 1 ) {
+                $self->drawTick( $scaleRadius, $previousTick + $subTick * $subTickValue, $inset / 5, $outset / 5 );
             } 
         }
 
-        $angle += $tickAngle;
+        # Draw tick
+        $self->drawTick( $scaleRadius, $tick, $inset, $outset );
+        $self->drawLabel( $tick );
+
+        $previousTick = $tick;
     }
 }
 
@@ -150,39 +153,6 @@ sub drawBackground {
     my $self = shift;
     my $im   = $self->axis->im;
 
-    my $rim = Image::Magick->new;
-    $rim->Set( size => $self->axis->get('width')."x". $self->axis->get('height') );
-    $rim->Read(filename => 'xc:none');
-    $rim->Set( 'antialias' => 'True', matte => 'True' );
-
-    $rim->Draw(
-        primitive   => 'Circle',
-        stroke      => $self->get('rimColor'),
-        strokewidth => 7,
-        points      => 
-                    $self->getXOffset . ',' . $self->getYOffset 
-            . ' ' . $self->getXOffset . ',' . ($self->getYOffset - $self->get('radius') ),
-        fill        => 'none', #'#666666',
-    );
-
-    $rim->Shade(
-#        geometry    => "300x0",
-        azimuth     => 10,
-        elevation   => 30,
-        gray        => 'True',
-    );
-    $rim->Blur(
-        sigma       => 4,
-    );
-
-
-    $rim->Colorize(
-        fill        => $self->get('rimColor'),
-    );
-    $im->SigmoidalContrast(
-        contrast    => 10,
-        'mid-point' => '60%',
-    );
 
     $im->Draw(
         primitive   => 'Circle',
@@ -195,28 +165,18 @@ sub drawBackground {
         fill        => $self->get('paneColor'),
     );
 
-#    $rim->Shadow(
-#        opacity     => 30,
-#        sigma       => 4,
-#        x           => 5,
-#        y           => 5,
-#    );
-
-    $im->Composite(
-#        compose     => 'Atop',
-        image       => $rim,
+    $im->Draw(
+        primitive   => 'Circle',
+        stroke      => 'orange',# $self->get('rimColor'),
+        strokewidth => 7,
         gravity     => 'Center',
+        points      =>              
+                   join( ',', $self->project(0,0) )
+           . ' ' . join( ',', $self->project(0, $self->get('radius') ) ),
+        fill        => 'none', #'#666666',
     );
 
-#    $im->Shadow(
-#        opacity     => 80,
-#        sigma       => 4,
-#        x           => 5,
-#        y           => 5,
-#    );
-    $im->Layers(
-        method      => 'merge',
-    );
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -226,9 +186,10 @@ sub drawLabel {
     my $angle       = shift;
 
     my $labelRadius = $self->get('scaleRadius') - $self->get('tickInset') - $self->get('labelSpacing');
-    my ( $x, $y )   = $self->project( $angle, $labelRadius );
+    my ( $x, $y )   = $self->projectValue( $tick, $labelRadius );
 
-print "=====hierrr\n";
+    my $angle   = $self->transformValue( $tick );
+    $angle      = abs( ( 360 + $angle -90 ) % 360 );
 
     $self->axis->text(
         text            => $tick,
@@ -239,7 +200,7 @@ print "=====hierrr\n";
         pointsize       => $self->axis->get('labelFontSize'),
         x               => $x,
         y               => $y,
-        halign => 
+        halign          => 
               $angle >   0 && $angle < 180      ? 'left'
             : $angle > 180 && $angle < 360      ? 'right'
             :                                     'center'
@@ -253,51 +214,29 @@ print "=====hierrr\n";
     );
 }
 
+
+
+
 #-------------------------------------------------------------------
 sub drawNeedle {
     my $self        = shift;
     my $value       = shift;
     my $color       = shift;
-    my $im          = $self->axis->im;
-return;
-    my $maxScale    = $self->getMaxScale;
-    my $minAngle    = $self->get('startAngle');
-    my $maxAngle    = $self->get('stopAngle');
-    my $angle  = ($maxAngle - $minAngle) * $value / $maxScale + $minAngle;
+
+    my $angle       = $self->transformValue( $value ); 
 
     my $tail    = 0.1 * $self->get('scaleRadius');
     my $body    =   1 * $self->get('scaleRadius');
 
-    $im->Set(Gravity => 'Center' );
-#    $self->image->Draw(
-#        primitive   => 'line',
-#        antialias   => 'true',
-#        stroke      => $color->getStrokeTriplet,
-#        points      => '0,0 0,75',
-#        rotate      => $angle,
-#        translate   => $self->getXOffset . ',' . $self->getYOffset
-#    );
+    #$self->im->Set(Gravity => 'Center' );
 
-#    $self->image->Draw(
-#        primitive   => 'polygon',
-#        points      => 
-#            "0,-$tail "
-#            ."-$tail,0 "
-#            ."0,$body "
-#            ."$tail,0",
-#        fill        => $color->getFillColor,
-#        stroke      => $color->getStrokeColor,
-#        rotate      => $angle,
-#        translate   => $self->getXOffset . ',' . $self->getYOffset,
-#    );
+    my $needleLength   = $self->get('scaleRadius');
+    my $halfWidth      = 2;
+    my $tipLength      = 2 * 2 * $halfWidth;
+    my $flangeRadius   = 6 * $halfWidth;
+    my $connectY       = sqrt( $flangeRadius ** 2 - $halfWidth ** 2 );
 
-     my $needleLength   = $self->get('scaleRadius');
-     my $halfWidth      = 2;
-     my $tipLength      = 2 * 2 * $halfWidth;
-     my $flangeRadius   = 6 * $halfWidth;
-     my $connectY       = sqrt( $flangeRadius ** 2 - $halfWidth ** 2 );
-
-     $im->Draw(
+    $self->im->Draw(
         primitive   => 'path',
         points      => 
              " M  0,$needleLength"
@@ -306,11 +245,10 @@ return;
             ." A $flangeRadius,$flangeRadius 0 1,1 $halfWidth,$connectY"
             ." L " . ( $halfWidth) . "," . ($needleLength - $tipLength)
             ." Z ",
-        fill        => '#777777',
-        stroke      => '#555555',
-        rotate      => $angle,
-#       translate   => [ $self->getXOffset, $self->getYOffset ], #$self->getXOffset . ',' . $self->getYOffset,
-        affine      => [ 1, 0, 0, 1, $self->getXOffset, $self->getYOffset ],
+        fill        => $color->getFillColor, #'#777777',
+        stroke      => $color->getStrokeColor, #'#555555',
+        rotate      => -$angle -90,
+        affine      => [ 1, 0, 0, 1, $self->project(0,0)],
     );
 }
 
@@ -318,15 +256,13 @@ return;
 sub drawTick {
     my $self    = shift;
     my $radius  = shift;
-    my $angle   = shift;
+    my $tick    = shift;
     my $inset   = shift;
     my $outset  = shift;
     my $image   = shift || $self->axis->im;
 
-    my $fromX   = $self->getXOffset - sin( $angle * pi/180 ) * ($radius - $inset);
-    my $fromY   = $self->getYOffset + cos( $angle * pi/180 ) * ($radius - $inset);
-    my $toX     = $self->getXOffset - sin( $angle * pi/180 ) * ($radius + $outset);
-    my $toY     = $self->getYOffset + cos( $angle * pi/180 ) * ($radius + $outset);
+    my ( $fromX, $fromY ) = $self->projectValue( $tick, $radius - $inset  );
+    my ( $toX,   $toY   ) = $self->projectValue( $tick, $radius + $outset );
 
     $image->Draw(
         primitive   => 'Line',
@@ -352,7 +288,6 @@ sub autoRange {
     my ($min, $max) = map { $_->[0] } ( $self->getDataRange )[2,3];
     my $tickWidth   = $self->calcTickWidth( $min, $max, $scaleLength );
     my @ticks       = @{ $self->generateTicks( $min, $max, $tickWidth ) };
-print join( ',', @ticks ), "\n";
 
     $self->set( 
         radius      => $radius,

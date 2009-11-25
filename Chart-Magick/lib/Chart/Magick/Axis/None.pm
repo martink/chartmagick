@@ -38,7 +38,7 @@ sub project {
     my $offsetX = $self->get('marginLeft');
     my $offsetY = $self->get('marginTop');
 
-    return ( $x->[0] + $offsetX, $y->[0] + $offsetY );
+    return ( int( $x->[0] + $offsetX ), int( $y->[0] + $offsetY ) );
 }
 
 1;
