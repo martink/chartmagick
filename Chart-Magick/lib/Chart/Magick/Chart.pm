@@ -57,6 +57,19 @@ sub addDataset {
 
 #-------------------------------------------------------------------
 
+=head2 addToLegend
+
+Adds the datasets in this chart to the legend of the axis.
+
+=cut
+
+sub addToLegend {
+
+
+}
+
+#-------------------------------------------------------------------
+
 sub autoRange {
     return;
 }
@@ -199,6 +212,21 @@ sub im {
     my $self = shift;
 
     return $self->axis->im;
+}
+
+#-------------------------------------------------------------------
+
+=head2 hasBlockSymbols ( )
+
+Returns a boolean telling whether the symbols in the legend should be drawn as colored blocks instead of line/marker
+pairs.
+
+Defaults to false. Override in you Chart plugin if it needs block symbols.
+
+=cut
+
+sub hasBlockSymbols {
+    return 0;
 }
 
 #-------------------------------------------------------------------

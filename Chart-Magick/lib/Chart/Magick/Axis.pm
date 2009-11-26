@@ -9,6 +9,7 @@ use List::Util qw{ min max };
 use Carp;
 use Data::Dumper;
 use Text::Wrap;
+use Chart::Magick::Legend;
 
 use constant pi => 3.14159265358979;
 
@@ -18,6 +19,7 @@ readonly charts         => my %charts;
 private  plotOptions    => my %plotOptions;
 private  im             => my %magick;
 private  axisLabels     => my %axisLabels;
+readonly legend         => my %legend;
 
 =head1 NAME
 
@@ -48,8 +50,9 @@ sub _buildObject {
 
     my $id = id $self;
 
-    $charts{ $id }      = [];
-    $axisLabels{ $id }  = [ ];
+    $charts{ $id        } = [];
+    $axisLabels{ $id    } = [ ];
+    $legend{ $id        } = Chart::Magick::Legend->new( $self );
 
     $self->{ _plotOptions } = {};
     return $self;
@@ -489,6 +492,7 @@ sub plotLast {
     my $self = shift;
 
     $self->plotTitle;
+    $self->legend->draw;
 
     return;
 };

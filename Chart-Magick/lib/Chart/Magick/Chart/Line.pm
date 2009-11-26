@@ -79,14 +79,18 @@ sub plot {
         my $color = $self->getPalette->getNextColor;
         push @palette, $color;
 
-        next unless exists $self->markers->[ $ds ];
+        my $marker;
+        if ( exists $self->markers->[ $ds ] ) {
 
-        my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
-        $size ||= $markerSize;
+            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
+            $size ||= $markerSize;
 
-        $markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $axis, {
-            strokeColor => $color->getStrokeColor,
-        } );
+            $markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $axis, {
+                strokeColor => $color->getStrokeColor,
+            } );
+        }
+
+        $axis->legend->addItem( 0, "Dataset $ds", $color, $marker );
     }
 
     # Draw the graphs
