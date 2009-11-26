@@ -9,6 +9,7 @@ use Chart::Magick::Chart::Pie;
 use Chart::Magick::Chart::Gauge;
 use Chart::Magick;
 use Image::Magick;
+use IMSVG;
 use Data::Dumper;
 use Time::HiRes qw( gettimeofday tv_interval );
 
@@ -165,7 +166,8 @@ $canvas->draw;
 # More timekeeping
 my $runtime1 = tv_interval( $time );
 
-$canvas->im->Write('canvas.png');
+#$canvas->im->Write('canvas.png');
+$canvas->im->Write('canvas.svg');
 
 # More timekeeping
 my $runtime = tv_interval( $time );
@@ -176,3 +178,5 @@ print "___>$runtime<___\n";
 #print $barChart->dataset->dumpData;
 
 #print join "\n" , $canvas->im->QueryFont;
+
+print $canvas->im->DumpStack;
