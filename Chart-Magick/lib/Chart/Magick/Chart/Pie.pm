@@ -236,11 +236,7 @@ sub getIntersect {
     my $b = 2 * $m * ( $y0 - $m * $x0 );
     my $c = $x02 * $m2 - 2 * $x0 * $y0 * $m + $y02 - $r2 * $h;
 
-    print "angle: $angle, h: $h, a: $a, b: $b, c: $c, b^2: ", $b**2, ", 4ac: ", 4*$a*$c,"\n";
-
     my $sgn_x   = ( $angle > 0.5 * pi && $angle < 1.5 * pi ) ? -1 : 1;
-#   my $sgn_y   = sin( $angle ) < 0 ? 1 : -1;
-#        ( $angle > 0 && $angle < pi )  ||  ( ($angle == 0 || $angle == pi) && $y0 < 0 ) ? -1 : 1;
 
     my $x   = ($angle == 0.5 * pi || $angle == 1.5 * pi )
           ? $x0
@@ -248,7 +244,6 @@ sub getIntersect {
           ;
        
     my $y   = ( $x - $x0 ) * $m + $y0; 
-#    my $y   = $sgn_y * sqrt( ($r2 - $x**2) * $h );
 
     return ( $x, $y );
 }
