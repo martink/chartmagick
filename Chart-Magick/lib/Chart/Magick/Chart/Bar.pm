@@ -207,12 +207,10 @@ sub plot {
     $barWidth *= 0.5;
 
     foreach my $coord ( @{ $self->dataset->getCoords } ) {
-        $self->getPalette->paletteIndex( 1 );
-
         my $positiveVerticalOffset = 0;
         my $negativeVerticalOffset = 0;
         for my $dataset ( 0 .. $barCount - 1 ) {
-            my $color   = $self->getPalette->getNextColor;
+            my $color   = $self->colors->[ $dataset ]; #$self->getPalette->getNextColor;
             my $value   = $self->dataset->getDataPoint( $coord, $dataset );
             
             next unless $value;

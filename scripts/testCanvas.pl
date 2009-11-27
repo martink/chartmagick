@@ -9,7 +9,6 @@ use Chart::Magick::Chart::Pie;
 use Chart::Magick::Chart::Gauge;
 use Chart::Magick;
 use Image::Magick;
-use IMSVG;
 use Data::Dumper;
 use Time::HiRes qw( gettimeofday tv_interval );
 
@@ -69,9 +68,9 @@ $gauge->dataset->addDataset( @ds1 );
 
 
 my $barChart = Chart::Magick::Chart::Bar->new( );
-$barChart->dataset->addDataset( @ds1 );
-$barChart->dataset->addDataset( @ds3 );
-$barChart->dataset->addDataset( @ds4 );
+$barChart->addDataset( @ds1, '2008' );
+$barChart->addDataset( @ds3, '2009' );
+$barChart->addDataset( @ds4, '2010' );
 $barChart->set(
     barWidth    => 10,
     barSpacing  => 3,
@@ -148,26 +147,11 @@ $axis->set('title', 'Gauge');
 #$canvas->addAxis( $axis, 100, 100 );
 $canvas->draw;
 
-
-#for (1..10) {
-#    my $fx = 0;
-#    my $tx = 400;
-#    my $y = 20;#*$_;
-#    $axis->im->Draw(
-#        'primitive'     => 'Path',
-#        'stroke'        => 'red',
-##        'stroke-pattern' => [10,2],
-#        'stroke-dashoffset' => '1',
-#        'stroke-dasharray'  => ['10','5','4'],
-#        'points'        => "M $fx,$y L $tx,$y",
-#    );
-#}
-
 # More timekeeping
 my $runtime1 = tv_interval( $time );
 
-#$canvas->im->Write('canvas.png');
-$canvas->im->Write('canvas.svg');
+$canvas->im->Write('canvas.png');
+#$canvas->im->Write('canvas.svg');
 
 # More timekeeping
 my $runtime = tv_interval( $time );
@@ -175,8 +159,3 @@ my $runtime = tv_interval( $time );
 print "___>$runtime1<___\n";
 print "___>$runtime<___\n";
 
-#print $barChart->dataset->dumpData;
-
-#print join "\n" , $canvas->im->QueryFont;
-
-print $canvas->im->DumpStack;

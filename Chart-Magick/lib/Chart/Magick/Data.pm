@@ -47,12 +47,13 @@ sub new {
     register    $self;
 
     my $id = id $self;
-    $data{ $id }            = [];
-    $datasetCount{ $id }    = 0;
-    $coordDim{ $id }      = 0;
-    $datasetIndex{ $id }    = 0;
-    $datasetData{ $id }     = [];
-    $globalData{ $id }      = {};
+    $data{ $id          } = [];
+    $datasetCount{ $id  } = 0;
+    $coordDim{ $id      } = 0;
+    $datasetIndex{ $id  } = 0;
+    $datasetData{ $id   } = [];
+    $globalData{ $id    } = {};
+    $labels{ $id        } = [];
 
     return $self;
 }

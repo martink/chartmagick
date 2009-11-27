@@ -102,7 +102,9 @@ Defines the properties of your plugin as well as their default values.
 #TODO: More verbose docs overhere.
 
 sub definition {
-    return {};
+    return {
+        markerSize      => 5,
+    };
 }
 
 #-------------------------------------------------------------------

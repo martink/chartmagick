@@ -49,7 +49,6 @@ sub definition {
 
     my $properties = {
         plotMarkers     => 1,
-        markerSize      => 5,
     };
 
     return { %$definition, %$properties };
