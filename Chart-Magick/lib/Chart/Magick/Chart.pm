@@ -17,10 +17,11 @@ readonly palette    => my %palette;
 readonly dataset    => my %dataset;
 readonly markers    => my %markers;
 readonly axis       => my %axis;
+readonly colors     => my %colors;
 
 #-------------------------------------------------------------------
 
-=head2 addDataset ( coords, values, marker, markerSize )
+=head2 addDataset ( coords, values, label, marker, markerSize )
 
 Adds a dataset to the dataset of this chart. Optionally you can set a marker for this dataset as well.
 
@@ -31,6 +32,10 @@ Array ref of coord array refs. See Chart::Magick::Data::addDataset for details.
 =head3 values
 
 Array ref of value array refs. See Chart::Magick::Data::addDataset for details.
+
+=head3 label
+
+The (legend) label for this dataset.
 
 =head3 marker
 
@@ -46,10 +51,11 @@ sub addDataset {
     my $self        = shift;
     my $coords      = shift || croak "Need coordinates";
     my $values      = shift || croak "Need values";
+    my $label       = shift;
     my $marker      = shift;
     my $markerSize  = shift;
 
-    $self->dataset->addDataset( $coords, $values );
+    $self->dataset->addDataset( $coords, $values, $label );
     $self->setMarker( $self->dataset->datasetCount - 1, $marker, $markerSize ) if $marker;
 
     return;
@@ -64,7 +70,19 @@ Adds the datasets in this chart to the legend of the axis.
 =cut
 
 sub addToLegend {
+    my $self = shift;
+    my $data = $self->dataset;
 
+    for my $ds ( 0 .. $data->datasetCount ) {
+        next unless defined $data->labels->[ $ds ];
+
+        $self->axis->legend->addItem( 
+            $self->getSymbolType,
+            $data->labels->[ $ds ],
+            $self->colors->[ $ds ],
+            $self->markers->[ $ds ] 
+        );
+    }
 
 }
 
@@ -188,6 +206,24 @@ sub getPalette {
 
 #-------------------------------------------------------------------
 
+=head2 getSymbolType ( )
+
+=over 4
+
+=item block
+
+=item line
+
+=item marker
+
+=cut
+
+sub getSymbolType {
+    croak "Chart plugin must overload getSymbolType method";
+}
+
+#-------------------------------------------------------------------
+
 =head2 getWidth ( )
 
 Returns the width in pixels of the area available for the chart.
@@ -245,9 +281,10 @@ sub new {
     bless       $self, $class;
     register    $self;
 
-    my $id              = id $self;
-    $dataset{ $id }     = Chart::Magick::Data->new;
-    $markers{ $id }     = [];
+    my $id            = id $self;
+    $dataset{ $id   } = Chart::Magick::Data->new;
+    $markers{ $id   } = [];
+    $colors{ $id    } = [];
 
     $self->initializeProperties( $properties );
 
@@ -263,6 +300,25 @@ Override this method to do any preprocessing before the drawing phase begins.
 =cut
 
 sub preprocessData {
+    my $self = shift;
+    my $markerSize = $self->get('markerSize');
+
+    $self->getPalette->paletteIndex( undef );
+    for my $ds ( 0 .. $self->dataset->datasetCount - 1 ) {
+        my $color = $self->getPalette->getNextColor;
+
+        push @{ $colors{ id $self } }, $color;
+
+        if ( exists $self->markers->[ $ds ] ) {
+            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
+            $size ||= $markerSize;
+
+            $self->markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $self->axis, {
+                strokeColor => $color->getStrokeColor,
+            } );
+        }
+    }
+
     return;
 }
 

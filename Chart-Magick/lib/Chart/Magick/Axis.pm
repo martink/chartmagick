@@ -412,6 +412,7 @@ sub draw {
     foreach my $chart (@{ $charts }) {
         $chart->setAxis( $self );
         $chart->preprocessData( ); #$self );
+        $chart->addToLegend;
     }
 
     # Preprocess data

@@ -9,6 +9,21 @@ use Data::Dumper;
 
 use base qw{ Chart::Magick::Chart };
 
+#--------------------------------------------------------------------
+
+=head2 getSymbolType ( )
+
+See Chart::Magick::Chart::getSymbolType.
+
+=cut
+
+sub getSymbolType {
+    my $self    = shift;
+    my $legend  = $self->axis->legend;
+
+    return $legend->SYMBOL_BLOCK;
+}
+
 
 #### TODO: getXOffset en Y offset tov. axis anchor bepalen.
 sub getXOffset {

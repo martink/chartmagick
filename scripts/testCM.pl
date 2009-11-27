@@ -29,8 +29,8 @@ my $time = [ gettimeofday ];
 
 # Create chart and add datasets to it
 my $chart = Chart::Magick::Chart::Line->new();
-$chart->addDataset( $dsx, $dsy,   'marker2' );
-$chart->addDataset( $dsx2, $dsy2, 'gooey.png', 20 ); 
+$chart->addDataset( $dsx, $dsy,   'Transordinary wobble scale', 'marker2' );
+$chart->addDataset( $dsx2, $dsy2, 'Octopode scale', 'gooey.png', 18 ); 
 
 # Create coordinate system
 my $axis = Chart::Magick::Axis::Lin->new( {
@@ -62,7 +62,7 @@ my $axis = Chart::Magick::Axis::Lin->new( {
 
 # Add the chart to the coordinate system
 $axis->addChart( $chart );
-$axis->legend->set( location => 'bottom' );
+#$axis->legend->set( location => 'bottom' );
 
 # Render it
 $axis->draw;

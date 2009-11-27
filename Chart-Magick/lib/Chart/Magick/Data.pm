@@ -131,6 +131,7 @@ sub addDataset {
     my $self    = shift;
     my $coords  = shift;
     my $values  = shift;
+    my $label   = shift;
 
     croak "Number of coordinates and values doesn't match" unless scalar @{ $coords } eq scalar @{ $values };
 
@@ -140,6 +141,9 @@ sub addDataset {
     for my $index ( 0 .. scalar @{ $coords } - 1 ) {
         $self->addDataPoint( $coords->[ $index ], $values->[ $index ], $datasetIndex );
     }
+
+    # Set dataset name
+    $labels{ id $self }->[ $datasetIndex ] = $label if $label;
 
     return;
 }

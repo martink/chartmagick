@@ -8,6 +8,21 @@ use POSIX qw{ floor ceil };
 
 use base qw{ Chart::Magick::Chart };
 
+#--------------------------------------------------------------------
+
+=head2 getSymbolType ( )
+
+See Chart::Magick::Chart::getSymbolType.
+
+=cut
+
+sub getSymbolType {
+    my $self    = shift;
+    my $legend  = $self->axis->legend;
+
+    return $legend->SYMBOL_BLOCK;
+}
+
 sub projectValue {
     my $self    = shift;
     my $value   = shift;
