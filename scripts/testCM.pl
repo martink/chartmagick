@@ -62,6 +62,7 @@ my $axis = Chart::Magick::Axis::Lin->new( {
 
 # Add the chart to the coordinate system
 $axis->addChart( $chart );
+$axis->legend->set( location => 'bottom' );
 
 # Render it
 $axis->draw;

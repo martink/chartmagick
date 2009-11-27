@@ -79,7 +79,6 @@ sub plot {
         my $color = $self->getPalette->getNextColor;
         push @palette, $color;
 
-        my $marker;
         if ( exists $self->markers->[ $ds ] ) {
 
             my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
@@ -90,7 +89,7 @@ sub plot {
             } );
         }
 
-        $axis->legend->addItem( 0, "Dataset $ds", $color, $marker );
+        $axis->legend->addItem( 0, "Dataset $ds", $color, $markers->[ $ds ] );
     }
 
     # Draw the graphs
