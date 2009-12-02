@@ -367,7 +367,7 @@ sub definition {
         height          => 300,
 
         # Image margins
-        margin          => 0,
+        margin          => 10,
         marginLeft      => sub { $_[0]->get('margin') },
         marginTop       => sub { $_[0]->get('margin') }, 
         marginRight     => sub { $_[0]->get('margin') },

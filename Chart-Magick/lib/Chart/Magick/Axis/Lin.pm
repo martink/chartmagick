@@ -71,8 +71,8 @@ sub definition {
         xTitleColor     => sub { $_[0]->get('fontColor') },
 #        xTitleAngle
 #        xLabelAngle
-        xStart          => 0,
-        xStop           => 0,
+        xStart          => undef,
+        xStop           => undef,
 
         xIncludeOrigin  => 0,
         xNoAdjustRange  => 1,
@@ -101,8 +101,8 @@ sub definition {
         yTitleColor     => sub { $_[0]->get('fontColor') },
 #        yTitleAngle
 #        yLabelAngle
-        yStart          => 1,
-        yStop           => 5,
+        yStart          => undef,
+        yStop           => undef,
 
         yIncludeOrigin  => 0,
         yNoAdjustRange  => 0,
@@ -120,9 +120,9 @@ sub definition {
         tickColor           => sub { $_[0]->get('boxColor') },
         subtickColor        => sub { $_[0]->get('tickColor') },
 
-        alignAxesWithTicks  => 1,
-        xAlignAxesWithTicks => sub { $_[0]->get('alignAxesWithTicks') },
-        yAlignAxesWithTicks => sub { $_[0]->get('alignAxesWithTicks') },
+        expandRange         => 1,
+        xExpandRange        => sub { $_[0]->get('expandRange') },
+        yExpandRange        => sub { $_[0]->get('expandRange') },
 
         plotBox             => 1,
         boxColor            => 'black',
@@ -171,6 +171,22 @@ See Chart::Magick::Axis::getCoordDimension.
 
 sub getCoordDimension {
     return 1;
+}
+
+#---------------------------------------------
+
+sub getDataRange {
+    my $self = shift;
+
+    my @overrides   = map { $self->get( $_ ) } qw{ xStart xStop yStart yStop };
+    my @values      = $self->SUPER::getDataRange;
+
+    return (
+        defined $overrides[0] ? [ $overrides[0] ] : $values[0],
+        defined $overrides[1] ? [ $overrides[1] ] : $values[1],
+        defined $overrides[2] ? [ $overrides[2] ] : $values[2],
+        defined $overrides[3] ? [ $overrides[3] ] : $values[3],
+    );
 }
 
 #---------------------------------------------
@@ -257,11 +273,13 @@ sub optimizeMargins {
             );
 
         # Adjust the chart ranges so that they align with the 0 axes if desired.
-        if ( $self->get('yAlignAxesWithTicks') ) {
+#        if ( $self->get('yAlignAxesWithTicks') ) {
+        if ( $self->get('yExpandRange') ) {
             $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
             $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
         }
-        if ( $self->get('xAlignAxesWithTicks') ) {
+#        if ( $self->get('xAlignAxesWithTicks') ) {
+        if ( $self->get('xExpandRange') ) {
             $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
             $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
         }   
