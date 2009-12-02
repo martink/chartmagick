@@ -217,6 +217,42 @@ Returns the point at which a line through x0,y0 and angle alpha intersects an el
 
 =cut
 
+#sub getIntersect {
+#    my $self    = shift;
+#    my $radius  = shift;
+#    my $angle   = shift;
+#    my $x0      = shift;
+#    my $y0      = shift;
+#
+#    my $m   = -sin( $angle ) / cos( $angle );
+#
+#    my $m2  = $m * $m;
+#    my $h   = sprintf( '%.6f', ( cos(2 * pi * $self->get('tiltAngle') / 360) ) ** 2 );
+#    $h = 0.00001 if $h == 0.0;
+#    my $x02 = $x0 ** 2;
+#    my $y02 = $y0 ** 2;
+#    my $r2  = $radius ** 2;
+#
+#    my $a = $m2 + $h;
+#    my $b = 2 * $m * ( $y0 - $m * $x0 );
+#    my $c = $x02 * $m2 - 2 * $x0 * $y0 * $m + $y02 - $r2 * $h;
+#
+#    my $sgn_x   = ( $angle > 0.5 * pi && $angle < 1.5 * pi ) ? -1 : 1;
+#
+#    my $x   = ($angle == 0.5 * pi || $angle == 1.5 * pi )
+#          ? $x0
+#          : (-$b + $sgn_x * sqrt( ($b**2) - 4 * $a * $c ) ) / ( 2 * $a )
+#          ;
+#    
+#
+#    #my $y   = ( $x - $x0 ) * $m + $y0;
+#
+#    my $sgn_y = ( $angle  > pi ) ? 1 : -1;
+#    my $y   = $sgn_y * sqrt( ( $r2 - $x ** 2 ) * ($h ** 2) );
+#
+#    return ( $x, $y );
+#}
+
 sub getIntersect {
     my $self    = shift;
     my $radius  = shift;
@@ -225,12 +261,13 @@ sub getIntersect {
     my $y0      = shift;
 
     my $m   = -sin( $angle ) / cos( $angle );
+
     my $m2  = $m * $m;
     my $h   = sprintf( '%.6f', ( cos(2 * pi * $self->get('tiltAngle') / 360) ) ** 2 );
     $h = 0.00001 if $h == 0.0;
-    my $x02 = $x0 ** 2;
-    my $y02 = $y0 ** 2;
-    my $r2  = $radius ** 2;
+    my $x02 = $x0 * $x0;
+    my $y02 = $y0 * $y0;
+    my $r2  = $radius * $radius;
 
     my $a = $m2 + $h;
     my $b = 2 * $m * ( $y0 - $m * $x0 );
@@ -240,10 +277,11 @@ sub getIntersect {
 
     my $x   = ($angle == 0.5 * pi || $angle == 1.5 * pi )
           ? $x0
-          : (-$b + $sgn_x * sqrt( ($b**2) - 4 * $a * $c ) ) / ( 2 * $a )
+          : (-$b + $sgn_x * sqrt( ($b*$b) - 4 * $a * $c ) ) / ( 2 * $a )
           ;
-       
-    my $y   = ( $x - $x0 ) * $m + $y0; 
+
+    my $sgn_y = ( $angle  > pi ) ? 1 : -1;
+    my $y   = $sgn_y * sqrt( ( $r2 - $x * $x) * $h );
 
     return ( $x, $y );
 }
@@ -284,6 +322,9 @@ sub calcCoordinates {
          - $pieHeight / $pieWidth * $slice->{explosionRadius} * sin( $slice->{avgAngle} ),
     );
 
+print "{{{$tipX}}}{{{$tipY}}}\n";
+
+
 #    my ( $startX, $startY ) =  (#$self->project(
 #         $pieWidth  * cos( $slice->{ startAngle } + $angleAdjust ),
 #        -$pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
@@ -292,15 +333,21 @@ sub calcCoordinates {
 #         $pieWidth  * cos( $slice->{ stopAngle } - $angleAdjust ),
 #        -$pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
 #    );
-    
-    my ( $startX, $startY ) =  $self->project(
+
+    my ( $startX, $startY ) =  ( #$self->project(
         $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY )
     );
-    my ( $endX, $endY )     = $self->project(
+
+print "w:$pieWidth, h:$pieHeight\n";
+print "start***$startX***$startY***\n";
+    my ( $endX, $endY )     = ( #$self->project(
         $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY )
     );
+print "end---$endX---$endY---\n";
 
     ($tipX, $tipY) = $self->project( $tipX, $tipY );
+    ( $startX, $startY ) = $self->project( $startX, $startY );
+    ( $endX, $endY ) = $self->project( $endX, $endY );
 
     my $coords = {
         %{ $slice },
@@ -393,13 +440,41 @@ Draws the pie chart.
 sub plot {
     my $self = shift;
     my $axis = $self->axis;
+    my $canvas = shift;
+
 
     $self->processDataset;
 
-#    my ( $pieWidth, $pieHeight ) = $self->getPieDimensions;
+    my ( $pieWidth, $pieHeight ) = $self->getPieDimensions;
+    for ( 0 .. $pieWidth * 2 ) {
+        my $r = $self->get('radius');
+        my $h = cos(2 * pi * $self->get('tiltAngle') / 360);
+
+        my $x  = -$pieWidth + $_;
+        my $y = sqrt( ( $r * $r - $x * $x) * $h * $h );
+
+        my ($x1, $y1) = $self->project( $x, $y);
+        my ($x2, $y2) = $self->project( $x, -$y);
+
+        $self->im->Draw(
+            primitive => 'Point',
+            stroke      => 'black',
+            fill        => 'black',
+            points      => "$x1,$y1",
+        );
+        $self->im->Draw(
+            primitive => 'Point',
+            stroke      => 'black',
+            fill        => 'black',
+            points      => "$x2,$y2",
+        );
+    };
+
+
+
 #    my ($x, $y) = $self->project( $pieWidth, 0 );
 #    my $y2 = $y + 1;
-#    $self->im->Draw(
+#    $canvas->Draw(
 #        primitive   => 'Path',
 #        stroke      => 'black',
 #        points      =>
@@ -408,7 +483,7 @@ sub plot {
 #            " Z ",
 #        fill        => 'none',
 #    );
-#
+
 #    $self->im->Draw(
 #        primitive   => 'Point',
 #        stroke      => 'black',
@@ -651,8 +726,11 @@ sub drawPieSlice {
         y   => $slice->{endCorner}->{y} - $offset,
     );
 
+
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
     my $bigCircle                = $self->bigCircle( $slice->{ angle } );
+
+print "[[$pieWidth]][[$pieHeight]]\n";
 
     $self->im->Draw(
         primitive   => 'Path',
@@ -724,6 +802,7 @@ sub drawRim {
 
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
     my $bigCircle                = $self->bigCircle( $slice->{ angle } );
+print "-->[[$pieWidth]][[$pieHeight]]\n";
 
     # Draw curvature
     $self->im->Draw(
