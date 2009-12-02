@@ -35,7 +35,7 @@ my @ds4 = (
 
 use constant pi => 3.14159265358979;
 
-my $pxCount = 1000;
+my $pxCount = 100;
 my $dsx = [ map { pi / $pxCount * $_  - 0.5 * pi      } (0..$pxCount) ];
 my $dsx = [ map { pi / $pxCount * $_                  } (-$pxCount/2..$pxCount/2) ];
 my $dsy = [ map { 1.1 + sin( 50*$_ ) + sin( 61*$_ )   } @{ $dsx } ];
@@ -124,11 +124,12 @@ $axis = $canvas->getAxis( 1 );
 $axis->addChart( $barChart );
 $axis->addChart( $lineChart );
 $axis->set( $config );
-#$axis->set('title', 'Multiple chart types on one axis');
-#$axis->set( $config );
 $axis->set('xTickOffset', 1);
 $axis->set('xSubtickCount', 0);
+$axis->set('xTitle', 'klazam!' );
 $axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4', 5 => 'overall' }, 1 );
+$axis->legend->set( position => 'top center' );
+
 
 # Fourth chart
 $axis = $canvas->getAxis( 3 );

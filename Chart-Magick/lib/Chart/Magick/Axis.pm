@@ -415,6 +415,8 @@ sub draw {
         $chart->addToLegend;
     }
 
+    $self->legend->preprocess;
+
     # Preprocess data
     $self->preprocessData;
 
@@ -559,6 +561,8 @@ sub preprocessData {
 
     $self->set( 'marginTop', $marginTop );
     $self->plotOption( 'titleOffset', $titleOffset);
+    
+    my $legendMargins = $self->legend->getRequiredMargins;
 
     # global
     my $axisWidth  = $self->get('width') - $self->get('marginLeft') - $self->get('marginRight');
@@ -570,6 +574,7 @@ sub preprocessData {
         axisAnchorX  => $self->get('marginLeft'),
         axisAnchorY  => $self->get('marginTop'),
     );
+
 
     return;
 }
