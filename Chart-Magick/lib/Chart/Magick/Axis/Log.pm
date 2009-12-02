@@ -82,13 +82,12 @@ Draws the graph. See Chart::Magick::Axis for documentation.
 
 sub draw {
     my $self = shift;
-
-    # Ticks in linlog are always aligned with the axes, so prevent the super class from over adjusting.
-    $self->set( 
-        xAlignAxesWithTicks     => 0,
-        yAlignAxesWithTicks     => 0,
+   
+    $self->set(
+        xExpandRange => 0,
+        yExpandRange => 0,
     );
-    
+
     $self->SUPER::draw( @_ );
 }
 

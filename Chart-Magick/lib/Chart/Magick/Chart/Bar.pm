@@ -64,7 +64,7 @@ sub definition {
 
 #--------------------------------------------------------------------------
 
-=head2 drawBar ( color, width, length, coord, coordOffset, bottom )
+=head2 drawBar ( $canvas, color, width, length, coord, coordOffset, bottom )
 
 Draw a bar onto the axis set in the object. All parameters should be passed in coordinates, not pixels.
 
@@ -96,6 +96,7 @@ The displacement of the actual bar bottom and the horizontal axis. Defaults to 0
 
 sub drawBar {
     my $self            = shift;
+    my $canvas          = shift;
 
     my $color           = shift;
     my $width           = shift;
@@ -110,7 +111,7 @@ sub drawBar {
     my $right   = $left + $width;                       # x-location of right bar edge
     my $top     = $bottom + $length;
 
-	$axis->im->Draw(
+	$canvas->Draw(
 		primitive	=> 'Path',
 		stroke		=> $color->getStrokeColor,
 		fill		=> $color->getFillColor,
@@ -179,7 +180,8 @@ Plots the bars onto the axis set in the object.
 =cut
 
 sub plot {
-    my $self = shift;
+    my $self    = shift;
+    my $canvas  = shift;
 
     my $barCount    = $self->dataset->datasetCount;
     my $groupCount  = $self->get('drawMode') eq 'cumulative' 
@@ -229,7 +231,7 @@ sub plot {
                 }
 
                 # Draw bars on top of each other.
-                $self->drawBar( $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
+                $self->drawBar( $canvas, $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
 
                 $verticalOffset += $barLength;
             }
@@ -237,7 +239,7 @@ sub plot {
                 # Default to sideBySide draw mode
                 my $offset      = $dataset * ( $barWidth + $barSpacing) - ($barSpacing + $barWidth ) * ( $barCount - 1 ) / 2;
 
-                $self->drawBar( $color, $barWidth, $barLength, $coord->[ 0 ], $offset, 0  );
+                $self->drawBar( $canvas, $color, $barWidth, $barLength, $coord->[ 0 ], $offset, 0  );
             }
         }
     }

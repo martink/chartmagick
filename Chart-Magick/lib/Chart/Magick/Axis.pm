@@ -391,6 +391,8 @@ sub definition {
         labelColor      => sub { $_[0]->get('fontColor') },
 
         background      => 'xc:white',
+
+        drawLegend      => 1,
     );
 
     return \%options;
@@ -423,14 +425,31 @@ sub draw {
     foreach my $chart (@{ $charts }) {
         $chart->autoRange;
     }
-    
+
     # Plot background stuff
     $self->plotFirst;
 
+    my $chartCanvas = Image::Magick->new( size => $self->get('width') . 'x' . $self->get('height') );
+    $chartCanvas->Read('xc:none');
+
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->plot( ); #$self );
+        $chart->plot( $chartCanvas ); #$self );
     }
+
+    $chartCanvas->Crop(
+        x       => $self->plotOption('chartAnchorX'),
+        y       => $self->plotOption('chartAnchorY'),
+        width   => $self->getChartWidth - 1,
+        height  => $self->getChartHeight - 1,
+    );
+
+    $self->im->Composite(
+        image   => $chartCanvas,
+        gravity => 'NorthWest',
+        x       => $self->plotOption('chartAnchorX') + 1,
+        y       => $self->plotOption('chartAnchorY') + 1,
+    );
 
     $self->plotLast;
 
@@ -495,7 +514,7 @@ sub plotLast {
     my $self = shift;
 
     $self->plotTitle;
-    $self->legend->draw;
+    $self->legend->draw if $self->get('drawLegend');
 
     return;
 };
@@ -571,8 +590,8 @@ sub preprocessData {
     $self->plotOption( 
         axisWidth    => $axisWidth,
         axisHeight   => $axisHeight,
-        axisAnchorX  => $self->get('marginLeft'),
-        axisAnchorY  => $self->get('marginTop'),
+        chartAnchorX  => $self->get('marginLeft'),
+        chartAnchorY  => $self->get('marginTop'),
     );
 
 
@@ -597,11 +616,12 @@ Array ref containing the values of the spot to be projected.
 =cut
 
 sub toPx {
-    my $self    = shift;
-    my $coord   = shift;
-    my $value   = shift;
+    my $self        = shift;
+    my $coord       = shift;
+    my $value       = shift;
+    my $chartCoords = shift;
     
-    return join ",", map { int } $self->project( $coord, $value );
+    return join ",", map { int } $self->project( $coord, $value ); #, $chartCoords );
 }
 
 #---------------------------------------------

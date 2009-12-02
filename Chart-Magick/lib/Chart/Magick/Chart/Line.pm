@@ -79,6 +79,7 @@ Draws the graph.
 
 sub plot {
     my $self    = shift;
+    my $canvas  = shift;
     my $axis    = $self->axis;
 
     my $datasetCount =  $self->dataset->datasetCount;
@@ -103,11 +104,11 @@ sub plot {
                 my @to   = ( $x, $y );
 
                 my $path = 
-                    "M " . $axis->toPx( @from   )
-                   ."L " . $axis->toPx( @to     )
+                    "M " . $axis->toPx( @from )
+                   ."L " . $axis->toPx( @to   )
                 ;
 
-	            $axis->im->Draw(
+	            $canvas->Draw(
                 	primitive	=> 'Path',
               	    stroke		=> $color->getStrokeColor,
                   	points		=> $path,
@@ -119,7 +120,7 @@ sub plot {
             # point.
             my $marker = $markers[ $ds ];
             if ( $marker && $self->get('plotMarkers') && exists $previousCoord->[ $ds ] ) {
-                $marker->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
+                $marker->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas );
             }
 
             # Store the current position of this dataset
@@ -131,7 +132,7 @@ sub plot {
     if ( $self->get('plotMarkers') ) {
         for my $ds ( 0 .. $datasetCount - 1 ) {
             next unless $markers[ $ds ];
-            $markers[ $ds ]->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
+            $markers[ $ds ]->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas );
         }
     }
 }

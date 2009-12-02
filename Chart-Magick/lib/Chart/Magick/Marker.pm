@@ -82,8 +82,9 @@ sub draw {
     my $self    = shift;
     my $x       = shift;
     my $y       = shift;
+    my $im      = shift || $self->axis->im;
 
-    $self->axis->im->Composite(
+    $im->Composite(
         image   => $self->im,
         gravity => 'NorthWest',
         x       => $x - $self->anchorX,
