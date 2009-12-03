@@ -217,42 +217,6 @@ Returns the point at which a line through x0,y0 and angle alpha intersects an el
 
 =cut
 
-#sub getIntersect {
-#    my $self    = shift;
-#    my $radius  = shift;
-#    my $angle   = shift;
-#    my $x0      = shift;
-#    my $y0      = shift;
-#
-#    my $m   = -sin( $angle ) / cos( $angle );
-#
-#    my $m2  = $m * $m;
-#    my $h   = sprintf( '%.6f', ( cos(2 * pi * $self->get('tiltAngle') / 360) ) ** 2 );
-#    $h = 0.00001 if $h == 0.0;
-#    my $x02 = $x0 ** 2;
-#    my $y02 = $y0 ** 2;
-#    my $r2  = $radius ** 2;
-#
-#    my $a = $m2 + $h;
-#    my $b = 2 * $m * ( $y0 - $m * $x0 );
-#    my $c = $x02 * $m2 - 2 * $x0 * $y0 * $m + $y02 - $r2 * $h;
-#
-#    my $sgn_x   = ( $angle > 0.5 * pi && $angle < 1.5 * pi ) ? -1 : 1;
-#
-#    my $x   = ($angle == 0.5 * pi || $angle == 1.5 * pi )
-#          ? $x0
-#          : (-$b + $sgn_x * sqrt( ($b**2) - 4 * $a * $c ) ) / ( 2 * $a )
-#          ;
-#    
-#
-#    #my $y   = ( $x - $x0 ) * $m + $y0;
-#
-#    my $sgn_y = ( $angle  > pi ) ? 1 : -1;
-#    my $y   = $sgn_y * sqrt( ( $r2 - $x ** 2 ) * ($h ** 2) );
-#
-#    return ( $x, $y );
-#}
-
 sub getIntersect {
     my $self    = shift;
     my $radius  = shift;
@@ -280,9 +244,8 @@ sub getIntersect {
           : (-$b + $sgn_x * sqrt( ($b*$b) - 4 * $a * $c ) ) / ( 2 * $a )
           ;
 
-    my $sgn_y = ( $angle  > pi ) ? 1 : -1;
-    my $y   = $sgn_y * sqrt( ( $r2 - $x * $x) * $h );
-
+    my $y   = ( $x - $x0 ) * $m + $y0;
+    
     return ( $x, $y );
 }
 
@@ -303,71 +266,35 @@ sub calcCoordinates {
     my $self    = shift;
     my $slice   = shift;
 
-    my( $pieWidth, $pieHeight ) = $self->getPieDimensions( $slice->{ scaleFactor } );
-    my $angleAdjust = atan2 $slice->{widthReduction}, $self->get('radius');
+    my( $width, $height )   = $self->getPieDimensions( $slice->{ scaleFactor } );
 
-    # Translate the origin from the top corner to the center of the image.
-#    my $offsetX = $self->getXOffset;
-#    my $offsetY = $self->getYOffset;
-#
-#    $offsetX += 2 * ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} );
-#    $offsetY -= 2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} );
-
-#    my ( $tipX, $tipY )     = ( #$self->project(
-#         2 * ( $pieWidth  / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * cos( $slice->{avgAngle} ),
-#        -2 * ( $pieHeight / ( $pieWidth+$pieHeight ) ) * $slice->{explosionRadius} * sin( $slice->{avgAngle} ),
-#    );
-    my ( $tipX, $tipY )     = ( #$self->project(
+    my ( $tipX, $tipY )     = (
          $slice->{explosionRadius} * cos( $slice->{avgAngle} ),
-         - $pieHeight / $pieWidth * $slice->{explosionRadius} * sin( $slice->{avgAngle} ),
+         - $height / $width * $slice->{explosionRadius} * sin( $slice->{avgAngle} ),
     );
 
-print "{{{$tipX}}}{{{$tipY}}}\n";
-
-
-#    my ( $startX, $startY ) =  (#$self->project(
-#         $pieWidth  * cos( $slice->{ startAngle } + $angleAdjust ),
-#        -$pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
-#    );
-#    my ( $endX, $endY )     = (# $self->project(
-#         $pieWidth  * cos( $slice->{ stopAngle } - $angleAdjust ),
-#        -$pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
-#    );
-
-    my ( $startX, $startY ) =  ( #$self->project(
+    my ( $startX, $startY ) = $self->project(
         $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY )
     );
-
-print "w:$pieWidth, h:$pieHeight\n";
-print "start***$startX***$startY***\n";
-    my ( $endX, $endY )     = ( #$self->project(
+    my ( $endX, $endY )     = $self->project(
         $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY )
     );
-print "end---$endX---$endY---\n";
+    ( $tipX, $tipY )        = $self->project( $tipX, $tipY );
 
-    ($tipX, $tipY) = $self->project( $tipX, $tipY );
-    ( $startX, $startY ) = $self->project( $startX, $startY );
-    ( $endX, $endY ) = $self->project( $endX, $endY );
-
-    my $coords = {
+    my %coords = (
         %{ $slice },
-        tip         => {
-            x   => $tipX, #$offsetX,
-            y   => $tipY, #$offsetY,
-        },
-        startCorner => {
-            x   => $startX, #$self->getXOffset + $pieWidth * cos( $slice->{ startAngle } + $angleAdjust ),
-            y   => $startY, #$self->getYOffset - $pieHeight * sin( $slice->{ startAngle } + $angleAdjust ),
-        },
-        endCorner   => {
-            x   => $endX, #$self->getXOffset + $pieWidth * cos( $slice->{ stopAngle } - $angleAdjust ),
-            y   => $endY, #$self->getYOffset - $pieHeight * sin( $slice->{ stopAngle } - $angleAdjust ),
-        },
-        width       => $pieWidth,
-        height      => $pieHeight,
-    };
+        tip         => { x   => $tipX,      y => $tipY      },
+        startCorner => { x   => $startX,    y => $startY    },
+        endCorner   => { x   => $endX,      y => $endY      },
+        width       => $width,
+        height      => $height,
+    );
 
-    return $coords;
+#    @{ $coords{ tip         }}{ 'x', 'y' } = ( $tipX, $tipY        );  #$self->project( $tipX, $tipY );
+#    @{ $coords{ startCorner }}{ 'x', 'y' } = ( $startX, $startY    );  #$self->project( $startX, $startY );
+#    @{ $coords{ endCorner   }}{ 'x', 'y' } = ( $endX, $endY        );  #$self->project( $endX, $endY );
+
+    return \%coords;
 }
 
 #--------------------------------------------------------------------
@@ -442,57 +369,7 @@ sub plot {
     my $axis = $self->axis;
     my $canvas = shift;
 
-
     $self->processDataset;
-
-    my ( $pieWidth, $pieHeight ) = $self->getPieDimensions;
-    for ( 0 .. $pieWidth * 2 ) {
-        my $r = $self->get('radius');
-        my $h = cos(2 * pi * $self->get('tiltAngle') / 360);
-
-        my $x  = -$pieWidth + $_;
-        my $y = sqrt( ( $r * $r - $x * $x) * $h * $h );
-
-        my ($x1, $y1) = $self->project( $x, $y);
-        my ($x2, $y2) = $self->project( $x, -$y);
-
-        $self->im->Draw(
-            primitive => 'Point',
-            stroke      => 'black',
-            fill        => 'black',
-            points      => "$x1,$y1",
-        );
-        $self->im->Draw(
-            primitive => 'Point',
-            stroke      => 'black',
-            fill        => 'black',
-            points      => "$x2,$y2",
-        );
-    };
-
-
-
-#    my ($x, $y) = $self->project( $pieWidth, 0 );
-#    my $y2 = $y + 1;
-#    $canvas->Draw(
-#        primitive   => 'Path',
-#        stroke      => 'black',
-#        points      =>
-#            " M $x,$y ".
-#            " A $pieWidth,$pieHeight 0 1,0 $x,$y2 ".
-#            " Z ",
-#        fill        => 'none',
-#    );
-
-#    $self->im->Draw(
-#        primitive   => 'Point',
-#        stroke      => 'black',
-#        points      => join(',', $self->project(0,0)),
-#    );
-
-
-
-
 
     # Draw slices in the correct order or you'll get an MC Escher.
     my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
@@ -516,8 +393,8 @@ sub plot {
     # Only 3d pies have sides
     if ($self->get('tiltAngle') != 0) {
         my @parts =
-            sort    sortSlices                                          # sort slices in drwaing order
-            map     { $self->splitSlice( $_ ) }                         # split slices crossing the horizontal axis
+            sort    sortSlices                          # sort slice parts in drawing order
+            map     { $self->splitSlice( $_ ) }         # split slices crossing the horizontal axis
             @slices;
 
         foreach my $slice (@parts) {
@@ -598,15 +475,19 @@ sub drawLabel {
     my $startRadius = $radius * $slice->{ scaleFactor } + $self->get('stickOffset');
     my $stopRadius  = $startRadius + $self->get('stickLength');
 
-    my $startPointX = $self->getXOffset + $startRadius * cos $angle;
-    my $startPointY = $self->getYOffset - $startRadius * $tiltScale * sin $angle;
-    my $endPointX   = $self->getXOffset + $stopRadius  * cos $angle;
-    my $endPointY   = $self->getYOffset - $stopRadius  * $tiltScale * sin $angle;
+    my ( $startPointX, $startPointY ) = $self->project( 
+         $startRadius * cos $angle, 
+        -$startRadius * $tiltScale * sin $angle 
+    );
+    my ( $endPointX, $endPointY     ) = $self->project(
+         $stopRadius  * cos $angle,
+        -$stopRadius  * $tiltScale * sin $angle
+    );
 
     if ($self->get('tiltAngle')) {
         my $position     = $self->get('labelPosition');
         my $labelOffsetY =
-            $position eq 'top'        ? $slice->{topHeight}
+              $position eq 'top'        ? $slice->{topHeight}
             : $position eq 'bottom'     ? $slice->{bottomHeight}
             :                           ( $slice->{topHeight} - $slice->{bottomHeight} ) / 2;
 
@@ -628,15 +509,17 @@ sub drawLabel {
     }
 
     # Process the textlabel
-    my $horizontalAlign =
-        $angle > 0.5 * pi && $angle < 1.5 * pi    ? 'right'
+    my $horizontalAlign
+        = $angle > 0.5 * pi && $angle < 1.5 * pi    ? 'right'
         : $angle < 1.5 * pi || $angle > 1.5 * pi    ? 'left'
-        : 'center';
+        :                                             'center'
+        ;
 
-    my $verticalAlign    =
-        $angle < pi   ? 'bottom'
+    my $verticalAlign
+        = $angle < pi   ? 'bottom'
         : $angle > pi   ? 'top'
-        : 'center';
+        :                 'center'
+        ;
 
     my $anchorX
         = $horizontalAlign eq 'right'
@@ -713,33 +596,32 @@ sub drawPieSlice {
     my $offset      = shift || 0;
     my $fillColor   = shift;
 
-    my %tip = (
-        x   => $slice->{tip}->{x},
-        y   => $slice->{tip}->{y} - $offset,
-    );
-    my %startCorner = (
-        x   => $slice->{startCorner}->{x},
-        y   => $slice->{startCorner}->{y} - $offset,
-    );
-    my %endCorner = (
-        x   => $slice->{endCorner}->{x},
-        y   => $slice->{endCorner}->{y} - $offset,
-    );
+    my ( $width, $height ) = @{ $slice }{ qw( width height ) };
 
+    my $tipX    = $slice->{tip}->{x};
+    my $tipY    = $slice->{tip}->{y} - $offset;
+    my $fromX   = $slice->{startCorner}->{x};
+    my $fromY   = $slice->{startCorner}->{y} - $offset;
 
-    my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
-    my $bigCircle                = $self->bigCircle( $slice->{ angle } );
+    # Construct path for slice
+    my $path = " M $tipX,$tipY L $fromX,$fromY ";
 
-print "[[$pieWidth]][[$pieHeight]]\n";
+    # We need to draw to top and bottom slices in parts as well, for two reasons: First to prevent the rims fom
+    # drawing with a different curvature than the top/bottom parts (probably due to rounding errors. 2) To revent
+    # Image magick from segfaulting when a slice of 100% is being drawn.
+    foreach my $part ( $self->splitSlice( $slice ) ) {
+        my $toX     = $part->{endCorner}->{x};
+        my $toY     = $part->{endCorner}->{y} - $offset;
+
+        $path .= " A $width,$height 0 0,0 $toX,$toY ";
+    }
+
+    $path .= 'Z';
 
     $self->im->Draw(
         primitive   => 'Path',
         stroke      => $slice->{strokeColor},
-        points      =>
-            " M $tip{x},$tip{y} ".
-            " L $startCorner{x},$startCorner{y} ".
-            " A $pieWidth,$pieHeight 0 $bigCircle,0 $endCorner{x},$endCorner{y} ".
-            " Z ",
+        points      => $path,
         fill        => $fillColor,
     );
 
@@ -802,7 +684,6 @@ sub drawRim {
 
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
     my $bigCircle                = $self->bigCircle( $slice->{ angle } );
-print "-->[[$pieWidth]][[$pieHeight]]\n";
 
     # Draw curvature
     $self->im->Draw(
