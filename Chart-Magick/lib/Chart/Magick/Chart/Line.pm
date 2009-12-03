@@ -89,11 +89,12 @@ sub plot {
     my @colors  = @{ $self->colors  };
     my @markers = @{ $self->markers };
 
+    my @paths;
     # Draw the graphs
     foreach my $x ( @{ $self->dataset->getCoords } ) {
 
         for my $ds ( 0 .. $datasetCount - 1) {
-            my $color = $colors[ $ds ];
+#           my $color = $colors[ $ds ];
 
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
@@ -104,16 +105,18 @@ sub plot {
                 my @to   = ( $x, $y );
 
                 my $path = 
-                    "M " . $axis->toPx( @from )
-                   ."L " . $axis->toPx( @to   )
+                #    " M " . $axis->toPx( @from )
+                   " L " . $axis->toPx( @to   )
                 ;
 
-	            $canvas->Draw(
-                	primitive	=> 'Path',
-              	    stroke		=> $color->getStrokeColor,
-                  	points		=> $path,
-              	    fill		=> 'none',
-                );
+                $paths[$ds] .= $path;
+
+#	            $canvas->Draw(
+#                	primitive	=> 'Path',
+#              	    stroke		=> $color->getStrokeColor,
+#                  	points		=> $path,
+#              	    fill		=> 'none',
+#                );
             }
 
             # Draw marker of previous data point so that it will be on top of the lines entering and leaving the
@@ -126,6 +129,18 @@ sub plot {
             # Store the current position of this dataset
             $previousCoord->[ $ds ] = [ $x, $y ];
         }
+    }
+
+    foreach my $ds (0..$datasetCount - 1) {
+                my $color = $colors[$ds];
+	            $canvas->Draw(
+                	primitive	=> 'Path',
+              	    stroke		=> $color->getStrokeColor,
+                  	points		=> $paths[$ds],
+              	    fill		=> 'none',
+                );
+        
+
     }
 
     # Draw last markers
