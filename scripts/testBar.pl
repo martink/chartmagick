@@ -62,12 +62,12 @@ $axis->set( {
 #$axis->set( xSubtickCount => 10, ySubtickCount => 5 );
 # Setup chart
 my $chart   = Chart::Magick::Chart::Bar->new( );
-$chart->setData( $ds );
-#$chart->addDataset( [ 0 .. 100 ], [ 1.. 101 ] );
+#$chart->setData( $ds );
+$chart->addDataset( [ 0 .. 100 ], [ map { rand( 100) - 50 } 1 .. 101 ] );
 
 $chart->set(
 #    'drawMode',     'cumulative',
-    'barSpacing' => 0,
+#    'barSpacing' => 0,
 );
 
 # Add the bar graph to the axis

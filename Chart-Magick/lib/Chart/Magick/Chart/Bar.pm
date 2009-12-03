@@ -56,7 +56,7 @@ sub definition {
     my %overrides = (
         barWidth    => 20,
         barSpacing  => 0.05,
-        groupSpacing=> sub { $_[0]->get('barSpacing') * 2 },
+        groupSpacing=> sub { $_[0]->get('barSpacing') * 3 },
         drawMode    => 'sideBySide',
     );  
 
@@ -212,12 +212,9 @@ sub plot {
 #        $p = $_->[0];
 #    }
 
-print "[$minSpacing]\n";
-
     my $groupWidth      = $minSpacing;
     my $groupSpacing    = $groupWidth * $self->get('groupSpacing');
     my $barSpacing      = $groupWidth * $self->get('barSpacing');
-print "{$barSpacing}{$groupSpacing}\n";
 
     my $barWidth        = ( $groupWidth  - $groupSpacing ) / $groupCount - $barSpacing ;
 #    $barWidth *= 0.5;
