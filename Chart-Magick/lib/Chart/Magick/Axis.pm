@@ -445,9 +445,9 @@ sub draw {
     }
 
     $chartCanvas->Crop(
-        x       => $self->plotOption('chartAnchorX'),
-        y       => $self->plotOption('chartAnchorY'),
-        width   => $self->getChartWidth - 1,
+        x       => $self->plotOption('chartAnchorX') + 1,
+        y       => $self->plotOption('chartAnchorY') + 1,
+        width   => $self->getChartWidth - 1, # - 1,
         height  => $self->getChartHeight - 1,
     );
 

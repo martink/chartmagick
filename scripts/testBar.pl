@@ -67,7 +67,7 @@ $chart->setData( $ds );
 
 $chart->set(
 #    'drawMode',     'cumulative',
-#    'barSpacing' => 0,
+    'barSpacing' => 0,
 );
 
 # Add the bar graph to the axis
