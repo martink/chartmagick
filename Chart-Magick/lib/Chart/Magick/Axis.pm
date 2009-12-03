@@ -276,6 +276,11 @@ sub addChart {
 }
 
 #---------------------------------------------
+sub applyLayoutHints {
+    return;
+}
+
+#---------------------------------------------
 
 =head2 charts ( ) 
 
@@ -415,6 +420,8 @@ sub draw {
         $chart->setAxis( $self );
         $chart->preprocessData( ); #$self );
         $chart->addToLegend;
+
+        $self->applyLayoutHints( $chart->layoutHints );
     }
 
     $self->legend->preprocess;

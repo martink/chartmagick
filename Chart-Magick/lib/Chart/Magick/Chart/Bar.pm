@@ -1,7 +1,7 @@
 package Chart::Magick::Chart::Bar;
 
 use strict;
-use List::Util qw{ sum reduce };
+use List::Util qw{ sum min };
 
 use base qw{ Chart::Magick::Chart };
 
@@ -55,7 +55,8 @@ sub definition {
 
     my %overrides = (
         barWidth    => 20,
-        barSpacing  => 5,
+        barSpacing  => 0.05,
+        groupSpacing=> sub { $_[0]->get('barSpacing') * 2 },
         drawMode    => 'sideBySide',
     );  
 
@@ -154,6 +155,8 @@ sub getDataRange {
     }
 
     return ( $global->{ minCoord }, $global->{ maxCoord }, [ $maxNeg ], [ $maxPos ] );
+
+#    return ( [ $global->{ minCoord }->[ 0 ] - 0.5 ], [ $global->{ maxCoord }->[0] + 0.5 ], [ $maxNeg ], [ $maxPos ] );
 }
 
 #--------------------------------------------------------------------
@@ -189,24 +192,35 @@ sub plot {
                     : $barCount
                     ;
 
-
     my $minSpacing;
     my $p;
-    foreach ( @{ $self->dataset->getCoords } ) {
-        if ( defined $p ) {
-            $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
-        }
-           
-        $p = $_->[0];
-    }
 
-    my $dataRange       = 5;
-    my $groupWidth      = $minSpacing; #$dataRange / $groupCount;
-    my $groupSpacing    = $groupWidth * 0.1;
-    my $barSpacing      = $groupWidth * 0.05;
+    my @coords = @{ $self->dataset->getCoords };
+    my $a      = shift( @coords )->[0];
+
+    my $minSpacing =
+        min
+        map         { my $t = $a; $a = $_->[0]; abs( $_->[0] - $t ) }
+        @coords;
+
+#    foreach ( @{ $self->dataset->getCoords } ) {
+#        if ( defined $p ) {
+#            my $spacing = 
+#            $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
+#        }
+#           
+#        $p = $_->[0];
+#    }
+
+print "[$minSpacing]\n";
+
+    my $groupWidth      = $minSpacing;
+    my $groupSpacing    = $groupWidth * $self->get('groupSpacing');
+    my $barSpacing      = $groupWidth * $self->get('barSpacing');
+print "{$barSpacing}{$groupSpacing}\n";
 
     my $barWidth        = ( $groupWidth  - $groupSpacing ) / $groupCount - $barSpacing ;
-    $barWidth *= 0.5;
+#    $barWidth *= 0.5;
 
     foreach my $coord ( @{ $self->dataset->getCoords } ) {
         my $positiveVerticalOffset = 0;
@@ -271,8 +285,15 @@ sub preprocessData {
 
     $self->SUPER::preprocessData;
 
-    $axis->set('xTickOffset', 1 ) unless $axis->get('xTickOffset');
-    $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
+#   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
+   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
+}
+
+sub layoutHints {
+    return {
+        coordPadding    => [ 0.5 ],
+        valuePadding    => [ 0   ],
+    };
 }
 
 1;

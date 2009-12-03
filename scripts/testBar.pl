@@ -59,17 +59,22 @@ $axis->set( {
     axisColor       => 'black',
 } );
 
-$axis->set( xSubtickCount => 10, ySubtickCount => 5 );
+#$axis->set( xSubtickCount => 10, ySubtickCount => 5 );
 # Setup chart
 my $chart   = Chart::Magick::Chart::Bar->new( );
 $chart->setData( $ds );
-#$chart->set('drawMode',     'cumulative');
+#$chart->addDataset( [ 0 .. 100 ], [ 1.. 101 ] );
+
+$chart->set(
+#    'drawMode',     'cumulative',
+#    'barSpacing' => 0,
+);
 
 # Add the bar graph to the axis
 $axis->addChart( $chart );
 
 # Set labels for the axis ticks
-$axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr da\'s nou ook niet echt een hele lange naam toch?', 5 => 'eeennnn hele lange maand naam zoals bijvoorbeld zoiets als mei of misschien ook nog wel iets anders zeg maar' } );
+#$axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr da\'s nou ook niet echt een hele lange naam toch?', 5 => 'eeennnn hele lange maand naam zoals bijvoorbeld zoiets als mei of misschien ook nog wel iets anders zeg maar' } );
 $axis->draw;
 
 # Write graph

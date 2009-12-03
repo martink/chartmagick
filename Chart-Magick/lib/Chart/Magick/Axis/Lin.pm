@@ -25,6 +25,22 @@ The following methods are available from this class:
 =cut
 
 #---------------------------------------------
+sub applyLayoutHints {
+    my $self    = shift;
+    my $hints   = shift;
+
+    if ( exists $hints->{ coordPadding } ) {
+        $self->set( 'xTickOffset', max( $self->get('xTickOffset'), $hints->{ coordPadding }->[0] * 2 ) );
+    };
+
+    if ( exists $hints->{ valuePadding } ) {
+        $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
+    };
+
+    return;
+}
+
+#---------------------------------------------
 
 =head2 definition ( )
 
