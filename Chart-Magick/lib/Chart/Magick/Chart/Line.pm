@@ -89,7 +89,7 @@ sub plot {
     my @colors  = @{ $self->colors  };
     my @markers = @{ $self->markers };
 
-    my @paths;
+    my ( @paths, @coords );
     # Draw the graphs
     foreach my $x ( @{ $self->dataset->getCoords } ) {
 
@@ -109,7 +109,8 @@ sub plot {
                    " L " . $axis->toPx( @to   )
                 ;
 
-                $paths[$ds] .= $path;
+#                $paths[$ds] .= $path;
+                push @{ $coords[ $ds ] }, $axis->toPx( @to   );
 
 #	            $canvas->Draw(
 #                	primitive	=> 'Path',
@@ -133,12 +134,18 @@ sub plot {
 
     foreach my $ds (0..$datasetCount - 1) {
                 my $color = $colors[$ds];
-	            $canvas->Draw(
-                	primitive	=> 'Path',
+                $canvas->Draw(
+                	primitive	=> 'Line',
               	    stroke		=> $color->getStrokeColor,
-                  	points		=> $paths[$ds],
+                  	points		=> join( ' ', @{ $coords[$ds] } ),
               	    fill		=> 'none',
                 );
+#                $canvas->Draw(
+#                	primitive	=> 'Path',
+#              	    stroke		=> $color->getStrokeColor,
+#                  	points		=> $paths[$ds],
+#              	    fill		=> 'none',
+#                );
         
 
     }
