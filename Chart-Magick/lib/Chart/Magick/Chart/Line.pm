@@ -69,6 +69,15 @@ sub getSymbolType {
     return $legend->SYMBOL_LINE + $legend->SYMBOL_MARKER;
 }
 
+sub inRange {
+    my $self    = shift;
+    my $coord   = shift;
+
+    return ( $coord->[0] >= $self->axis->get('xStart') && $coord->[0] <= $self->axis->get('xStop') );
+}
+
+
+
 #--------------------------------------------------------------------
 
 =head2 plot
@@ -90,71 +99,37 @@ sub plot {
     my @markers = @{ $self->markers };
 
     my ( @paths, @coords );
+
     # Draw the graphs
-    foreach my $x ( @{ $self->dataset->getCoords } ) {
-
+    foreach my $x ( grep { $self->inRange( $_ ) }  @{ $self->dataset->getCoords } ) {
         for my $ds ( 0 .. $datasetCount - 1) {
-#           my $color = $colors[ $ds ];
-
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
             next unless defined $y;
 
-            if ( $previousCoord->[ $ds ] ) {
-                my @from = @{ $previousCoord->[ $ds ] };
-                my @to   = ( $x, $y );
+            my @to = ( $x, $y );
 
-                my $path = 
-                #    " M " . $axis->toPx( @from )
-                   " L " . $axis->toPx( @to   )
-                ;
-
-#                $paths[$ds] .= $path;
-                push @{ $coords[ $ds ] }, $axis->toPx( @to   );
-
-#	            $canvas->Draw(
-#                	primitive	=> 'Path',
-#              	    stroke		=> $color->getStrokeColor,
-#                  	points		=> $path,
-#              	    fill		=> 'none',
-#                );
-            }
-
-            # Draw marker of previous data point so that it will be on top of the lines entering and leaving the
-            # point.
-            my $marker = $markers[ $ds ];
-            if ( $marker && $self->get('plotMarkers') && exists $previousCoord->[ $ds ] ) {
-                $marker->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas );
-            }
-
-            # Store the current position of this dataset
-            $previousCoord->[ $ds ] = [ $x, $y ];
+            push @{ $coords[ $ds ] }, $axis->toPx( @to );
         }
     }
 
+
     foreach my $ds (0..$datasetCount - 1) {
-                my $color = $colors[$ds];
-                $canvas->Draw(
-                	primitive	=> 'Line',
-              	    stroke		=> $color->getStrokeColor,
-                  	points		=> join( ' ', @{ $coords[$ds] } ),
-              	    fill		=> 'none',
-                );
-#                $canvas->Draw(
-#                	primitive	=> 'Path',
-#              	    stroke		=> $color->getStrokeColor,
-#                  	points		=> $paths[$ds],
-#              	    fill		=> 'none',
-#                );
+        my $color = $colors[$ds];
+
+        $canvas->Draw(
+            primitive	=> 'polyline',
+            stroke		=> $color->getStrokeColor,
+            points		=> join( ' ', @{ $coords[$ds] } ),
+            fill		=> 'none',
+        );
+       
+        next unless $self->get('plotMarkers') && $markers[ $ds ];
         
-
-    }
-
-    # Draw last markers
-    if ( $self->get('plotMarkers') ) {
-        for my $ds ( 0 .. $datasetCount - 1 ) {
-            next unless $markers[ $ds ];
-            $markers[ $ds ]->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas );
+        my $marker = $markers[ $ds ];
+        
+        foreach ( @{ $coords[$ds] } ) {
+            $marker->draw( split( /,/, $_ ), $canvas );
         }
     }
 }

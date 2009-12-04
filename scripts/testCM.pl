@@ -59,8 +59,8 @@ my $axis = Chart::Magick::Axis::Lin->new( {
 
     drawLegend      => 0,
 
-    xStart          => -0.1 * pi,
-    xStop           => 0,
+#    xStart          => -0.1 * pi,
+#    xStop           => 0,
     expandRange     => 0,
 #  xTickOffset     => 1,
 } );
