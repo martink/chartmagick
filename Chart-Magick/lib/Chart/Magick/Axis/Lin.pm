@@ -448,7 +448,7 @@ sub generateTicks {
     my $self    = shift;
     my $from    = shift;
     my $to      = shift;
-    my $width   = shift;
+    my $width   = shift || 1;
 
     # Figure out the first tick so that the ticks will align with zero.
     my $firstTick = floor( $from / $width ) * $width;
@@ -640,6 +640,7 @@ sub preprocessData {
 
     # Get the extreme values of the data, so we can determine what values the axis should at leat span.
     my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
+print "{$minX, $maxX, $minY, $maxY}\n";
 
     ($minX, $maxX) = $self->adjustXRange( $minX, $maxX );
     ($minY, $maxY) = $self->adjustYRange( $minY, $maxY );
@@ -659,6 +660,8 @@ sub preprocessData {
         xStart      => $minX,
         xTicks      => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ),
     );
+
+print "$minX, $maxX, ", $self->get( 'xTickWidth' ),"\n";
 
     $self->plotOption( 
         yChartStop  => $maxY + $self->get('yTickOffset') / 2,
