@@ -33,16 +33,15 @@ sub optimizeMargins {
     my $chartHeight = $baseHeight - ( $xLabelHeight + $self->get('xTickOutset') + $self->get('xLabelTickOffset')) * 2;
 
     $self->plotOption(
-        chartWidth  => $chartWidth,
-        chartHeight => $chartHeight,
-        xPxPerUnit  => 2 * pi / $maxX,
-        yPxPerUnit  => ( 0.5 * $chartHeight ) / ($maxY - $minY),
-        xTickOffset => 0,
-        yTickOffset => 0,
-        chartAnchorX => $self->plotOption( 'axisMarginLeft' ) + ( $yLabelWidth + $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
-        chartAnchorY => $self->plotOption( 'axisMarginTop'  ) + ( $xLabelHeight+ $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
+        chartWidth      => $chartWidth,
+        chartHeight     => $chartHeight,
+        xPxPerUnit      => 2 * pi / $maxX,
+        yPxPerUnit      => ( 0.5 * $chartHeight ) / ($maxY - $minY),
+        xTickOffset     => 0,
+        yTickOffset     => 0,
+        chartAnchorX    => $self->plotOption( 'axisMarginLeft' ) + ( $yLabelWidth + $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
+        chartAnchorY    => $self->plotOption( 'axisMarginTop'  ) + ( $xLabelHeight+ $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
     );
-print "[[", $self->plotOption( 'chartAnchorY' ), "]]\n";
 
     return ( $minX, $maxX, $minY, $maxY );
 };
@@ -95,7 +94,6 @@ See Chart::Magick::Axis::Lin::plotBox.
 
 sub plotBox {
     my $self = shift;
-print "box\n";
 
     $self->im->Draw(
         primitive   => 'Circle',
@@ -115,35 +113,32 @@ See Chart::Magick::Axis::Lin::plotRulers.
 
 sub plotRulers {
     my $self = shift;
-print "rulers\n";   
-
+    
     my $maxX = $self->get('xStop');
     my $maxY = $self->get('yStop');
     
-    for ( 0 .. 7 ) {
+    for my $tick ( @{ $self->getXTicks } ) {
+        next unless $tick < $maxX;
+
         $self->im->Draw(
             primitive   => 'Path',
             stroke      => $self->get('xRulerColor'),
             points      => 
-                  " M " . $self->toPx( [ 0              ], [ 0      ] )
-                . " L " . $self->toPx( [ $maxX * $_ / 8 ], [ $maxY  ] ),
+                  " M " . $self->toPx( [ 0      ], [ 0      ] )
+                . " L " . $self->toPx( [ $tick  ], [ $maxY  ] ),
             fill        => 'none',
-
         );
     }
 
-print "bbb\n";
-    for ( @{ $self->getYTicks } ) {
-print "$_\n";
-
-        next unless $_ > 0 && $_ <= $maxY;
+    for my $tick ( @{ $self->getYTicks } ) {
+        next unless $tick > 0 && $tick <= $maxY;
 
         $self->im->Draw(
             primitive   => 'Circle',
             stroke      => $self->get('yRulerColor'),
             points      => 
-                  $self->toPx( [ 0 ], [ 0   ] )
-                . " " . $self->toPx( [ 0 ], [ $_  ] ),
+                        $self->toPx( [ 0 ], [ 0     ] )
+                . " " . $self->toPx( [ 0 ], [ $tick ] ),
             fill        => 'none',
             antialias   => 'true',
         );
@@ -160,7 +155,6 @@ See Chart::Magick::Axis::Lin::plotTicks.
 
 sub plotTicks {
     my $self = shift;
-print "ticks\n";
 
     my $maxX = $self->get('xStop');
     my $maxY = $self->get('yStop');
@@ -168,7 +162,9 @@ print "ticks\n";
     my $tickFrom = $maxY - $self->get('xTickInset')  / $self->plotOption('yPxPerUnit') ;
     my $tickTo   = $maxY + $self->get('xTickOutset') / $self->plotOption('yPxPerUnit') ;
 
-    for my $tick ( @{ $self->getXTicks } ) { #( 0 .. 7 ) {
+    for my $tick ( @{ $self->getXTicks } ) {
+        next unless $tick < $maxX;
+
         $self->im->Draw(
             primitive   => 'Path',
             stroke      => $self->get('xTickColor'),
@@ -187,16 +183,19 @@ print "ticks\n";
             : $rotAngle > pi && $rotAngle < 2 * pi  ? 'right'
             :                                         'center'
             ;
-        my $valign = 'center';
+
+        my $valign = 
+              $angle    > 0  && $angle    < pi      ? 'bottom'
+            : $angle    > pi && $angle    < 2 * pi  ? 'top'
+            :                                         'center'
+            ; 
 
         my ($x, $y) = $self->project( [ $tick ], [ $tickTo + $self->get('xLabelTickOffset') / $self->plotOption('yPxPerUnit')   ] );
-
 
         $self->text(
             text        => $self->getTickLabel( $tick, 0 ),
             halign      => $halign, 
             valign      => $valign,
-            align       => lcfirst $halign,
             font        => $self->get('labelFont'),
             pointsize   => $self->get('labelFontSize'),
             style       => 'Normal',
@@ -206,9 +205,22 @@ print "ticks\n";
         );
     }
 
-    
-}
+    foreach my $tick ( @{ $self->getYTicks } ) {
+        my ($x, $y) = $self->project( [ 0 ], [ $tick ] );
 
+        $self->text(
+            text        => $self->getTickLabel( $tick, 1 ),
+            halign      => 'center', 
+            valign      => 'top',
+            font        => $self->get('labelFont'),
+            pointsize   => $self->get('labelFontSize'),
+            style       => 'Normal',
+            fill        => $self->get('labelColor'),
+            x           => $x,
+            y           => $y + $self->get('yLabelTickOffset'),
+        );
+    }
+}
 
 =head2 preprocessData ()
 
@@ -220,13 +232,6 @@ sub preprocessData {
     my $self = shift;
 
     $self->SUPER::preprocessData;
-    
-#    my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
-#print "[$minX, $maxX, $minY, $maxY]\n";
-    
-#    $self->{ _xPerDegree } = 2 * pi / $maxX;
-#    $self->{ _yRange     } = $maxY;
-#    $self->plotOption( yPxPerUnit => $self->getChartHeight / 2 / $maxY );
 }
 
 =head2 project ( coord, value )
@@ -244,8 +249,6 @@ sub project {
     my $centerX = $self->plotOption( 'chartAnchorX' ) + $self->getChartWidth  / 2;
     my $centerY = $self->plotOption( 'chartAnchorY' ) + $self->getChartHeight / 2;
     my $scale   = $self->plotOption( 'yPxPerUnit' );
-
-print $self->plotOption( 'chartAnchorY' ) ," ", $self->getChartHeight, "\n";
 
     return (
         $centerX + $scale * $value->[0] * cos $angle,

@@ -640,7 +640,6 @@ sub preprocessData {
 
     # Get the extreme values of the data, so we can determine what values the axis should at leat span.
     my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
-print "{$minX, $maxX, $minY, $maxY}\n";
 
     ($minX, $maxX) = $self->adjustXRange( $minX, $maxX );
     ($minY, $maxY) = $self->adjustYRange( $minY, $maxY );
@@ -660,8 +659,6 @@ print "{$minX, $maxX, $minY, $maxY}\n";
         xStart      => $minX,
         xTicks      => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ),
     );
-
-print "$minX, $maxX, ", $self->get( 'xTickWidth' ),"\n";
 
     $self->plotOption( 
         yChartStop  => $maxY + $self->get('yTickOffset') / 2,
@@ -1008,16 +1005,16 @@ sub drawTick {
 
     $self->text(
         text        => $self->getTickLabel( $tick, $isX ? 0 : 1 ),
-        halign      => $isX ? 'center' : 'right',
-        valign      => $isX ? 'top'    : 'center',
-        align       => $isX ? 'Center' : 'Right',
+        halign      => $args->{ halign } || $isX ? 'center' : 'right',
+        valign      => $args->{ valign } || $isX ? 'top'    : 'center',
+        align       => $args->{ align  } || $isX ? 'Center' : 'Right',
         font        => $self->get('labelFont'),
         pointsize   => $self->get('labelFontSize'),
         style       => 'Normal',
         fill        => $self->get('labelColor'),
         x           => $isX ? $x1 : $x1 - $self->get('yLabelTickOffset'),
         y           => $isX ? $y1 + $self->get('xLabelTickOffset') : $y1,
-        wrapWidth   => $args->{ wrap }
+        wrapWidth   => $args->{ wrap },
     );
 
     return;
