@@ -56,17 +56,20 @@ sub definition {
 
 #--------------------------------------------------------------------
 
-=head2 getSymbolType ( )
+=head2 getSymbolDef ( )
 
-See Chart::Magick::Chart::getSymbolType.
+See Chart::Magick::Chart::getSymbolDef.
 
 =cut
 
-sub getSymbolType {
+sub getSymbolDef {
     my $self    = shift;
-    my $legend  = $self->axis->legend;
+    my $ds      = shift;
 
-    return $legend->SYMBOL_LINE + $legend->SYMBOL_MARKER;
+    return {
+        line    => $self->colors->[ $ds ],
+        marker  => $self->markers->[ $ds ],
+    };
 }
 
 #--------------------------------------------------------------------

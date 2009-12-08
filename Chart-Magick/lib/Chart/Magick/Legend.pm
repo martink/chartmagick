@@ -323,7 +323,7 @@ sub draw {
     $y1 += $self->get('padding') + $self->precalc->{ itemHeight } / 2;
 
     foreach my $item ( @{ $self->items } ) {
-        $self->drawSymbol( $x1, $y1, $item );
+        $self->drawSymbol( $x1, $y1, $item->{ symbol } );
 
         $self->axis->text( 
             text        => $item->{ label },
@@ -395,7 +395,7 @@ sub drawSymbol {
         );
     }
 
-    if ( exists $symbol->{ marker } && $symbol->{ marker } ) { #) & SYMBOL_MARKER && $item->{ marker } ) {
+    if ( exists $symbol->{ marker } && $symbol->{ marker } ) {
         $symbol->{ marker }->draw( ($x2 + $x1) / 2, $y );
     }
     
@@ -437,7 +437,7 @@ Optional hashref that containing values for the properties defined in the defini
 sub new {
     my $class       = shift;
     my $axis        = shift || croak "No axis passed";
-    my $prperties   = shift || {};
+    my $properties  = shift || {};
     my $self        = bless {}, $class;
 
     register $self;

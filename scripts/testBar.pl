@@ -1,15 +1,9 @@
 use strict;
 
 use Chart::Magick::Axis::Lin;
-use Chart::Magick::Axis::Polar;
-use Chart::Magick::Axis::LinLog;
-use Chart::Magick::Chart::Line;
 use Chart::Magick::Chart::Bar;
-use Chart::Magick::Chart::Pie;
-use Chart::Magick;
-use Chart::Magick::Data;
+use Time::HiRes qw( gettimeofday tv_interval );
 
-use Image::Magick;
 use Data::Dumper;
 
 use constant pi => 3.14159265358979;
@@ -27,6 +21,10 @@ my @ds3 = (
     [ qw( 1 2 3 4 5 6 ) ],
     [ qw( 0.5 5 1 4 2 -2) ],
 );
+
+# Timekeeping
+my $time = [ gettimeofday ];
+
 
 # Setup axis
 my $axis    = Chart::Magick::Axis::Lin->new( {
@@ -69,10 +67,20 @@ $chart->set(
 # Add the bar graph to the axis
 $axis->addChart( $chart );
 
+
 # Set labels for the axis ticks
 #$axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr da\'s nou ook niet echt een hele lange naam toch?', 5 => 'eeennnn hele lange maand naam zoals bijvoorbeld zoiets als mei of misschien ook nog wel iets anders zeg maar' } );
+
+print "setup  : ", tv_interval( $time ), "s\n";
+$time = [ gettimeofday ];
+
 $axis->draw;
+
+print "drawing: ", tv_interval( $time ), "s\n";
+$time = [ gettimeofday ];
+
 
 # Write graph
 $axis->im->Write('out.png');
+print "write  : ", tv_interval( $time ), "s\n";
 

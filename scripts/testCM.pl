@@ -69,15 +69,18 @@ my $axis = Chart::Magick::Axis::Lin->new( {
 $axis->addChart( $chart );
 #$axis->legend->set( location => 'bottom' );
 
+print "setup  : ", tv_interval( $time ), "s\n";
+$time = [ gettimeofday ];
+
 # Render it
 $axis->draw;
+
+print "drawing: ", tv_interval( $time ), "s\n";
+$time = [ gettimeofday ];
+
 
 # And write it to disk
 $axis->im->Write('out.png');
 
-# More timekeeping
-my $runtime = tv_interval( $time );
+print "write  : ", tv_interval( $time ), "s\n";
 
-print "___>$runtime<___\n";
-print $chart->dataset->memUsage;
-#print join "\n" , $canvas->im->QueryFont;
