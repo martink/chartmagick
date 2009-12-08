@@ -142,7 +142,6 @@ sub getRequiredMargins {
 The following properties are settable:
 
 =over 4
-=over 4
 
 =item position
 
@@ -253,6 +252,14 @@ sub definition {
     return { %definition };
 }
 
+#--------------------------------------------------------------------
+
+=head2 getAnchr
+
+returns the x,y coordinate of the legend anchor.
+
+=cut
+
 sub getAnchor {
     my $self = shift;
 
@@ -276,6 +283,14 @@ sub getAnchor {
 
     return ( int $x, int $y );
 }
+
+#--------------------------------------------------------------------
+
+=head2 draw ( )
+
+Draws the legend onto the axis canvas.
+
+=cut
 
 sub draw {
     my $self = shift;
@@ -332,18 +347,36 @@ sub draw {
 
 }
 
+#--------------------------------------------------------------------
+
+=head2 drawSymbol ( x, y, symbolDef )
+
+Draws the passed symbl at the given coordinates.
+
+=head3 x
+
+The x coordinate of the symbol on the canvas.
+
+=head3 y
+
+The y coordinate of the symbol on the canvas.
+
+=head3 symbolDef
+
+The symbol definition of the symbol as defined in the Symbol definitions section above.
+
+=cut
+
 sub drawSymbol {
     my $self    = shift;
     my $x       = shift;
     my $y       = shift;
-    my $item    = shift;
+    my $symbol    = shift;
 
     my $x1      = $x;
     my $y1      = int( $y - $self->get('symbolHeight') / 2 );
     my $x2      = $x + $self->get('symbolWidth');
     my $y2      = int( $y + $self->get('symbolHeight') / 2 );
-
-    my $symbol  = $item->{ symbol };
 
     if ( exists $symbol->{ block } && $symbol->{ block } ) {
         $self->im->Draw(
@@ -368,6 +401,14 @@ sub drawSymbol {
     
 }
 
+#--------------------------------------------------------------------
+
+=head2 isHorizontal ( )
+
+Return a true value if the legend is being drawn horizontally. Returns false for vertical legends.
+
+=cut
+
 sub isHorizontal {
     my $self = shift;
 
@@ -377,10 +418,27 @@ sub isHorizontal {
     return $self->get('position') =~ m{ center }ix;
 }
 
+#--------------------------------------------------------------------
+
+=head2 new ( axis, [ properties ] )
+
+Constructor.
+
+=head3 axis
+
+An instanciated Chart::Magick::Axis object on which the legend must be drawn.
+
+=head3 properties
+
+Optional hashref that containing values for the properties defined in the definition method.
+
+=cut
+
 sub new {
-    my $class   = shift;
-    my $axis    = shift || croak "No axis passed";
-    my $self    = bless {}, $class;
+    my $class       = shift;
+    my $axis        = shift || croak "No axis passed";
+    my $prperties   = shift || {};
+    my $self        = bless {}, $class;
 
     register $self;
 
@@ -389,9 +447,18 @@ sub new {
     $precalc{ $id   } = {};
     $axis{ $id      } = $axis;
 
-    $self->initializeProperties;
+    $self->initializeProperties( $properties );
+
     return $self;
 }
+
+#--------------------------------------------------------------------
+
+=head2 preprocess ( )
+
+Precalculates and caches some parameters required for drawing the legend.
+
+=cut
 
 sub preprocess {
     my $self    = shift;
@@ -431,6 +498,14 @@ sub preprocess {
 
     return;
 }
+
+#--------------------------------------------------------------------
+
+=head2 im ( )
+
+Returns the Image::Magick object that the legend is being drawn onto.
+
+=cut
 
 sub im {
     my $self = shift;
