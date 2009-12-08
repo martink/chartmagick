@@ -76,14 +76,30 @@ sub addToLegend {
     for my $ds ( 0 .. $data->datasetCount ) {
         next unless defined $data->labels->[ $ds ];
 
-        $self->axis->legend->addItem( 
-            $self->getSymbolType,
+        $self->axis->legend->addItem(
             $data->labels->[ $ds ],
-            $self->colors->[ $ds ],
-            $self->markers->[ $ds ] 
-        );
+            $self->getSymbolDef( $ds ),
+         );
+#        $self->axis->legend->addItem( 
+#            $self->getSymbolType,
+#            $data->labels->[ $ds ],
+#            $self->colors->[ $ds ],
+#            $self->markers->[ $ds ] 
+#        );
     }
 
+}
+
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+print '[',$self->colors->[ $ds ],"]\n";
+
+    return {
+        line    => $self->colors->[ $ds ],
+        marker  => $self->markers->[ $ds ],
+    };
 }
 
 #-------------------------------------------------------------------

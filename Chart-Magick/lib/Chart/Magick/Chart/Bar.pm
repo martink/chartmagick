@@ -174,6 +174,16 @@ sub getSymbolType {
     return $legend->SYMBOL_BLOCK;
 }
 
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+    return {
+        block   => $self->colors->[ $ds ],
+    };
+}
+
+
 #--------------------------------------------------------------------------
 
 =head2 plot ( ) 

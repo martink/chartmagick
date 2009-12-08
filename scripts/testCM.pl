@@ -57,7 +57,7 @@ my $axis = Chart::Magick::Axis::Lin->new( {
     # Custom format the x labels
     xLabelFormat    => '%.1fπ',
 
-    drawLegend      => 0,
+    drawLegend      => 1,
 
     xStart          => -0.1 * pi,
     xStop           => 0,

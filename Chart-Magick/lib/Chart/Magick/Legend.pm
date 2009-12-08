@@ -15,32 +15,95 @@ readonly items      => my %items;
 readonly precalc    => my %precalc;
 readonly axis       => my %axis;
 
-sub SYMBOL_BLOCK {
-    return 0b0001;
-}
+#--------------------------------------------------------------------
 
-sub SYMBOL_LINE {
-    return 0b0010;
-}
+=head1 Symbol definitions
 
-sub SYMBOL_MARKER {
-    return 0b0100;
-}
+Each item in the legend has a symbol that corresponds to its representation in the chart. Eg. a line of a certain
+color with a marker.
+
+Each symbol is composed of different components and symbol definitions describe which components to use within a
+symbol. Such a definition is a hashref containing one or more of the following keys and values:
+
+=over 4
+
+=item block
+
+Adds a colored rectangle to the symbol. This is mainly used for charts that consist of areas rather than lines or
+points, such as bar charts. The value must be an instanciated Chart::Magick::Color object.
+
+=item line 
+
+Adds a line to the symbol. Used in eg. line charts. Value must be an instanciated Chart::Magick::Color object.
+
+=item marker
+
+Adds a marker to the symbol. Value must be an instanciated Chart::Magick::Marker object.
+
+=back
+
+=head3 Examples
+
+A legend item with only a line has the following definition
+
+    {
+        line    => $color,
+    }
+
+whereas a line with markers is defined as
+
+    {
+        line    => $color,
+        marker  => $marker,
+    }
+
+The variables $color and $marker are instanciated Chart::Magick::Color and ::Marker objects respectively.
+
+=head1 Methods
+
+The following methods are available from this class:
+
+=cut
+
+#--------------------------------------------------------------------
+
+=head2 addItem ( symbolType, label, color, marker )
+
+Adds an item to the legend.
+
+=head3 label
+
+The text label of this item.
+
+=head3 symbol
+
+The symbol definition for this item. See the Symbol definitions section above.
+
+=cut
 
 sub addItem {
     my $self    = shift;
-    my $symbol  = shift;
     my $label   = shift;
-    my $color   = shift;
-    my $marker  = shift;
+    my $symbol  = shift;
 
     push @{ $items{ id $self } }, {
         symbol  => $symbol,
         label   => $label,
-        color   => $color,
-        marker  => $marker,
     };
 }
+
+#--------------------------------------------------------------------
+
+=head2 getRequiredMargins ( );
+
+Returns an array containing the required margins that should be set in order for the legend not to overlap
+anything. The returned margins are based on the location of the legend and its orientatation.
+
+The array that is returned holds the required margins in the following order:
+
+    ( left, right, top, bottom )
+
+=cut
 
 sub getRequiredMargins {
     my $self    = shift;
@@ -72,13 +135,107 @@ sub getRequiredMargins {
     return @margins;
 }
 
+#--------------------------------------------------------------------
+
+=head2 definition ( )
+
+The following properties are settable:
+
+=over 4
+=over 4
+
+=item position
+
+String defining the location of the legend. This string consists of two words identifying horizontal and vertical
+position, and are separated by a space. 
+
+Available horizontal locations are 'left', 'center', and 'right'. Available vertical locations are 'top', 'middle'
+and 'bottom'.
+
+Defaults to 'top right'.
+
+=item orientation
+
+Determines whether the legend should be drawn horizontally or vertically. Options are 'horizontal', 'vertical' and
+'auto'. If set to auto the orientation will be automatically determined as a function of location.
+
+Defaults to 'auto'.
+
+=item drawBorder
+
+If set to a true value, a border will be drawn around the legend.
+
+Defaults to 1.
+
+=item borderColor
+
+The color the border should be drawn in. Can be any format accepted by imagemagick.
+
+Defaults to 'black'.
+
+=item backgroundColor
+
+The color of the legend's background. Can be any format accepted by imagemagick. For a transparent background, set
+to 'none'.
+
+Defaults to 'white'.
+
+=item margin
+
+The number of pixels of emptyness the legend should be surrounded with.
+
+Defaults to 10.
+
+=item padding
+
+The number of pixels the contents of the legend should be at least away from the legend border.
+
+Defaults to 10.
+
+=item spacing
+
+The number of pixels that should be between each legend item.
+
+Defaults to 10.
+
+=item labelSpacing
+
+The number of pixels between symbol and text label.
+
+Defaults to 5.
+
+=item legendFont
+
+The font to render the text labels of the legend items.
+
+Defaults to the labelFont set by the Axis object.
+
+=item legendFontSize
+
+The pointsize the legend item text labels are rendered in.
+
+=item legendColor
+
+The color of the item text labels.
+
+=item symbolWidth
+
+The width of the symbols in pixels.
+
+=item symbolHeight
+
+The height of the symbols in pixels.
+
+=back
+
+=cut 
+
 sub definition {
     my $self = shift;
 
     my %definition = (
         position        => 'top right',
         orientation     => 'auto',
-        overlapChart    => 0,
         drawBorder      => 1,
         backgroundColor => 'white',
         borderColor     => 'black',
@@ -188,25 +345,25 @@ sub drawSymbol {
 
     my $symbol  = $item->{ symbol };
 
-    if ( $symbol & SYMBOL_BLOCK ) {
+    if ( exists $symbol->{ block } && $symbol->{ block } ) {
         $self->im->Draw(
             primitive   => 'rectangle',
             points      => "$x1,$y1 $x2,$y2",
-            fill        => $item->{ color }->getFillColor,
-            stroke      => $item->{ color }->getStrokeColor,
+            fill        => $symbol->{ block }->getFillColor,
+            stroke      => $symbol->{ block }->getStrokeColor,
         );
     }
 
-    if ( $symbol & SYMBOL_LINE ) {
+    if ( exists $symbol->{ line } && $symbol->{ line } ) {
         $self->im->Draw(
             primitive   => 'line',
             points      => "$x,$y $x2,$y",
-            stroke      => $item->{ color }->getStrokeColor,
+            stroke      => $symbol->{ line }->getStrokeColor,
         );
     }
 
-    if ( $symbol & SYMBOL_MARKER && $item->{ marker } ) {
-        $item->{ marker }->draw( ($x2 + $x1) / 2, $y );
+    if ( exists $symbol->{ marker } && $symbol->{ marker } ) { #) & SYMBOL_MARKER && $item->{ marker } ) {
+        $symbol->{ marker }->draw( ($x2 + $x1) / 2, $y );
     }
     
 }
@@ -247,8 +404,8 @@ sub preprocess {
         ) )[ 4, 5 ]
     ] } @{ $self->items };
 
-    my $maxLabelWidth  = max map { $_->[0] || '0' } @labelDimensions;
-    my $maxLabelHeight = max map { $_->[1] || '0' } @labelDimensions;
+    my $maxLabelWidth  = max( map { $_->[0] } @labelDimensions ) || 0;
+    my $maxLabelHeight = max( map { $_->[1] } @labelDimensions ) || 0;
 
     my $itemWidth   = $self->get('symbolWidth') + $self->get('labelSpacing') + $maxLabelWidth;
     my $itemHeight  = max $self->get('symbolHeight'), $maxLabelHeight;
