@@ -768,14 +768,14 @@ sub text {
           !defined $prop{ halign }      ? 0
         : $prop{ halign } eq 'center'   ? $width / 2
         : $prop{ halign } eq 'right'    ? $width
-        : 0;
+        :                                 0;
 
     # Using the align properties will cause IM to shift its anchor point. We'll have to compensate for that...
     $anchorX     -=
           !defined $prop{ align }       ? 0
         : $prop{ align }  eq 'Center'   ? $width / 2
         : $prop{ align }  eq 'Right'    ? $width
-        : 0;
+        :                                 0;
 
 
     # IM aparently always anchors at the baseline of the first line of a text block, let's take that into account.
@@ -783,7 +783,7 @@ sub text {
           !defined $prop{ valign }      ? $ascender
         : $prop{ valign } eq 'center'   ? $ascender - $height / 2
         : $prop{ valign } eq 'bottom'   ? $ascender - $height
-        : $ascender;
+        :                                 $ascender;
 
     # Convert the rotation angle to radians
     my $rotation = $prop{ rotate } ? $prop{ rotate } / 180 * pi : 0 ;

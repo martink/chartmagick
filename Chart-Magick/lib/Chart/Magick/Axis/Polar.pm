@@ -1,10 +1,61 @@
 package Chart::Magick::Axis::Polar;
 
 use strict;
+use warnings;
+
+use Carp;
+use POSIX qw{ ceil };
+use List::Util qw{ max };
+use Math::Trig;
 
 use base qw{ Chart::Magick::Axis::Lin };
-use constant pi => 3.141528;
 
+
+sub rad2rad {
+    return Math::Trig::rad2rad( shift );
+}
+
+
+sub optimizeMargins { 
+    my ( $self, $minX, $maxX, $minY, $maxY ) = @_;
+
+    $self->SUPER::optimizeMargins( $minX, $maxX, $minY, $maxY );
+
+    my $xTickWidth = $self->get('xTickWidth') || ( $minX - $maxX ) / 8;
+    my @xLabels = map { $self->getTickLabel( $_, 0 ) } @{ $self->generateTicks( $minX, $maxX, $xTickWidth ) };
+    
+    my $xLabelHeight    = ceil max map { int $self->getLabelDimensions( $_ )->[1] } @xLabels; 
+    my $yLabelWidth     = ceil max map { int $self->getLabelDimensions( $_ )->[0] } @xLabels;
+    my $baseWidth       = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
+    my $baseHeight      = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
+
+    my $chartWidth  = $baseWidth  - ( $yLabelWidth + $self->get('xTickOutset') + $self->get('xLabelTickOffset')) * 2;
+    my $chartHeight = $baseHeight - ( $xLabelHeight + $self->get('xTickOutset') + $self->get('xLabelTickOffset')) * 2;
+
+    $self->plotOption(
+        chartWidth      => $chartWidth,
+        chartHeight     => $chartHeight,
+        xPxPerUnit      => 2 * pi / $maxX,
+        yPxPerUnit      => ( 0.5 * $chartHeight ) / ($maxY - $minY),
+        xTickOffset     => 0,
+        yTickOffset     => 0,
+        chartAnchorX    => $self->plotOption( 'axisMarginLeft' ) + ( $yLabelWidth + $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
+        chartAnchorY    => $self->plotOption( 'axisMarginTop'  ) + ( $xLabelHeight+ $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
+    );
+
+    return ( $minX, $maxX, $minY, $maxY );
+};
+
+
+sub definition {
+    my $self = shift;
+
+    my %def = (
+        xExpandRange    => 0,
+    );
+
+    return { %{ $self->SUPER::definition }, %def };
+}
 
 #--------------------------------------------------------------------
 
@@ -62,31 +113,32 @@ See Chart::Magick::Axis::Lin::plotRulers.
 
 sub plotRulers {
     my $self = shift;
-   
+    
     my $maxX = $self->get('xStop');
     my $maxY = $self->get('yStop');
     
-    for ( 0 .. 7 ) {
+    for my $tick ( @{ $self->getXTicks } ) {
+        next unless $tick < $maxX;
+
         $self->im->Draw(
             primitive   => 'Path',
             stroke      => $self->get('xRulerColor'),
             points      => 
-                  " M " . $self->toPx( [ 0              ], [ 0      ] )
-                . " L " . $self->toPx( [ $maxX * $_ / 8 ], [ $maxY  ] ),
+                  " M " . $self->toPx( [ 0      ], [ 0      ] )
+                . " L " . $self->toPx( [ $tick  ], [ $maxY  ] ),
             fill        => 'none',
-
         );
     }
 
-    for ( @{ $self->getYTicks } ) {
-        next unless $_ > 0 && $_ <= $maxY;
+    for my $tick ( @{ $self->getYTicks } ) {
+        next unless $tick > 0 && $tick <= $maxY;
 
         $self->im->Draw(
             primitive   => 'Circle',
             stroke      => $self->get('yRulerColor'),
             points      => 
-                  $self->toPx( [ 0 ], [ 0   ] )
-                . " " . $self->toPx( [ 0 ], [ $_  ] ),
+                        $self->toPx( [ 0 ], [ 0     ] )
+                . " " . $self->toPx( [ 0 ], [ $tick ] ),
             fill        => 'none',
             antialias   => 'true',
         );
@@ -103,26 +155,72 @@ See Chart::Magick::Axis::Lin::plotTicks.
 
 sub plotTicks {
     my $self = shift;
-    
+
     my $maxX = $self->get('xStop');
     my $maxY = $self->get('yStop');
     
     my $tickFrom = $maxY - $self->get('xTickInset')  / $self->plotOption('yPxPerUnit') ;
     my $tickTo   = $maxY + $self->get('xTickOutset') / $self->plotOption('yPxPerUnit') ;
 
-    for ( 0 .. 7 ) {
+    for my $tick ( @{ $self->getXTicks } ) {
+        next unless $tick < $maxX;
+
         $self->im->Draw(
             primitive   => 'Path',
             stroke      => $self->get('xTickColor'),
             points      => 
-                  " M " . $self->toPx( [ $maxX * $_ / 8 ], [ $tickFrom ] )
-                . " L " . $self->toPx( [ $maxX * $_ / 8 ], [ $tickTo   ] ),
+                  " M " . $self->toPx( [ $tick ], [ $tickFrom ] )
+                . " L " . $self->toPx( [ $tick ], [ $tickTo   ] ),
             fill        => 'none',
 
         );
+
+        my $angle    = $tick * $self->getPxPerXUnit;
+        my $rotAngle = rad2rad( $angle + 0.5 * pi );
+
+        my $halign = 
+              $rotAngle > 0  && $rotAngle < pi      ? 'left'
+            : $rotAngle > pi && $rotAngle < 2 * pi  ? 'right'
+            :                                         'center'
+            ;
+
+        my $valign = 
+              $angle    > 0  && $angle    < pi      ? 'bottom'
+            : $angle    > pi && $angle    < 2 * pi  ? 'top'
+            :                                         'center'
+            ; 
+
+        my ($x, $y) = $self->project( [ $tick ], [ $tickTo + $self->get('xLabelTickOffset') / $self->plotOption('yPxPerUnit')   ] );
+
+        $self->text(
+            text        => $self->getTickLabel( $tick, 0 ),
+            halign      => $halign, 
+            valign      => $valign,
+            font        => $self->get('labelFont'),
+            pointsize   => $self->get('labelFontSize'),
+            style       => 'Normal',
+            fill        => $self->get('labelColor'),
+            x           => $x,
+            y           => $y,
+        );
+    }
+
+    foreach my $tick ( @{ $self->getYTicks } ) {
+        my ($x, $y) = $self->project( [ 0 ], [ $tick ] );
+
+        $self->text(
+            text        => $self->getTickLabel( $tick, 1 ),
+            halign      => 'center', 
+            valign      => 'top',
+            font        => $self->get('labelFont'),
+            pointsize   => $self->get('labelFontSize'),
+            style       => 'Normal',
+            fill        => $self->get('labelColor'),
+            x           => $x,
+            y           => $y + $self->get('yLabelTickOffset'),
+        );
     }
 }
-
 
 =head2 preprocessData ()
 
@@ -134,13 +232,6 @@ sub preprocessData {
     my $self = shift;
 
     $self->SUPER::preprocessData;
-    
-    my ($minX, $maxX, $minY, $maxY) = map { $_->[0] } $self->getDataRange;
-
-    
-    $self->{ _xPerDegree } = 2 * pi / $maxX;
-    $self->{ _yRange     } = $maxY;
-    $self->plotOption( yPxPerUnit => $self->getChartHeight / 2 / $maxY );
 }
 
 =head2 project ( coord, value )
@@ -154,7 +245,7 @@ sub project {
     my $coord   = shift;
     my $value   = shift;
 
-    my $angle   = $coord->[0] * $self->{ _xPerDegree };
+    my $angle   = $coord->[0] * $self->getPxPerXUnit;
     my $centerX = $self->plotOption( 'chartAnchorX' ) + $self->getChartWidth  / 2;
     my $centerY = $self->plotOption( 'chartAnchorY' ) + $self->getChartHeight / 2;
     my $scale   = $self->plotOption( 'yPxPerUnit' );

@@ -448,7 +448,7 @@ sub generateTicks {
     my $self    = shift;
     my $from    = shift;
     my $to      = shift;
-    my $width   = shift;
+    my $width   = shift || 1;
 
     # Figure out the first tick so that the ticks will align with zero.
     my $firstTick = floor( $from / $width ) * $width;
@@ -1005,16 +1005,16 @@ sub drawTick {
 
     $self->text(
         text        => $self->getTickLabel( $tick, $isX ? 0 : 1 ),
-        halign      => $isX ? 'center' : 'right',
-        valign      => $isX ? 'top'    : 'center',
-        align       => $isX ? 'Center' : 'Right',
+        halign      => $args->{ halign } || $isX ? 'center' : 'right',
+        valign      => $args->{ valign } || $isX ? 'top'    : 'center',
+        align       => $args->{ align  } || $isX ? 'Center' : 'Right',
         font        => $self->get('labelFont'),
         pointsize   => $self->get('labelFontSize'),
         style       => 'Normal',
         fill        => $self->get('labelColor'),
         x           => $isX ? $x1 : $x1 - $self->get('yLabelTickOffset'),
         y           => $isX ? $y1 + $self->get('xLabelTickOffset') : $y1,
-        wrapWidth   => $args->{ wrap }
+        wrapWidth   => $args->{ wrap },
     );
 
     return;

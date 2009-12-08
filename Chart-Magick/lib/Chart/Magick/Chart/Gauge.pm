@@ -10,17 +10,19 @@ use base qw{ Chart::Magick::Chart };
 
 #--------------------------------------------------------------------
 
-=head2 getSymbolType ( )
+=head2 getSymbolDef ( )
 
-See Chart::Magick::Chart::getSymbolType.
+See Chart::Magick::Chart::getSymbolDef.
 
 =cut
 
-sub getSymbolType {
+sub getSymbolDef {
     my $self    = shift;
-    my $legend  = $self->axis->legend;
+    my $ds      = shift;
 
-    return $legend->SYMBOL_BLOCK;
+    return {
+        block   => $self->markers->[ $ds ],
+    };
 }
 
 sub projectValue {

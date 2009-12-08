@@ -76,12 +76,10 @@ sub addToLegend {
     for my $ds ( 0 .. $data->datasetCount ) {
         next unless defined $data->labels->[ $ds ];
 
-        $self->axis->legend->addItem( 
-            $self->getSymbolType,
+        $self->axis->legend->addItem(
             $data->labels->[ $ds ],
-            $self->colors->[ $ds ],
-            $self->markers->[ $ds ] 
-        );
+            $self->getSymbolDef( $ds ),
+         );
     }
 
 }
@@ -208,20 +206,25 @@ sub getPalette {
 
 #-------------------------------------------------------------------
 
-=head2 getSymbolType ( )
+=head2 getSymbolDef ( )
 
-=over 4
+Returns the symbol definition of this chart type. See the Symbol definitions section of Chart::Magick::Legend for
+more information on symbol definitions.
 
-=item block
+Defaults to lines plus markers.
 
-=item line
-
-=item marker
+Override this method if your chart type has another type of symbol.
 
 =cut
 
-sub getSymbolType {
-    croak "Chart plugin must overload getSymbolType method";
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+    return {
+        line    => $self->colors->[ $ds ],
+        marker  => $self->markers->[ $ds ],
+    };
 }
 
 #-------------------------------------------------------------------

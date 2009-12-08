@@ -161,18 +161,23 @@ sub getDataRange {
 
 #--------------------------------------------------------------------
 
-=head2 getSymbolType ( )
+=head2 getSymbolDef ( )
 
-See Chart::Magick::Chart::getSymbolType.
+See Chart::Magick::Chart::getSymbolDef.
+
+Bar charts use block symbols only.
 
 =cut
 
-sub getSymbolType {
+sub getSymbolDef {
     my $self    = shift;
-    my $legend  = $self->axis->legend;
+    my $ds      = shift;
 
-    return $legend->SYMBOL_BLOCK;
+    return {
+        block   => $self->colors->[ $ds ],
+    };
 }
+
 
 #--------------------------------------------------------------------------
 
