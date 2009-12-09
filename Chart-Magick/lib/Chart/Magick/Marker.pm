@@ -16,17 +16,20 @@ readonly anchorY    => my %anchorY;
 
 #---------------------------------------------
 our %DEFAULT_MARKERS = (
-    marker1 => {
+    triangle => {
         size    => 1,
-        shape   => 'm0,-0.43 l0.5,0.86 l-1,0 Z',
+        shape   => 'm%f,%f l%f,%f l%f,%f Z', 
+        points  => [ 0, -0.43, 0.5, 0.86, -1, 0 ],
     },
-    marker2 => { 
+    square => { 
         size    => 1,
-        shape   => 'm0.5,0.5 l-1,0 l0,1 l1,0 Z',
+        shape   => 'm%f,%f l%f,%f l%f,%f l%f,%f Z',
+        points  => [ 0.5, -0.5, -1, 0, 0, 1, 1, 0 ],
     },
     circle => { 
         size    => 50,
-        shape   => 'M25,0 a25,25 0 0,0 -50,0 a25,25 0 0,0 50,0',
+        shape   => 'm%f,%f a%f,%f 0 0,0 %f,%f a%f,%f 0 0,0 %f,%f',
+        points  => [ 25, 0, 25, 25, -50, 0, 25, 25, 50, 0 ],
     },
 );
 
@@ -78,8 +81,8 @@ sub draw {
     $im->Composite(
         image   => $self->im,
         gravity => 'NorthWest',
-        x       => $x - $self->anchorX,
-        y       => $y - $self->anchorY,
+        x       => int( $x - $self->anchorX ),
+        y       => int( $y - $self->anchorY ),
     ); 
 
     return;
@@ -126,7 +129,7 @@ sub createMarkerFromFile {
 #---------------------------------------------
 sub createMarkerFromDefault {
     my $self        = shift;
-    my $shape       = shift || 'marker1';
+    my $shape       = shift || 'square';
     my $strokeColor = shift || 'black';
     my $fillColor   = shift || 'none';
 
@@ -136,12 +139,12 @@ sub createMarkerFromDefault {
     my $strokeWidth = 1;
 
     my $marker  = $DEFAULT_MARKERS{ $shape };
-    my $path    = $marker->{ shape };
-
     my $scale   = $size / $marker->{ size };
+    my $path    = sprintf $marker->{ shape }, map { $_ * $scale } @{ $marker->{ points } };
+print "$path\n";
 
-    my $width   = $size + $strokeWidth;
-    my $height  = $size + $strokeWidth;
+    my $width   = $size + 2 * $strokeWidth;
+    my $height  = $size + 2 * $strokeWidth;
 
     $anchorX{ $id } = $width    / 2;
     $anchorY{ $id } = $height   / 2;
@@ -153,13 +156,14 @@ print "size:$size scale:$scale w:$width anchor: $anchorX{ $id }\n";
     $im->Draw(
        primitive    => 'Path',
        stroke       => $strokeColor,
-       strokewidth  => $strokeWidth / $scale,
+       strokewidth  => $strokeWidth,
        points       => $path,
        fill         => $fillColor,
        antialias    => 'true',
-       affine       => [ $scale, 0, 0, $scale, $anchorX{ $id }, $anchorY{ $id } ]
+       x            => $anchorX{ $id },
+       y            => $anchorY{ $id },
     );
-    
+
     return $im;
 }    
 
