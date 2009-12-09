@@ -10,6 +10,7 @@ use Scalar::Util qw{ blessed };
 
 readonly axis       => my %axis;
 readonly im         => my %im;
+readonly direct     => my %direct;
 readonly size       => my %size;
 readonly anchorX    => my %anchorX;
 readonly anchorY    => my %anchorY;
@@ -19,7 +20,7 @@ our %DEFAULT_MARKERS = (
     triangle => {
         size    => 1,
         shape   => 'm%f,%f l%f,%f l%f,%f Z', 
-        points  => [ 0, -0.43, 0.5, 0.86, -1, 0 ],
+        points  => [ 0, -0.6, 0.5, 1, -1, 0 ],
     },
     square => { 
         size    => 1,
@@ -27,9 +28,9 @@ our %DEFAULT_MARKERS = (
         points  => [ 0.5, -0.5, -1, 0, 0, 1, 1, 0 ],
     },
     circle => { 
-        size    => 50,
+        size    => 2,
         shape   => 'm%f,%f a%f,%f 0 0,0 %f,%f a%f,%f 0 0,0 %f,%f',
-        points  => [ 25, 0, 25, 25, -50, 0, 25, 25, 50, 0 ],
+        points  => [ 1, 0, 1, 1, -2, 0, 1, 1, 2, 0 ],
     },
 );
 
@@ -78,12 +79,22 @@ sub draw {
     my $y       = shift;
     my $im      = shift || $self->axis->im;
 
-    $im->Composite(
-        image   => $self->im,
-        gravity => 'NorthWest',
-        x       => int( $x - $self->anchorX ),
-        y       => int( $y - $self->anchorY ),
-    ); 
+    my $direct = $direct{ id $self };
+    if ($direct) {
+        $im->Draw(
+            %$direct,
+            x   => $x,
+            y   => $y,
+        );
+    }
+    else {
+        $im->Composite(
+            image   => $self->im,
+            gravity => 'NorthWest',
+            x       => $x - $self->anchorX,
+            y       => $y - $self->anchorY,
+        ); 
+    }
 
     return;
 }
@@ -133,38 +144,22 @@ sub createMarkerFromDefault {
     my $strokeColor = shift || 'black';
     my $fillColor   = shift || 'none';
 
-    my $id      = id $self;
-    my $size    = $size{ $id };
-
     my $strokeWidth = 1;
 
     my $marker  = $DEFAULT_MARKERS{ $shape };
-    my $scale   = $size / $marker->{ size };
+    my $scale   = $self->size / $marker->{ size };
     my $path    = sprintf $marker->{ shape }, map { $_ * $scale } @{ $marker->{ points } };
-print "$path\n";
 
-    my $width   = $size + 2 * $strokeWidth;
-    my $height  = $size + 2 * $strokeWidth;
+    $direct{ id $self }  = {
+        primitive    => 'Path',
+        stroke       => $strokeColor,
+        strokewidth  => $strokeWidth,
+        points       => $path,
+        fill         => $fillColor,
+        antialias    => 'true',
+    },
 
-    $anchorX{ $id } = $width    / 2;
-    $anchorY{ $id } = $height   / 2;
-
-print "size:$size scale:$scale w:$width anchor: $anchorX{ $id }\n";
-
-    my $im = Image::Magick->new( size => $width .'x'. $height, index => 1 );
-    $im->ReadImage( 'xc:none' );
-    $im->Draw(
-       primitive    => 'Path',
-       stroke       => $strokeColor,
-       strokewidth  => $strokeWidth,
-       points       => $path,
-       fill         => $fillColor,
-       antialias    => 'true',
-       x            => $anchorX{ $id },
-       y            => $anchorY{ $id },
-    );
-
-    return $im;
+    return;
 }    
 
 1;
