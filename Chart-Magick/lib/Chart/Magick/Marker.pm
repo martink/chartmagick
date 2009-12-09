@@ -10,32 +10,27 @@ use Scalar::Util qw{ blessed };
 
 readonly axis       => my %axis;
 readonly im         => my %im;
+readonly direct     => my %direct;
 readonly size       => my %size;
 readonly anchorX    => my %anchorX;
 readonly anchorY    => my %anchorY;
 
 #---------------------------------------------
 our %DEFAULT_MARKERS = (
-    marker1 => {
-        width   => 1,
-        height  => 0.75,
-        shape   => [
-            [ 'M', 0,    0.75   ],
-            [ 'L', 0.5,  0      ],
-            [ 'L', 1,    0.75   ],
-            [ 'L', 0,    0.75   ],
-        ],
+    triangle => {
+        size    => 1,
+        shape   => 'm%f,%f l%f,%f l%f,%f Z', 
+        points  => [ 0, -0.6, 0.5, 1, -1, 0 ],
     },
-    marker2 => { 
-        width   => 1,
-        height  => 1,
-        shape   => [
-            [ 'M',  0,   0      ],
-            [ 'L',  1,   0      ],
-            [ 'L',  1,   1      ],
-            [ 'L',  0,   1      ],
-            [ 'L',  0,   0      ],
-        ],
+    square => { 
+        size    => 1,
+        shape   => 'm%f,%f l%f,%f l%f,%f l%f,%f Z',
+        points  => [ 0.5, -0.5, -1, 0, 0, 1, 1, 0 ],
+    },
+    circle => { 
+        size    => 2,
+        shape   => 'm%f,%f a%f,%f 0 0,0 %f,%f a%f,%f 0 0,0 %f,%f',
+        points  => [ 1, 0, 1, 1, -2, 0, 1, 1, 2, 0 ],
     },
 );
 
@@ -84,12 +79,22 @@ sub draw {
     my $y       = shift;
     my $im      = shift || $self->axis->im;
 
-    $im->Composite(
-        image   => $self->im,
-        gravity => 'NorthWest',
-        x       => $x - $self->anchorX,
-        y       => $y - $self->anchorY,
-    ); 
+    my $direct = $direct{ id $self };
+    if ($direct) {
+        $im->Draw(
+            %$direct,
+            x   => $x,
+            y   => $y,
+        );
+    }
+    else {
+        $im->Composite(
+            image   => $self->im,
+            gravity => 'NorthWest',
+            x       => $x - $self->anchorX,
+            y       => $y - $self->anchorY,
+        ); 
+    }
 
     return;
 }
@@ -135,35 +140,26 @@ sub createMarkerFromFile {
 #---------------------------------------------
 sub createMarkerFromDefault {
     my $self        = shift;
-    my $shape       = shift || 'marker2';
+    my $shape       = shift || 'square';
     my $strokeColor = shift || 'black';
     my $fillColor   = shift || 'none';
-
-    my $id      = id $self;
-    my $size    = $size{ $id };
 
     my $strokeWidth = 1;
 
     my $marker  = $DEFAULT_MARKERS{ $shape };
-    my $path    = join ' ', map { $_->[0] . $size*$_->[1] . ',' . $size*$_->[2] } @{ $marker->{ shape } };
-    my $width   = $size * $marker->{ width  } + $strokeWidth;
-    my $height  = $size * $marker->{ height } + $strokeWidth;
+    my $scale   = $self->size / $marker->{ size };
+    my $path    = sprintf $marker->{ shape }, map { $_ * $scale } @{ $marker->{ points } };
 
-    $anchorX{ $id } = $size * $marker->{ width } / 2;
-    $anchorY{ $id } = $size * $marker->{ height } / 2;
+    $direct{ id $self }  = {
+        primitive    => 'Path',
+        stroke       => $strokeColor,
+        strokewidth  => $strokeWidth,
+        points       => $path,
+        fill         => $fillColor,
+        antialias    => 'true',
+    },
 
-    my $im = Image::Magick->new( size => $width .'x'. $height, index => 1 );
-    $im->ReadImage( 'xc:none' );
-    $im->Draw(
-       primitive    => 'Path',
-       stroke       => $strokeColor,
-       strokewidth  => $strokeWidth,
-       points       => $path,
-       fill         => $fillColor,
-       antialias    => 'true',
-    );
-    
-    return $im;
+    return;
 }    
 
 1;
