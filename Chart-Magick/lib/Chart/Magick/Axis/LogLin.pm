@@ -1,6 +1,7 @@
 package Chart::Magick::Axis::LogLin;
 
 use strict;
+use warnings;
 
 use base qw{ Chart::Magick::Axis::Log };
 
@@ -17,6 +18,12 @@ The following methods are available from this class:
 =cut
 
 #--------------------------------------------------------------------
+
+=head2 adjustXRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustXRangeToOrigin.
+
+=cut
 
 sub adjustXRangeToOrigin {
     my $self = shift;
@@ -40,6 +47,8 @@ sub draw {
     );
     
     $self->SUPER::draw( @_ );
+
+    return;
 }
 
 #--------------------------------------------------------------------
@@ -58,9 +67,9 @@ sub getXTicks {
 
 #--------------------------------------------------------------------
 
-=head2 transformY ( y )
+=head2 transformX ( y )
 
-See Chart::Magick::Axis::transformY.
+See Chart::Magick::Axis::transformX.
 
 =cut
 

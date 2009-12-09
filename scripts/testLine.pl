@@ -16,7 +16,7 @@ my $ds = Chart::Magick::Data->new;
 $ds->addDataset(
 #    [ qw( 48 210 520 800 1200 ) ],
     [ qw( 0.003 0.02 0.03 0.05 0.1 )],
-    [ qw( 0.5 5 1 4 2 ) ],
+    [ qw( 0.5 4.3 1 4 2 ) ],
 );
 #$ds->addDataset(
 #    [ map { 0.1 * $_        } ( 1 .. 1000 ) ],
@@ -34,13 +34,18 @@ my $axis    = Chart::Magick::Axis::LinLog->new( {
     title           => 'Logarithmic plot',
     xSubtickCount   => 9,
     ySubtickCount   => 9,
+    xStart          => 0.04,
+    xStop           => 0.678,
+    yStart          => -1.54,
+    yStop           => 4.89,
     xTitle          => '# Zonkers',
     yTitle          => 'Revenue',
    # xTickOffset     => 1,
    # yTickOffset     => 1,
-    xExpandRange    => 1,
-    yExpandRange    => 1,
     flipAxes        => 0,
+
+    xExpandRange    => 0,
+    yExpandRange    => 0,
 } );
 $axis->addChart( $chart );
 $axis->draw;

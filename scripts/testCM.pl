@@ -29,8 +29,8 @@ my $time = [ gettimeofday ];
 
 # Create chart and add datasets to it
 my $chart = Chart::Magick::Chart::Line->new();
-$chart->addDataset( $dsx, $dsy,   'marker2' );
-$chart->addDataset( $dsx2, $dsy2, 'gooey.png', 20 ); 
+$chart->addDataset( $dsx, $dsy,   'Transordinary wobble scale', 'circle', 6 );
+$chart->addDataset( $dsx2, $dsy2, 'Octopode scale', 'gooey.png', 15); 
 
 # Create coordinate system
 my $axis = Chart::Magick::Axis::Lin->new( {
@@ -57,21 +57,31 @@ my $axis = Chart::Magick::Axis::Lin->new( {
     # Custom format the x labels
     xLabelFormat    => '%.1fπ',
 
-    flipAxes => 1,
+#    flipAxes => 1,
+    drawLegend      => 1,
+
+    xStart          => -0.1 * pi,
+    xStop           => 0,
+    expandRange     => 0,
+#  xTickOffset     => 1,
 } );
 
 # Add the chart to the coordinate system
 $axis->addChart( $chart );
+#$axis->legend->set( location => 'bottom' );
+
+print "setup  : ", tv_interval( $time ), "s\n";
+$time = [ gettimeofday ];
 
 # Render it
 $axis->draw;
 
+print "drawing: ", tv_interval( $time ), "s\n";
+$time = [ gettimeofday ];
+
+
 # And write it to disk
 $axis->im->Write('out.png');
 
-# More timekeeping
-my $runtime = tv_interval( $time );
+print "write  : ", tv_interval( $time ), "s\n";
 
-print "___>$runtime<___\n";
-print $chart->dataset->memUsage;
-#print join "\n" , $canvas->im->QueryFont;

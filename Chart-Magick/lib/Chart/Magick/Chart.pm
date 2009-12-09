@@ -1,6 +1,7 @@
 package Chart::Magick::Chart;
 
 use strict;
+use warnings;
 
 use Class::InsideOut    qw{ :std };
 use List::Util          qw{ min max };
@@ -16,10 +17,11 @@ readonly palette    => my %palette;
 readonly dataset    => my %dataset;
 readonly markers    => my %markers;
 readonly axis       => my %axis;
+readonly colors     => my %colors;
 
 #-------------------------------------------------------------------
 
-=head2 addDataset ( coords, values, marker, markerSize )
+=head2 addDataset ( coords, values, label, marker, markerSize )
 
 Adds a dataset to the dataset of this chart. Optionally you can set a marker for this dataset as well.
 
@@ -30,6 +32,10 @@ Array ref of coord array refs. See Chart::Magick::Data::addDataset for details.
 =head3 values
 
 Array ref of value array refs. See Chart::Magick::Data::addDataset for details.
+
+=head3 label
+
+The (legend) label for this dataset.
 
 =head3 marker
 
@@ -45,11 +51,43 @@ sub addDataset {
     my $self        = shift;
     my $coords      = shift || croak "Need coordinates";
     my $values      = shift || croak "Need values";
+    my $label       = shift;
     my $marker      = shift;
     my $markerSize  = shift;
 
-    $self->dataset->addDataset( $coords, $values );
+    $self->dataset->addDataset( $coords, $values, $label );
     $self->setMarker( $self->dataset->datasetCount - 1, $marker, $markerSize ) if $marker;
+
+    return;
+}
+
+#-------------------------------------------------------------------
+
+=head2 addToLegend
+
+Adds the datasets in this chart to the legend of the axis.
+
+=cut
+
+sub addToLegend {
+    my $self = shift;
+    my $data = $self->dataset;
+
+    for my $ds ( 0 .. $data->datasetCount ) {
+        next unless defined $data->labels->[ $ds ];
+
+        $self->axis->legend->addItem(
+            $data->labels->[ $ds ],
+            $self->getSymbolDef( $ds ),
+         );
+    }
+
+}
+
+#-------------------------------------------------------------------
+
+sub autoRange {
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -62,7 +100,9 @@ Defines the properties of your plugin as well as their default values.
 #TODO: More verbose docs overhere.
 
 sub definition {
-    return {};
+    return {
+        markerSize      => 5,
+    };
 }
 
 #-------------------------------------------------------------------
@@ -81,7 +121,6 @@ sub getAxis {
     croak "Cannot call getAxis when no Axis has been set" unless $axis;
     return $axis;
 }
-
 
 #-------------------------------------------------------------------
 
@@ -120,6 +159,20 @@ sub getDataRange {
 
 #-------------------------------------------------------------------
 
+=head2 getHeight ( )
+
+Returns the height in pixels of the area available for the chart.
+
+=cut
+
+sub getHeight {
+    my $self = shift;
+
+    return $self->axis->getChartHeight;
+}
+
+#-------------------------------------------------------------------
+
 =head2 getPalette ( )
 
 Returns the Chart::Magick::Palette object associated with this plugin. If none is set, will create a default
@@ -153,6 +206,82 @@ sub getPalette {
 
 #-------------------------------------------------------------------
 
+=head2 getSymbolDef ( )
+
+Returns the symbol definition of this chart type. See the Symbol definitions section of Chart::Magick::Legend for
+more information on symbol definitions.
+
+Defaults to lines plus markers.
+
+Override this method if your chart type has another type of symbol.
+
+=cut
+
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+    return {
+        line    => $self->colors->[ $ds ],
+        marker  => $self->markers->[ $ds ],
+    };
+}
+
+#-------------------------------------------------------------------
+
+=head2 getWidth ( )
+
+Returns the width in pixels of the area available for the chart.
+
+=cut
+
+sub getWidth {
+    my $self = shift;
+
+    return $self->axis->getChartWidth;
+}
+
+#-------------------------------------------------------------------
+
+=head2 im ( )
+
+Returns the Image::Magick object of the axis tied to chart.
+
+=cut
+
+sub im {
+    my $self = shift;
+
+    return $self->axis->im;
+}
+
+#-------------------------------------------------------------------
+
+=head2 hasBlockSymbols ( )
+
+Returns a boolean telling whether the symbols in the legend should be drawn as colored blocks instead of line/marker
+pairs.
+
+Defaults to false. Override in you Chart plugin if it needs block symbols.
+
+=cut
+
+sub hasBlockSymbols {
+    return 0;
+}
+
+#-------------------------------------------------------------------
+
+sub layoutHints {
+    return {
+        coordPadding    => [ 0 ],
+        valuePadding    => [ 0 ],
+    };
+}
+
+
+#-------------------------------------------------------------------
+
 =head2 new ( )
 
 Constructor.
@@ -167,9 +296,10 @@ sub new {
     bless       $self, $class;
     register    $self;
 
-    my $id              = id $self;
-    $dataset{ $id }     = Chart::Magick::Data->new;
-    $markers{ $id }     = [];
+    my $id            = id $self;
+    $dataset{ $id   } = Chart::Magick::Data->new;
+    $markers{ $id   } = [];
+    $colors{ $id    } = [];
 
     $self->initializeProperties( $properties );
 
@@ -185,7 +315,26 @@ Override this method to do any preprocessing before the drawing phase begins.
 =cut
 
 sub preprocessData {
+    my $self = shift;
+    my $markerSize = $self->get('markerSize');
 
+    $self->getPalette->paletteIndex( undef );
+    for my $ds ( 0 .. $self->dataset->datasetCount - 1 ) {
+        my $color = $self->getPalette->getNextColor;
+
+        push @{ $colors{ id $self } }, $color;
+
+        if ( exists $self->markers->[ $ds ] ) {
+            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
+            $size ||= $markerSize;
+
+            $self->markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $self->axis, {
+                strokeColor => $color->getStrokeColor,
+            } );
+        }
+    }
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -208,6 +357,8 @@ sub setAxis {
         unless $axis && $axis->isa( 'Chart::Magick::Axis' );
 
     $axis{ id $self } = $axis;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -230,6 +381,8 @@ sub setData {
         unless $data && $data->isa( 'Chart::Magick::Data' );
 
     $dataset{ id $self } = $data;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -280,6 +433,8 @@ sub setMarker {
     };
 
     $markers{ id $self }->[ $index ] = $def;
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -302,6 +457,8 @@ sub setPalette {
     croak "Palette must be a Chart::Magick::Palette" unless $palette->isa( 'Chart::Magick::Palette' );
 
     $palette{ id $self } = $palette;
+
+    return;
 }
 
 1;

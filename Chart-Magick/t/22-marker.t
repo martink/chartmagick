@@ -74,13 +74,12 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
 #####################################################################
 {
     no warnings 'redefine';
-    my ($im, %args);
-    local *Image::Magick::Composite = sub { $im = shift; %args = @_; return 'called' }; 
+    my ( $im, %args, $called );
+    local *Image::Magick::Composite = sub { $im = shift; %args = @_; $called = 'called' }; 
 
-    my $axis = Chart::Magick::Axis->new;
-
-    my $marker      = Chart::Magick::Marker->new( $VALID_DEFAULT, 5, $axis );
-    my $called      = $marker->draw( 1, 2 );
+    my $axis    = Chart::Magick::Axis->new;
+    my $marker  = Chart::Magick::Marker->new( $VALID_DEFAULT, 5, $axis );
+    $marker->draw( 1, 2 );
     
     is( $called, 'called', 'draw uses compositing to draw markers' );
     is( $im, $axis->im, 'draw composites onto the Image::Magick object of the axis' );

@@ -1,12 +1,15 @@
 package Chart::Magick::Axis;
 
 use strict;
+use warnings;
+
 use Class::InsideOut qw{ :std };
 use Image::Magick;
 use List::Util qw{ min max };
 use Carp;
 use Data::Dumper;
 use Text::Wrap;
+use Chart::Magick::Legend;
 
 use constant pi => 3.14159265358979;
 
@@ -16,6 +19,7 @@ readonly charts         => my %charts;
 private  plotOptions    => my %plotOptions;
 private  im             => my %magick;
 private  axisLabels     => my %axisLabels;
+readonly legend         => my %legend;
 
 =head1 NAME
 
@@ -46,8 +50,9 @@ sub _buildObject {
 
     my $id = id $self;
 
-    $charts{ $id }      = [];
-    $axisLabels{ $id }  = [ ];
+    $charts{ $id        } = [];
+    $axisLabels{ $id    } = [ ];
+    $legend{ $id        } = Chart::Magick::Legend->new( $self );
 
     $self->{ _plotOptions } = {};
     return $self;
@@ -97,6 +102,8 @@ sub addLabels {
         %{ $currentLabels   },
         %{ $newLabels       },
     };
+
+    return;
 }
 
 #----------------------------------------------
@@ -123,6 +130,44 @@ sub checkFont {
     return -e $self->im->QueryFont( $font );
 }
 
+#--------------------------------------------------------------------
+sub getChartHeight {
+    my $self = shift;
+
+    return $self->plotOption( 'axisHeight' ) - $self->get('marginTop') - $self->get('marginBottom');
+}
+
+#--------------------------------------------------------------------
+sub getChartWidth {
+    my $self = shift;
+
+    return $self->plotOption( 'axisWidth' ) - $self->get('marginLeft') - $self->get('marginRight');
+}
+
+#--------------------------------------------------------------------
+sub getLabelDimensions {
+    my $self        = shift;
+    my $label       = shift;
+    my $wrapWidth   = shift;
+
+    my %properties = (
+        text        => $label,
+        font        => $self->get('labelFont'),
+        pointsize   => $self->get('labelFontSize'),
+    );
+
+    my ($w, $h) = ( $self->im->QueryFontMetrics( %properties ) )[4,5];
+    
+    if ( $wrapWidth && $w > $wrapWidth ) {
+        # This is not guaranteed to work in every case, but it'll do for now.
+        local $Text::Wrap::columns = int( $wrapWidth / $w * length $label );
+        $properties{ text } = join qq{\n}, wrap( q{}, q{}, $label );
+
+        ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
+    }
+
+    return [ $w, $h ];
+}
 
 #----------------------------------------------
 
@@ -155,7 +200,7 @@ sub getLabels {
 
     return { %{ $labels } }     unless defined $coord;
     return $labels->{ $coord }  if exists $labels->{ $coord };
-    return undef;
+    return;
 }
 
 #----------------------------------------------
@@ -178,7 +223,7 @@ sub im {
     my $magick  = Image::Magick->new(
         size        => $width.'x'.$height,
     );
-    $magick->Read('xc:white');
+    $magick->Read( $self->get('background') );
     $magick{ id $self } = $magick;
 
     return $magick;
@@ -226,6 +271,13 @@ sub addChart {
             unless $chart->isa('Chart::Magick::Chart');
         push @{ $charts{ id $self } }, $chart;
     }
+
+    return;
+}
+
+#---------------------------------------------
+sub applyLayoutHints {
+    return;
 }
 
 #---------------------------------------------
@@ -320,7 +372,7 @@ sub definition {
         height          => 300,
 
         # Image margins
-        margin          => 30,
+        margin          => 10,
         marginLeft      => sub { $_[0]->get('margin') },
         marginTop       => sub { $_[0]->get('margin') }, 
         marginRight     => sub { $_[0]->get('margin') },
@@ -342,7 +394,10 @@ sub definition {
         labelFont       => sub { $_[0]->get('font') }, 
         labelFontSize   => sub { $_[0]->get('fontSize') },
         labelColor      => sub { $_[0]->get('fontColor') },
-        
+
+        background      => 'xc:white',
+
+        drawLegend      => 1,
     );
 
     return \%options;
@@ -364,20 +419,48 @@ sub draw {
     foreach my $chart (@{ $charts }) {
         $chart->setAxis( $self );
         $chart->preprocessData( ); #$self );
+        $chart->addToLegend;
+
+        $self->applyLayoutHints( $chart->layoutHints );
     }
+
+    $self->legend->preprocess;
 
     # Preprocess data
     $self->preprocessData;
 
+    foreach my $chart (@{ $charts }) {
+        $chart->autoRange;
+    }
+
     # Plot background stuff
     $self->plotFirst;
 
+    my $chartCanvas = Image::Magick->new( size => $self->get('width') . 'x' . $self->get('height') );
+    $chartCanvas->Read('xc:none');
+
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->plot( ); #$self );
+        $chart->plot( $chartCanvas ); #$self );
     }
 
+    $chartCanvas->Crop(
+        x       => $self->plotOption('chartAnchorX') + 1,
+        y       => $self->plotOption('chartAnchorY') + 1,
+        width   => $self->getChartWidth - 1, # - 1,
+        height  => $self->getChartHeight - 1,
+    );
+
+    $self->im->Composite(
+        image   => $chartCanvas,
+        gravity => 'NorthWest',
+        x       => $self->plotOption('chartAnchorX') + 1,
+        y       => $self->plotOption('chartAnchorY') + 1,
+    );
+
     $self->plotLast;
+
+    return;
 }
 
 #---------------------------------------------
@@ -420,6 +503,7 @@ You'll probably never call this method by yourself.
 =cut
 
 sub plotFirst {
+    return;
 }
 
 #---------------------------------------------
@@ -437,6 +521,9 @@ sub plotLast {
     my $self = shift;
 
     $self->plotTitle;
+    $self->legend->draw if $self->get('drawLegend');
+
+    return;
 };
 
 #---------------------------------------------
@@ -460,6 +547,8 @@ sub plotTitle {
         halign      => 'center',
         valign      => 'top',
     );
+
+    return;
 }
 
 #---------------------------------------------
@@ -484,13 +573,13 @@ sub preprocessData {
    
     # Calc title height
     my $minTitleMargin  = $self->get('minTitleMargin');
-    my $titleHeight = [ 
-        $self->im->QueryFontMetrics( 
-            text        => $self->get('title'),
-            font        => $self->get('titleFont'),
-            pointsize   => $self->get('titleFontSize'),
-        )
-    ]->[ 5 ];
+    my $titleHeight = $self->get('title')
+        ? ( $self->im->QueryFontMetrics( 
+                text        => $self->get('title'),
+                font        => $self->get('titleFont'),
+                pointsize   => $self->get('titleFontSize'),
+          ) )[ 5 ]
+        : 0;
 
     # Adjust top margin to fit title
     my $marginTop   = max $self->get('marginTop'), $titleHeight + 2 * $minTitleMargin;
@@ -498,6 +587,8 @@ sub preprocessData {
 
     $self->set( 'marginTop', $marginTop );
     $self->plotOption( 'titleOffset', $titleOffset);
+    
+    my $legendMargins = $self->legend->getRequiredMargins;
 
     # global
     my $axisWidth  = $self->get('width') - $self->get('marginLeft') - $self->get('marginRight');
@@ -506,9 +597,12 @@ sub preprocessData {
     $self->plotOption( 
         axisWidth    => $axisWidth,
         axisHeight   => $axisHeight,
-        axisAnchorX  => $self->get('marginLeft'),
-        axisAnchorY  => $self->get('marginTop'),
+        chartAnchorX  => $self->get('marginLeft'),
+        chartAnchorY  => $self->get('marginTop'),
     );
+
+
+    return;
 }
 
 #-------------------------------------------------------------------
@@ -529,9 +623,12 @@ Array ref containing the values of the spot to be projected.
 =cut
 
 sub toPx {
-    my $self    = shift;
+    my $self        = shift;
+    my $coord       = shift;
+    my $value       = shift;
+    my $chartCoords = shift;
     
-    return join ",", map { int } $self->project( @_ );
+    return join ",", map { int } $self->project( $coord, $value ); #, $chartCoords );
 }
 
 #---------------------------------------------
@@ -554,27 +651,44 @@ Plot option value.
 =cut
 
 sub plotOption {
-    my $self    = shift;
+    my ( $self, @options ) = @_;
 
     # No params? Return a safe copy of all plot options.
-    return { %{ $self->{ _plotOptions } } } unless scalar @_;
+    return { %{ $self->{ _plotOptions } } } unless scalar @options;
 
     # More than one param? Apply the passed key/value pairs on the plot options.
-    if ( scalar @_ > 1 ) {
-        $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @_ };
+    if ( scalar @options > 1 ) {
+        $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @options };
         return ;
     }
 
-    # Uncomment line below when debuggingis finished.
-    # return $self->{ _plotOptions }->{ $_[0] };
+    my $option = $options[0];
 
-    my $option = shift;
+    # Uncomment line below when debuggingis finished.
+    # return $self->{ _plotOptions }->{ $option };
+
     croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
     
     return $self->{ _plotOptions }->{ $option };
 }
 
 #-------------------------------------------------------------------
+
+=head2 project ( coord, value )
+
+Projects a coord/value pair onto the canvas and returns the x/y pixel values of the projection.
+
+Each Axis plugin must overload this method.
+
+=head3 coord
+
+Arrayref containing the coord.
+
+=head3 value
+
+Arrayref containing the value, corresponding to the coord.
+
+=cut
 
 sub project {
     croak "Chart::Magick::Axis->project must be overloaded by sub class";
@@ -637,71 +751,64 @@ You can use the align property to set the text justification.
 =cut
 
 sub text {
-	my $self = shift;
-	my %properties = @_;
+	my $self    = shift;
+	my %prop    = @_;
 
-    $properties{ text } = $self->wrapText( %properties ) if $properties{ wrapWidth };
+    # Don't bother to draw an empty string...
+    return unless length $prop{ text };
 
-    my %testProperties = %properties;
-    my ($x_ppem, $y_ppem, $ascender, $descender, $w, $h, $max_advance) = $self->im->QueryMultilineFontMetrics(%testProperties);
+    # Wrap text if necessary
+    $prop{ text } = $self->wrapText( %prop ) if $prop{ wrapWidth };
 
-    # Convert the rotation angle to radians
-    $properties{rotate} ||= 0;
-    my $rotation = $properties{rotate} / 180 * pi;
+    # Find width and height of resulting text block
+    my ( $ascender, $width, $height ) = ( $self->im->QueryMultilineFontMetrics( %prop ) )[ 2, 4, 5 ];
 
 	# Process horizontal alignment
-    my $anchorX = 0;
-	if ($properties{halign} eq 'center') {
-        $anchorX = $w / 2;
-	}
-	elsif ($properties{halign} eq 'right') {
-        $anchorX = $w;
-	}
+    my $anchorX  =
+          !defined $prop{ halign }      ? 0
+        : $prop{ halign } eq 'center'   ? $width / 2
+        : $prop{ halign } eq 'right'    ? $width
+        :                                 0;
 
     # Using the align properties will cause IM to shift its anchor point. We'll have to compensate for that...
-    if ($properties{align} eq 'Center') {
-        $anchorX -= $w / 2;
-    }
-    elsif ($properties{align} eq 'Right') {
-        $anchorX -= $w;
-    }
+    $anchorX     -=
+          !defined $prop{ align }       ? 0
+        : $prop{ align }  eq 'Center'   ? $width / 2
+        : $prop{ align }  eq 'Right'    ? $width
+        :                                 0;
+
 
     # IM aparently always anchors at the baseline of the first line of a text block, let's take that into account.
-    my $lineHeight = $ascender;
-    my $anchorY = $lineHeight;
+    my $anchorY =
+          !defined $prop{ valign }      ? $ascender
+        : $prop{ valign } eq 'center'   ? $ascender - $height / 2
+        : $prop{ valign } eq 'bottom'   ? $ascender - $height
+        :                                 $ascender;
 
-	# Process vertical alignment
-	if ($properties{valign} eq 'center') {
-        $anchorY -= $h / 2;
-	}
-	elsif ($properties{valign} eq 'bottom') {
-        $anchorY -= $h;
-    }
+    # Convert the rotation angle to radians
+    my $rotation = $prop{ rotate } ? $prop{ rotate } / 180 * pi : 0 ;
 
     # Calc the the angle between the IM anchor and our desired anchor
-    my $r       = sqrt( $anchorX**2 + $anchorY**2 );
+    my $r       = sqrt( $anchorX ** 2  + $anchorY ** 2 );
     my $theta   = atan2( -$anchorY , $anchorX ); 
 
     # And from that angle we can translate the coordinates of the text block so that it will be alligned the way we
     # want it to.
-    my $offsetY = $r * sin( $theta + $rotation );
-    my $offsetX = $r * cos( $theta + $rotation );
+    $prop{ x } -= $r * cos( $theta + $rotation );
+    $prop{ y } -= $r * sin( $theta + $rotation );
 
-    $properties{x} -= $offsetX;
-    $properties{y} -= $offsetY;
-
-	# We must delete these keys or else placement can go wrong for some reason...
-	delete($properties{halign});
-	delete($properties{valign});
+    # Prevent Image::Magick from complaining about unrecognized options.
+    delete @prop{ qw( halign valign wrapWidth ) };
 
     $self->im->Annotate(
-		#Leave align => 'Left' here as a default or all text will be overcompensated.
-		align		=> 'Left',
-		%properties,
-		gravity		=> 'Center', #'NorthWest',
-		antialias	=> 'true',
-#        undercolor  => 'red',
+        #Leave align => 'Left' here as a default or all text will be overcompensated.
+        align       => 'Left',
+        %prop,
+        gravity     => 'Center', #'NorthWest',
+        antialias   => 'true',
 	);
+
+    return;
 }
 
 1;

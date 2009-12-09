@@ -1,6 +1,7 @@
 package Chart::Magick::Axis::LinLog;
 
 use strict;
+use warnings;
 
 use base qw{ Chart::Magick::Axis::Log };
 
@@ -17,6 +18,12 @@ The following methods are available from this class:
 =cut
 
 #--------------------------------------------------------------------
+
+=head2 adjustYRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustYRangeToOrigin.
+
+=cut
 
 sub adjustYRangeToOrigin {
     my $self = shift;
@@ -40,6 +47,8 @@ sub draw {
     );
     
     $self->SUPER::draw( @_ );
+
+    return;
 }
 
 #--------------------------------------------------------------------

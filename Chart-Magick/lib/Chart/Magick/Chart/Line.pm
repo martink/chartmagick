@@ -49,13 +49,30 @@ sub definition {
 
     my $properties = {
         plotMarkers     => 1,
-        markerSize      => 5,
     };
 
     return { %$definition, %$properties };
 }
 
-#-------------------------------------------------------------------
+#--------------------------------------------------------------------
+
+=head2 getSymbolDef ( )
+
+See Chart::Magick::Chart::getSymbolDef.
+
+=cut
+
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+    return {
+        line    => $self->colors->[ $ds ],
+        marker  => $self->markers->[ $ds ],
+    };
+}
+
+#--------------------------------------------------------------------
 
 =head2 plot
 
@@ -64,36 +81,22 @@ Draws the graph.
 =cut
 
 sub plot {
-    my $self = shift;
-    my $axis = $self->axis;
+    my $self    = shift;
+    my $canvas  = shift;
+    my $axis    = $self->axis;
 
     my $datasetCount =  $self->dataset->datasetCount;
     my $previousCoord;
-    my $markers = [];
-    my $markerSize = $self->get('markerSize');
 
     # Cache palette and instaciate markers
-    my @palette;
-    $self->getPalette->paletteIndex( undef );
-    for my $ds ( 0 .. $datasetCount - 1) { 
-        my $color = $self->getPalette->getNextColor;
-        push @palette, $color;
-
-        next unless exists $self->markers->[ $ds ];
-
-        my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
-        $size ||= $markerSize;
-
-        $markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $axis, {
-            strokeColor => $color->getStrokeColor,
-        } );
-    }
+    my @colors  = @{ $self->colors  };
+    my @markers = @{ $self->markers };
 
     # Draw the graphs
     foreach my $x ( @{ $self->dataset->getCoords } ) {
 
         for my $ds ( 0 .. $datasetCount - 1) {
-            my $color = $palette[ $ds ];
+            my $color = $colors[ $ds ];
 
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
@@ -104,11 +107,11 @@ sub plot {
                 my @to   = ( $x, $y );
 
                 my $path = 
-                    "M " . $axis->toPx( @from   )
-                   ."L " . $axis->toPx( @to     )
+                    "M " . $axis->toPx( @from )
+                   ."L " . $axis->toPx( @to   )
                 ;
 
-	            $axis->im->Draw(
+	            $canvas->Draw(
                 	primitive	=> 'Path',
               	    stroke		=> $color->getStrokeColor,
                   	points		=> $path,
@@ -118,9 +121,9 @@ sub plot {
 
             # Draw marker of previous data point so that it will be on top of the lines entering and leaving the
             # point.
-            my $marker = $markers->[ $ds ];
+            my $marker = $markers[ $ds ];
             if ( $marker && $self->get('plotMarkers') && exists $previousCoord->[ $ds ] ) {
-                $marker->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
+                $marker->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas );
             }
 
             # Store the current position of this dataset
@@ -131,8 +134,8 @@ sub plot {
     # Draw last markers
     if ( $self->get('plotMarkers') ) {
         for my $ds ( 0 .. $datasetCount - 1 ) {
-            next unless $markers->[ $ds ];
-            $markers->[ $ds ]->draw( $axis->project( @{ $previousCoord->[ $ds ] } ) );
+            next unless $markers[ $ds ];
+            $markers[ $ds ]->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas );
         }
     }
 }

@@ -1,6 +1,8 @@
 package Chart::Magick::Data;
 
 use strict;
+use warnings;
+
 use Class::InsideOut qw{ :std };
 use Carp;
 use Data::Dumper;
@@ -45,12 +47,13 @@ sub new {
     register    $self;
 
     my $id = id $self;
-    $data{ $id }            = [];
-    $datasetCount{ $id }    = 0;
-    $coordDim{ $id }      = 0;
-    $datasetIndex{ $id }    = 0;
-    $datasetData{ $id }     = [];
-    $globalData{ $id }      = {};
+    $data{ $id          } = [];
+    $datasetCount{ $id  } = 0;
+    $coordDim{ $id      } = 0;
+    $datasetIndex{ $id  } = 0;
+    $datasetData{ $id   } = [];
+    $globalData{ $id    } = {};
+    $labels{ $id        } = [];
 
     return $self;
 }
@@ -103,7 +106,9 @@ sub addDataPoint {
     $data->[ $dataset  ]->{ $key } = $value;
 
     # Set min, max, total, etc.
-    $self->updateStats( $coords, $value, $dataset )
+    $self->updateStats( $coords, $value, $dataset );
+
+    return;
 }
 
 #---------------------------------------------------------------
@@ -127,6 +132,7 @@ sub addDataset {
     my $self    = shift;
     my $coords  = shift;
     my $values  = shift;
+    my $label   = shift;
 
     croak "Number of coordinates and values doesn't match" unless scalar @{ $coords } eq scalar @{ $values };
 
@@ -136,6 +142,11 @@ sub addDataset {
     for my $index ( 0 .. scalar @{ $coords } - 1 ) {
         $self->addDataPoint( $coords->[ $index ], $values->[ $index ], $datasetIndex );
     }
+
+    # Set dataset name
+    $labels{ id $self }->[ $datasetIndex ] = $label if $label;
+
+    return;
 }
 
 #---------------------------------------------------------------
@@ -180,8 +191,8 @@ Requires Data::Dumper to be installed.
 sub dumpData {
     my $self = shift;
 
-    eval { require Data::Dumper };
-    return "Cannot dump data since require Data::Dumper failed.\nError message:\n $@\n" if $@;
+    my $ok = eval { require Data::Dumper; 1 };
+    return "Cannot dump data since require Data::Dumper failed.\nError message:\n $@\n" if !$ok || $@;
 
     return 
          "\n------------- DATA --------------------------\n"
@@ -205,8 +216,8 @@ Requires Devel::Size
 =cut
 
 sub memUsage {
-    eval { require Devel::Size; Devel::Size->import( 'total_size' ) };
-    return "Cannot display mem usage since require Devel::Size failed.\nError message:\n $@\n" if $@;
+    my $ok = eval { require Devel::Size; Devel::Size->import( 'total_size' ); 1 };
+    return "Cannot display mem usage since require Devel::Size failed.\nError message:\n $@\n" if !$ok || $@;
 
     return 
          "\n------------- MEMORY USAGE ------------------\n"
@@ -336,6 +347,8 @@ sub updateStats {
             $data->{ maxCoord }->[ $i ] = $_ if !defined $data->{ maxCoord }->[ $i ] || $_ > $data->{ maxCoord }->[ $i ];
         }
     }
+
+    return;
 }
 
 1;

@@ -1,7 +1,7 @@
 package Chart::Magick::Chart::Bar;
 
 use strict;
-use List::Util qw{ sum reduce };
+use List::Util qw{ sum min };
 
 use base qw{ Chart::Magick::Chart };
 
@@ -55,7 +55,8 @@ sub definition {
 
     my %overrides = (
         barWidth    => 20,
-        barSpacing  => 5,
+        barSpacing  => 0.05,
+        groupSpacing=> sub { $_[0]->get('barSpacing') * 3 },
         drawMode    => 'sideBySide',
     );  
 
@@ -64,7 +65,7 @@ sub definition {
 
 #--------------------------------------------------------------------------
 
-=head2 drawBar ( color, width, length, coord, coordOffset, bottom )
+=head2 drawBar ( $canvas, color, width, length, coord, coordOffset, bottom )
 
 Draw a bar onto the axis set in the object. All parameters should be passed in coordinates, not pixels.
 
@@ -96,6 +97,7 @@ The displacement of the actual bar bottom and the horizontal axis. Defaults to 0
 
 sub drawBar {
     my $self            = shift;
+    my $canvas          = shift;
 
     my $color           = shift;
     my $width           = shift;
@@ -110,12 +112,7 @@ sub drawBar {
     my $right   = $left + $width;                       # x-location of right bar edge
     my $top     = $bottom + $length;
 
-    my @botLeft  = $axis->toPx( [ $left  ], [ $bottom ] );
-    my @topLeft  = $axis->toPx( [ $left  ], [ $top    ] );
-    my @topRight = $axis->toPx( [ $right ], [ $top    ] );
-    my @botRight = $axis->toPx( [ $right ], [ $bottom ] );
-
-	$axis->im->Draw(
+	$canvas->Draw(
 		primitive	=> 'Path',
 		stroke		=> $color->getStrokeColor,
 		fill		=> $color->getFillColor,
@@ -123,7 +120,8 @@ sub drawBar {
 			  " M " . $axis->toPx( [ $left  ], [ $bottom ] )
 			. " L " . $axis->toPx( [ $left  ], [ $top    ] )
             . " L " . $axis->toPx( [ $right ], [ $top    ] )
-			. " L " . $axis->toPx( [ $right ], [ $bottom ] ),
+			. " L " . $axis->toPx( [ $right ], [ $bottom ] )
+            . " Z ",
 	);
     
 }
@@ -149,15 +147,37 @@ sub getDataRange {
     foreach my $coord ( @{ $self->dataset->getCoords } ) {
         my @values = map { $self->dataset->getDataPoint( $coord, $_ ) } (0 .. $self->dataset->datasetCount - 1);
 
-        my $negSum = sum grep { $_ < 0 } map { $_ ? $_->[0] : 0 } @values;
-        my $posSum = sum grep { $_ > 0 } map { $_ ? $_->[0] : 0 } @values;
+        my $negSum = sum( grep { $_ < 0 } map { $_ ? $_->[0] : 0 } @values ) || 0;
+        my $posSum = sum( grep { $_ > 0 } map { $_ ? $_->[0] : 0 } @values ) || 0;
 
         $maxNeg = $negSum if $negSum < $maxNeg;
         $maxPos = $posSum if $posSum > $maxPos;
     }
 
     return ( $global->{ minCoord }, $global->{ maxCoord }, [ $maxNeg ], [ $maxPos ] );
+
+#    return ( [ $global->{ minCoord }->[ 0 ] - 0.5 ], [ $global->{ maxCoord }->[0] + 0.5 ], [ $maxNeg ], [ $maxPos ] );
 }
+
+#--------------------------------------------------------------------
+
+=head2 getSymbolDef ( )
+
+See Chart::Magick::Chart::getSymbolDef.
+
+Bar charts use block symbols only.
+
+=cut
+
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+    return {
+        block   => $self->colors->[ $ds ],
+    };
+}
+
 
 #--------------------------------------------------------------------------
 
@@ -168,7 +188,8 @@ Plots the bars onto the axis set in the object.
 =cut
 
 sub plot {
-    my $self = shift;
+    my $self    = shift;
+    my $canvas  = shift;
 
     my $barCount    = $self->dataset->datasetCount;
     my $groupCount  = $self->get('drawMode') eq 'cumulative' 
@@ -176,32 +197,38 @@ sub plot {
                     : $barCount
                     ;
 
-
     my $minSpacing;
     my $p;
-    foreach ( @{ $self->dataset->getCoords } ) {
-        if ( defined $p ) {
-            $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
-        }
-           
-        $p = $_->[0];
-    }
 
-    my $dataRange       = 5;
-    my $groupWidth      = $minSpacing; #$dataRange / $groupCount;
-    my $groupSpacing    = $groupWidth * 0.1;
-    my $barSpacing      = $groupWidth * 0.05;
+    my @coords = @{ $self->dataset->getCoords };
+    my $a      = shift( @coords )->[0];
+
+    my $minSpacing =
+        min
+        map         { my $t = $a; $a = $_->[0]; abs( $_->[0] - $t ) }
+        @coords;
+
+#    foreach ( @{ $self->dataset->getCoords } ) {
+#        if ( defined $p ) {
+#            my $spacing = 
+#            $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
+#        }
+#           
+#        $p = $_->[0];
+#    }
+
+    my $groupWidth      = $minSpacing;
+    my $groupSpacing    = $groupWidth * $self->get('groupSpacing');
+    my $barSpacing      = $groupWidth * $self->get('barSpacing');
 
     my $barWidth        = ( $groupWidth  - $groupSpacing ) / $groupCount - $barSpacing ;
-    $barWidth *= 0.5;
+#    $barWidth *= 0.5;
 
     foreach my $coord ( @{ $self->dataset->getCoords } ) {
-        $self->getPalette->paletteIndex( 1 );
-
         my $positiveVerticalOffset = 0;
         my $negativeVerticalOffset = 0;
         for my $dataset ( 0 .. $barCount - 1 ) {
-            my $color   = $self->getPalette->getNextColor;
+            my $color   = $self->colors->[ $dataset ]; #$self->getPalette->getNextColor;
             my $value   = $self->dataset->getDataPoint( $coord, $dataset );
             
             next unless $value;
@@ -220,7 +247,7 @@ sub plot {
                 }
 
                 # Draw bars on top of each other.
-                $self->drawBar( $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
+                $self->drawBar( $canvas, $color, $barWidth, $barLength, $coord->[0], 0, $verticalOffset );
 
                 $verticalOffset += $barLength;
             }
@@ -228,7 +255,7 @@ sub plot {
                 # Default to sideBySide draw mode
                 my $offset      = $dataset * ( $barWidth + $barSpacing) - ($barSpacing + $barWidth ) * ( $barCount - 1 ) / 2;
 
-                $self->drawBar( $color, $barWidth, $barLength, $coord->[ 0 ], $offset, 0  );
+                $self->drawBar( $canvas, $color, $barWidth, $barLength, $coord->[ 0 ], $offset, 0  );
             }
         }
     }
@@ -260,8 +287,15 @@ sub preprocessData {
 
     $self->SUPER::preprocessData;
 
-    $axis->set('xTickOffset', 1 ) unless $axis->get('xTickOffset');
-    $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
+#   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
+   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
+}
+
+sub layoutHints {
+    return {
+        coordPadding    => [ 0.5 ],
+        valuePadding    => [ 0   ],
+    };
 }
 
 1;

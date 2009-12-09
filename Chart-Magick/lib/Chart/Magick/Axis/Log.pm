@@ -21,6 +21,12 @@ The following methods are available from this class:
 
 #--------------------------------------------------------------------
 
+=head2 adjustXRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustXRangeToOrigin.
+
+=cut
+
 sub adjustXRangeToOrigin {
     my $self = shift;
     return @_;
@@ -28,12 +34,16 @@ sub adjustXRangeToOrigin {
 
 #--------------------------------------------------------------------
 
+=head2 adjustYRangeToOrigin ( )
+
+See Chart::Magick::Axis::Lin::adjustYRangeToOrigin.
+
+=cut
+
 sub adjustYRangeToOrigin {
     my $self = shift;
     return @_;
 }
-
-
 
 #--------------------------------------------------------------------
 
@@ -72,13 +82,12 @@ Draws the graph. See Chart::Magick::Axis for documentation.
 
 sub draw {
     my $self = shift;
-
-    # Ticks in linlog are always aligned with the axes, so prevent the super class from over adjusting.
-    $self->set( 
-        xAlignAxesWithTicks     => 0,
-        yAlignAxesWithTicks     => 0,
+   
+    $self->set(
+        xExpandRange => 0,
+        yExpandRange => 0,
     );
-    
+
     $self->SUPER::draw( @_ );
 }
 
@@ -166,6 +175,7 @@ sub getYTicks {
 }
 
 #--------------------------------------------------------------------
+
 =head2 logTransform ( value, base )
 
 Returns the base n logarithm of value. Defaults to base 10. Output is formatted to have 5 decimals.
@@ -186,7 +196,7 @@ sub logTransform {
     my $value   = shift || 0;
     my $base    = shift || 10;
 
-    return undef if ( $value <= 0 );
+    return if ( $value <= 0 );
 
     # The sprintf's below are necessary to prevent precision errors:
     # For instance log( 0.1 ) / log( 10 ) returns -0.99999999999999977795539507496869191527366638183594 which ceil

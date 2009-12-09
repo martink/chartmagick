@@ -7,7 +7,7 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis;
 
-use Test::More tests => 40;
+use Test::More tests => 42;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart', 'Chart::Magick::Chart can be used' );
@@ -184,8 +184,6 @@ BEGIN {
     );
 }
 
-#sub getDataRange {
-#sub preprocessData {
 #####################################################################
 #
 #  preprocessData
@@ -217,6 +215,20 @@ BEGIN {
     cmp_ok( $range[ 1 ], '==', $expect->{ maxCoord }, 'getDataRange returns correct max coord' );
     cmp_ok( $range[ 2 ], '==', $expect->{ minValue }, 'getDataRange returns correct min value' );
     cmp_ok( $range[ 3 ], '==', $expect->{ maxValue }, 'getDataRange returns correct max value' );
+}
+
+#####################################################################
+#
+# im / setAxis / axis
+#
+#####################################################################
+{
+    my $axis    = Chart::Magick::Axis->new;
+    my $chart   = Chart::Magick::Chart->new;
+    $chart->setAxis( $axis );
+     
+    is( $chart->axis, $axis,     'axis returns correct axis object' );
+    is( $chart->im,   $axis->im, 'im returns the correct object'    );
 }
 
 #####################################################################

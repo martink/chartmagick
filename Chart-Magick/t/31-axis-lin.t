@@ -397,7 +397,7 @@ BEGIN {
         fill        => '__labelColor',
         x           => ignore(),
         y           => ignore(),
-#        wrapWidth   => ignore(),
+        wrapWidth   => ignore(),
     );
     my %expectDraw = (
         primitive   => ignore(),
