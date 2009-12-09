@@ -17,25 +17,16 @@ readonly anchorY    => my %anchorY;
 #---------------------------------------------
 our %DEFAULT_MARKERS = (
     marker1 => {
-        width   => 1,
-        height  => 0.75,
-        shape   => [
-            [ 'M', 0,    0.75   ],
-            [ 'L', 0.5,  0      ],
-            [ 'L', 1,    0.75   ],
-            [ 'L', 0,    0.75   ],
-        ],
+        size    => 1,
+        shape   => 'm0,-0.43 l0.5,0.86 l-1,0 Z',
     },
     marker2 => { 
-        width   => 1,
-        height  => 1,
-        shape   => [
-            [ 'M',  0,   0      ],
-            [ 'L',  1,   0      ],
-            [ 'L',  1,   1      ],
-            [ 'L',  0,   1      ],
-            [ 'L',  0,   0      ],
-        ],
+        size    => 1,
+        shape   => 'm0.5,0.5 l-1,0 l0,1 l1,0 Z',
+    },
+    circle => { 
+        size    => 50,
+        shape   => 'M25,0 a25,25 0 0,0 -50,0 a25,25 0 0,0 50,0',
     },
 );
 
@@ -135,7 +126,7 @@ sub createMarkerFromFile {
 #---------------------------------------------
 sub createMarkerFromDefault {
     my $self        = shift;
-    my $shape       = shift || 'marker2';
+    my $shape       = shift || 'marker1';
     my $strokeColor = shift || 'black';
     my $fillColor   = shift || 'none';
 
@@ -145,22 +136,28 @@ sub createMarkerFromDefault {
     my $strokeWidth = 1;
 
     my $marker  = $DEFAULT_MARKERS{ $shape };
-    my $path    = join ' ', map { $_->[0] . $size*$_->[1] . ',' . $size*$_->[2] } @{ $marker->{ shape } };
-    my $width   = $size * $marker->{ width  } + $strokeWidth;
-    my $height  = $size * $marker->{ height } + $strokeWidth;
+    my $path    = $marker->{ shape };
 
-    $anchorX{ $id } = $size * $marker->{ width } / 2;
-    $anchorY{ $id } = $size * $marker->{ height } / 2;
+    my $scale   = $size / $marker->{ size };
+
+    my $width   = $size + $strokeWidth;
+    my $height  = $size + $strokeWidth;
+
+    $anchorX{ $id } = $width    / 2;
+    $anchorY{ $id } = $height   / 2;
+
+print "size:$size scale:$scale w:$width anchor: $anchorX{ $id }\n";
 
     my $im = Image::Magick->new( size => $width .'x'. $height, index => 1 );
     $im->ReadImage( 'xc:none' );
     $im->Draw(
        primitive    => 'Path',
        stroke       => $strokeColor,
-       strokewidth  => $strokeWidth,
+       strokewidth  => $strokeWidth / $scale,
        points       => $path,
        fill         => $fillColor,
        antialias    => 'true',
+       affine       => [ $scale, 0, 0, $scale, $anchorX{ $id }, $anchorY{ $id } ]
     );
     
     return $im;
