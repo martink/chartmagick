@@ -6,8 +6,8 @@ my $dsy = [ reverse 1 .. 5 ];
 my $noise_x = [ map { $_ / 100 } ( 1 .. 500 ) ];
 my $noise_y = [ map { rand     } ( 1 .. 500 ) ];
 
-Chart::Magick->line( 
-    width   => 500,
+Chart::Magick->bar( 
+    width   => 1180,
     height  => 300,
     data    => [ 
 #        [ $dsx, $dsy, 'DS 1', 'circle', 6 ],

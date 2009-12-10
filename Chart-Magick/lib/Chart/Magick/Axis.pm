@@ -17,7 +17,7 @@ use base qw{ Chart::Magick::Definition };
 
 readonly charts         => my %charts;
 private  plotOptions    => my %plotOptions;
-private  im             => my %magick;
+readonly im             => my %magick;
 private  axisLabels     => my %axisLabels;
 readonly legend         => my %legend;
 
@@ -53,6 +53,8 @@ sub _buildObject {
     $charts{ $id        } = [];
     $axisLabels{ $id    } = [ ];
     $legend{ $id        } = Chart::Magick::Legend->new( $self );
+    $magick{ $id        } = Image::Magick->new;
+
 
     $self->{ _plotOptions } = {};
     return $self;
@@ -211,23 +213,6 @@ Returns the Image::Magick object that is used for drawing. Will automatically cr
 this object has not been associated with one.
 
 =cut
-
-sub im {
-    my $self = shift;
-
-    my $im = $magick{ id $self };
-    return $im if $im;
-
-    my $width   = $self->get('width')   || croak "no height";
-    my $height  = $self->get('height')  || croak "no width";
-    my $magick  = Image::Magick->new(
-        size        => $width.'x'.$height,
-    );
-    $magick->Read( $self->get('background') );
-    $magick{ id $self } = $magick;
-
-    return $magick;
-}
 
 #----------------------------------------------
 
@@ -414,6 +399,10 @@ Draws the axis and all charts that are put onto it.
 sub draw {
     my $self    = shift;
     my $charts  = $charts{ id $self };
+
+    # Prepare canvas
+    $self->im->Set( size => $self->get('width') . 'x' . $self->get('height') );
+    $self->im->Read( 'xc:white' );
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {

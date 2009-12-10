@@ -50,7 +50,9 @@ sub AUTOLOAD {
     }
 
     $axis->addChart( $chart );
-    
+    $axis->set( width => $params{ width }, height => $params{ height } );
+
+
     $chart->set(        $params{ chart  } || {} );
     $axis->set(         $params{ axis   } || {} );
     $axis->legend->set( $params{ legend } || {} ); 
