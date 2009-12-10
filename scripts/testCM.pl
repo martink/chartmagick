@@ -46,9 +46,9 @@ my $axis = Chart::Magick::Axis::Lin->new( {
     titleColor      => 'purple',
     
     # Set the titles
-    title           => 'Gooey Attack!',
-    xTitle          => 'Prediction',
-    yTitle          => 'Outcome',
+#    title           => 'Gooey Attack!',
+#    xTitle          => 'Prediction',
+#    yTitle          => 'Outcome',
 
     # Normalize the x ticks to pi, and set a custom tick width. 
     xLabelUnits     => pi,
@@ -57,12 +57,12 @@ my $axis = Chart::Magick::Axis::Lin->new( {
     # Custom format the x labels
     xLabelFormat    => '%.1fπ',
 
-#    flipAxes => 1,
+    flipAxes => 1,
     drawLegend      => 1,
 
-    xStart          => -0.1 * pi,
-    xStop           => 0,
-    expandRange     => 0,
+#    xStart          => -0.1 * pi,
+#    xStop           => 0,
+    expandRange     => 1,
 #  xTickOffset     => 1,
 } );
 
@@ -85,3 +85,5 @@ $axis->im->Write('out.png');
 
 print "write  : ", tv_interval( $time ), "s\n";
 
+$Data::Dumper::Sortkeys = 1;
+print Dumper( $axis->plotOption );

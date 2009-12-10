@@ -415,6 +415,22 @@ sub draw {
     my $self    = shift;
     my $charts  = $charts{ id $self };
 
+    foreach my $key ( keys %{ $self->get } ) {
+        print "$key \n";
+        my $newKey = $key;
+
+        if ( $key =~ m/^x/ ) {
+            substr( $newKey, 0, 1, 'y' );
+        }
+        elsif ( $key =~ m/^y/ ) {
+            substr( $newKey, 0, 1, 'x' );
+        }
+
+        $self->plotOption( $newKey => $self->get( $key ) );
+    }
+use Data::Dumper;
+print Dumper ($self->plotOption );
+
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
         $chart->setAxis( $self );

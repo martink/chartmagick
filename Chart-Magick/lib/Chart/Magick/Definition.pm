@@ -28,7 +28,7 @@ sub get {
 
     if ($key) {
         #### TODO: handle error and don't croak?
-        croak "invalid key: [$key]" unless exists $properties->{ $key };
+        confess "invalid key: [$key]" unless exists $properties->{ $key };
 
         return 
             ref $properties->{ $key } eq 'CODE'

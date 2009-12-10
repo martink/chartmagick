@@ -31,11 +31,13 @@ sub applyLayoutHints {
     my $hints   = shift;
 
     if ( exists $hints->{ coordPadding } ) {
-        $self->set( 'xTickOffset', max( $self->get('xTickOffset'), $hints->{ coordPadding }->[0] * 2 ) );
+#        $self->set( 'xTickOffset', max( $self->get('xTickOffset'), $hints->{ coordPadding }->[0] * 2 ) );
+        $self->plotOption( 'xTickOffset', max( $self->get('xTickOffset'), $hints->{ coordPadding }->[0] * 2 ) );
     };
 
     if ( exists $hints->{ valuePadding } ) {
-        $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
+#        $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
+        $self->plotOption( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
     };
 
     return;
@@ -277,6 +279,7 @@ sub optimizeMargins {
     my $ready;
     while ( !$ready ) {
         my ($minX, $maxX, $minY, $maxY) = @params;
+print "-->$minX, $maxX, $minY, $maxY\n";
 
         # Calc current chart dimensions
         my $chartWidth  = floor( $baseWidth  - $yLabelWidth );
@@ -334,24 +337,29 @@ sub optimizeMargins {
 
         if ( $prevXLabelHeight == $xLabelHeight && $prevYLabelWidth == $yLabelWidth ) {
             $ready = 1;
-            $self->set( 
-                xTickWidth  => $xTickWidth,
-                yTickWidth  => $yTickWidth,
-            );
+#            $self->set( 
+#                xTickWidth  => $xTickWidth,
+#                yTickWidth  => $yTickWidth,
+#            );
             # axisMarginLeft and bottom need to be set first.
             $self->plotOption(
                 axisMarginLeft  => $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth,
                 axisMarginBottom=> $self->plotOption( 'axisMarginBottom' ) + $yLabelWidth, 
             ); 
-            $self->plotOption( 
+            $self->plotOption(
+                xTickWidth  => $xTickWidth,
+                yTickWidth  => $yTickWidth,
+      
                 chartWidth      => $chartWidth,
                 chartHeight     => $chartHeight,
                 xPxPerUnit      => $xPxPerUnit,
                 xTickOffset     => $xAddUnit / 2 * $xPxPerUnit,
                 yPxPerUnit      => $yPxPerUnit,
                 yTickOffset     => $yAddUnit / 2 * $yPxPerUnit,
-                chartAnchorX    => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
-                chartAnchorY    => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
+#                chartAnchorX    => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
+                chartAnchorX    => $self->plotOption('marginLeft') + $self->plotOption('axisMarginLeft'),
+#                chartAnchorY    => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
+                chartAnchorY    => $self->plotOption('marginTop' ) + $self->plotOption('axisMarginTop' ), 
             );
 
             return ($minX, $maxX, $minY, $maxY);
@@ -376,7 +384,7 @@ Calcs and sets the base margins of the axis.
 
 sub calcBaseMargins {
     my $self = shift;
-
+# plotOption?
     # calc axisMarginLeft
     my $yTitleWidth = length $self->get('yTitle') == 0
                     ? 0
@@ -657,20 +665,24 @@ sub preprocessData {
     ($minX, $maxX, $minY, $maxY) = $self->optimizeMargins( $minX, $maxX, $minY, $maxY );
 
     # Store the calulated values in the object and generate the tick locations based on the tick width.
-    $self->set( 
+#    $self->set( 
+    $self->plotOption(
         yStop       => $maxY,
         yStart      => $minY,
-        yTicks      => $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ),
+#        yTicks      => $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ),
+        yTicks      => $self->generateTicks( $minY, $maxY, $self->plotOption( 'yTickWidth' ) ),
         xStop       => $maxX,
         xStart      => $minX,
-        xTicks      => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ),
+#        xTicks      => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ),
+        xTicks      => $self->generateTicks( $minX, $maxX, $self->plotOption( 'xTickWidth' ) ),
     );
 
     $self->plotOption( 
-        yChartStop  => $maxY + $self->get('yTickOffset') / 2,
-        yChartStart => $minY - $self->get('yTickOffset') / 2,
-        xChartStop  => $maxX + $self->get('xTickOffset') / 2,
-        xChartStart => $minX - $self->get('xTickOffset') / 2,
+#TODO: x en y tijdelijk omgedraaid.         
+        xChartStop  => $maxY + $self->get('yTickOffset') / 2,
+        xChartStart => $minY - $self->get('yTickOffset') / 2,
+        yChartStop  => $maxX + $self->get('xTickOffset') / 2,
+        yChartStart => $minX - $self->get('xTickOffset') / 2,
 
 #        chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
 #        chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
@@ -680,13 +692,15 @@ sub preprocessData {
     $self->plotOption( 'xPxOffset'  => 
           $self->plotOption('chartAnchorX') 
         + $self->plotOption('xTickOffset') 
-        - $self->transformX( $self->get('xStart') ) * $self->getPxPerXUnit
+#        - $self->transformX( $self->get('xStart') ) * $self->getPxPerXUnit
+        - $self->transformX( $self->plotOption('xStart') ) * $self->getPxPerXUnit
     );
     $self->plotOption( 'yPxOffset'  => 
         $self->plotOption('chartAnchorY') 
         + $self->getChartHeight 
         - $self->plotOption('yTickOffset')
-        + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
+#        + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
+        + $self->transformY( $self->plotOption('yStart') ) * $self->getPxPerYUnit
     );
 
     return;
@@ -703,7 +717,8 @@ Returns the locations of the ticks on the x axis in chart x coordinates.
 sub getXTicks {
     my $self = shift;
    
-    return [ @{ $self->get('xTicks') } ];
+#    return [ @{ $self->get('xTicks') } ];
+    return [ @{ $self->plotOption('xTicks') } ];
 }
 
 #---------------------------------------------
@@ -770,7 +785,8 @@ Returns an array ref containing the locations of the ticks on the y axis in char
 sub getYTicks {
     my $self = shift;
    
-    return [ @{ $self->get('yTicks') } ];
+#    return [ @{ $self->get('yTicks') } ];
+    return [ @{ $self->plotOption('yTicks') } ];
 }
 
 #---------------------------------------------
@@ -802,13 +818,15 @@ sub plotAxes {
     my $path    = q{};
 
     # Does the chart range include the x-axis?
-    if ( $self->get('yStart') * $self->get('yStop') <= 0 ) {
+#    if ( $self->get('yStart') * $self->get('yStop') <= 0 ) {
+    if ( $self->plotOption('yStart') * $self->plotOption('yStop') <= 0 ) {
         $path .= 
               " M " . $self->toPx( [ $self->plotOption( 'xChartStart' ) ], [ 0 ] )
             . " L " . $self->toPx( [ $self->plotOption( 'xChartStop'  ) ], [ 0 ] );
     }
     # Does the chart range include the y-axis?
-    if ( $self->get('xStart') * $self->get('xStop') <= 0 ) {
+#    if ( $self->get('xStart') * $self->get('xStop') <= 0 ) {
+    if ( $self->plotOption('xStart') * $self->plotOption('xStop') <= 0 ) {
         $path .= 
               " M " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStart' ) ] )
             . " L " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStop'  ) ] );
@@ -845,8 +863,10 @@ sub plotAxisTitles {
         fill        => $self->get('xTitleColor'),
         halign      => 'center',
         valign      => 'bottom',
-        x           => $self->getChartWidth / 2 + $self->get('marginLeft') + $self->plotOption('axisMarginLeft'), 
-        y           => $self->get('height') - $self->get('marginBottom') - $self->get('xTitleBorderOffset'),
+#        x           => $self->getChartWidth / 2 + $self->get('marginLeft') + $self->plotOption('axisMarginLeft'), 
+        x           => $self->getChartWidth / 2 + $self->plotOption('marginLeft') + $self->plotOption('axisMarginLeft'), 
+#        y           => $self->get('height') - $self->get('marginBottom') - $self->get('xTitleBorderOffset'),
+        y           => $self->get('height') - $self->plotOption('marginBottom') - $self->get('xTitleBorderOffset'),
         rotate      => 0,
     );
 
@@ -858,8 +878,10 @@ sub plotAxisTitles {
         fill        => $self->get('yTitleColor'),
         halign      => 'center',
         valign      => 'top',
-        x           => $self->get('marginLeft') + $self->get('yTitleBorderOffset'),
-        y           => $self->getChartHeight / 2 + $self->get('marginTop') + $self->plotOption('axisMarginTop'),
+#        x           => $self->get('marginLeft') + $self->get('yTitleBorderOffset'),
+        x           => $self->plotOption('marginLeft') + $self->get('yTitleBorderOffset'),
+#        y           => $self->getChartHeight / 2 + $self->get('marginTop') + $self->plotOption('axisMarginTop'),
+        y           => $self->getChartHeight / 2 + $self->plotOption('marginTop') + $self->plotOption('axisMarginTop'),
         rotate      => -90,
     );
 
@@ -906,8 +928,10 @@ You'll probably never need to call this method manually.
 sub plotRulers {
     my $self = shift;
 
-    my $minY = $self->get('yStart');
-    my $maxY = $self->get('yStop');
+#    my $minY = $self->get('yStart');
+    my $minY = $self->plotOption('yStart');
+#    my $maxY = $self->get('yStop');
+    my $maxY = $self->plotOption('yStop');
 
     if ( $self->get('yPlotRulers') ) {
         for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
@@ -925,8 +949,10 @@ sub plotRulers {
         }
     }
 
-    my $minX = $self->get('xStart');
-    my $maxX = $self->get('xStop');
+#    my $minX = $self->get('xStart');
+    my $minX = $self->plotOption('xStart');
+#    my $maxX = $self->get('xStop');
+    my $maxX = $self->plotOption('xStop');
 
     if ( $self->get('xPlotRulers') ) {
         for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
@@ -990,12 +1016,14 @@ sub drawTick {
 
     my ( $x1, $y1, $x2, $y2 );
     if ( $isX ) {
-        my $base    = ( $self->get('ticksOutside') || $self->get('yStop') < 0 || $self->get('yStart') > 0 ) ? $self->plotOption('yChartStart') : 0;
+#        my $base    = ( $self->get('ticksOutside') || $self->get('yStop') < 0 || $self->get('yStart') > 0 ) ? $self->plotOption('yChartStart') : 0;
+        my $base    = ( $self->get('ticksOutside') || $self->plotOption('yStop') < 0 || $self->plotOption('yStart') > 0 ) ? $self->plotOption('yChartStart') : 0;
         my ($x, $y) = $self->project( [ $tick ], [ $base ] );
         ($x1, $y1, $x2, $y2) = ( $x, $y + $outset, $x, $y - $inset );
     }
     else {
-        my $base    = ( $self->get('ticksOutside') || $self->get('xStop') < 0 || $self->get('xStart') > 0 ) ? $self->plotOption('xChartStart') : 0;
+#        my $base    = ( $self->get('ticksOutside') || $self->get('xStop') < 0 || $self->get('xStart') > 0 ) ? $self->plotOption('xChartStart') : 0;
+        my $base    = ( $self->get('ticksOutside') || $self->plotOption('xStop') < 0 || $self->plotOption('xStart') > 0 ) ? $self->plotOption('xChartStart') : 0;
         my ($x, $y) = $self->project( [ $base ], [ $tick ] );
         ($x1, $y1, $x2, $y2) = ( $x - $outset, $y, $x + $inset, $y );
     }    
@@ -1038,14 +1066,15 @@ You'll probably never need to call this method manually.
 
 sub plotTicks {
     my $self = shift;
-
-    my $minY = $self->get('yStart');
-    my $maxY = $self->get('yStop');
+#TODO
+#    my $minY = $self->get('yStart');
+    my $minY = $self->plotOption('yStart');
+#    my $maxY = $self->get('yStop');
+    my $maxY = $self->plotOption('yStop');
 
     # Y Ticks
     foreach my $tick ( @{ $self->getYTicks } ) {
         next if $tick < $minY || $tick > $maxY;
-
         $self->drawTick( { y => $tick } );
     }
 
@@ -1055,13 +1084,17 @@ sub plotTicks {
         $self->drawTick( { y => $tick, subtick => 1 } );
     }
 
-    my $minX = $self->get('xStart');
-    my $maxX = $self->get('xStop');
+#    my $minX = $self->get('xStart');
+    my $minX = $self->plotOption('xStart');
+#    my $maxX = $self->get('xStop');
+    my $maxX = $self->plotOption('xStop');
 
     # X main ticks
     my $wrap = $self->get('xTickWidth') * $self->plotOption( 'xPxPerUnit' );
     foreach my $tick ( @{ $self->getXTicks } ) {
         next if $tick < $minX || $tick > $maxX;
+
+print "BBBBB$tick\n";
 
         $self->drawTick( { x => $tick, wrap => $wrap } );
     }
