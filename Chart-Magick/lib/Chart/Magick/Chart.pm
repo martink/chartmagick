@@ -227,6 +227,12 @@ sub getSymbolDef {
     };
 }
 
+sub getDefaultAxisClass {
+    my $self = shift;
+
+    croak "Char class " . ref( $self ) . " does not override getDefaultAxisClass.";
+}
+
 #-------------------------------------------------------------------
 
 =head2 getWidth ( )
