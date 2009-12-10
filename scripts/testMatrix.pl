@@ -1,14 +1,10 @@
 use strict;
 
-use Chart::Magick::Axis::None;
-use Chart::Magick::Axis::Lin;
-use Chart::Magick::Axis::LinLog;
 use Chart::Magick::Chart::Line;
 use Chart::Magick::Chart::Bar;
 use Chart::Magick::Chart::Pie;
 use Chart::Magick::Chart::Gauge;
 use Chart::Magick;
-use Image::Magick;
 use Data::Dumper;
 use Time::HiRes qw( gettimeofday tv_interval );
 
@@ -50,6 +46,13 @@ my @ds5 = (
 my $time = [ gettimeofday ];
 
 
+my $matrix = Chart::Magick->matrix( 800, 750, [
+    [ 'Lin' ],
+    [ 'Lin', 'LinLog' ],
+    [ 'None', 'None' ],
+] );
+
+
 # Set up chart objects
 my $pieChart = Chart::Magick::Chart::Pie->new();
 $pieChart->dataset->addDataset( @ds1 );
@@ -73,7 +76,7 @@ $barChart->addDataset( @ds3, '2009' );
 $barChart->addDataset( @ds4, '2010' );
 $barChart->set(
     barWidth    => 10,
-    barSpacing  => 3,
+#    barSpacing  => 3,
     drawMode    => 'stacked',
 );
 
@@ -87,15 +90,12 @@ $lineChart->dataset->addDataset( @ds3 );
 my $lineChart1 = Chart::Magick::Chart::Line->new();
 $lineChart1->dataset->addDataset( @ds5 );
 
-my $canvas = Chart::Magick->new( 800, 750 );
-$canvas->matrix( [ 'Lin' ], [ 'Lin', 'LinLog' ], [ 'None', 'None' ] );
-
 my $config = {
     margin          => 15,
 };
 
 # First chart
-my $axis = $canvas->getAxis( 0 );
+my $axis = $matrix->getAxis( 0, 0 );
 $axis->addChart( $lineChart1 );
 $axis->set( $config );
 $axis->set(
@@ -110,49 +110,48 @@ $axis->set(
 );
 
 
-# Second chart
-$axis = $canvas->getAxis( 2 );
-$axis->addChart( $logChart );
-$axis->set( $config );
-$axis->set('ySubtickCount', 2);
-$axis->set('title', 'Logarithmic plot');
-$axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4ehuewh euqwhdiwhd uheuhu', 5 => 'overall' }, 1 );
 
 
 # Third chart
-$axis = $canvas->getAxis( 1 );
+$axis = $matrix->getAxis( 1, 0 );
 $axis->addChart( $barChart );
-$axis->addChart( $lineChart );
+#$axis->addChart( $lineChart );
 $axis->set( $config );
-$axis->set('xTickOffset', 1);
-$axis->set('xSubtickCount', 0);
+#$axis->set('xTickOffset', 1);
+#$axis->set('xSubtickCount', 0);
 $axis->set('xTitle', 'klazam!' );
 $axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4', 5 => 'overall' }, 1 );
 $axis->legend->set( position => 'top center' );
 
+# Second chart
+$matrix->setWeight( 1, 1, 2 );
+$axis = $matrix->getAxis( 1, 1 );
+$axis->addChart( $logChart );
+$axis->set( $config );
+#$axis->set('ySubtickCount', 2);
+$axis->set('title', 'Logarithmic plot');
+$axis->addLabels( { 1 => 'q1', 2 => 'q2', 3 => 'q3', 4 => 'q4ehuewh euqwhdiwhd uheuhu', 5 => 'overall' }, 1 );
 
 # Fourth chart
-$axis = $canvas->getAxis( 3 );
+$axis = $matrix->getAxis( 2, 0 );
 $axis->addChart( $pieChart );
 $axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
 $axis->set(
     title       =>  'Pie!',
     );
 
-$axis = $canvas->getAxis( 4 );
+$axis = $matrix->getAxis( 2, 1 );
 $axis->addChart( $gauge );
 $axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
 $axis->set('title', 'Gauge');
 
 
-#$canvas->addAxis( $axis, 100, 100 );
-$canvas->draw;
+$matrix->draw;
 
 # More timekeeping
 my $runtime1 = tv_interval( $time );
 
-$canvas->im->Write('canvas.png');
-#$canvas->im->Write('canvas.svg');
+$matrix->im->Write('matrix.png');
 
 # More timekeeping
 my $runtime = tv_interval( $time );
