@@ -10,6 +10,11 @@ use Data::Dumper;
 use base qw{ Chart::Magick::Chart };
 
 #--------------------------------------------------------------------
+sub getDefaultAxisClass {
+    return 'Chart::Magick::Axis::None';
+}
+
+#--------------------------------------------------------------------
 
 =head2 getSymbolDef ( )
 

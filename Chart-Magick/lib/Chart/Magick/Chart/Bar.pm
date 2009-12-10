@@ -160,6 +160,11 @@ sub getDataRange {
 }
 
 #--------------------------------------------------------------------
+sub getDefaultAxisClass {
+    return 'Chart::Magick::Axis::Lin';
+}
+
+#--------------------------------------------------------------------
 
 =head2 getSymbolDef ( )
 

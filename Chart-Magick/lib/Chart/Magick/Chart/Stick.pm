@@ -1,4 +1,4 @@
-package Chart::Magick::Chart::Line;
+package Chart::Magick::Chart::Stick;
 
 use strict;
 use List::Util qw{ min max };
@@ -8,11 +8,11 @@ use base qw{ Chart::Magick::Chart };
 
 =head1 NAME
 
-Chart::Magick::Chart::Line
+Chart::Magick::Chart::Stick
 
 =head1 DESCRIPTION
 
-A line graph Chart plugin for Chart::Magick.
+A stick Chart plugin for Chart::Magick.
 
 =head1 METHODS
 
@@ -30,10 +30,6 @@ The following properties can be set:
 
 =over 4
 
-=item plotMarkers
-
-Determines whether or not markers are draw at data points. Defaults to 1.
-
 =item markerSize
 
 Default marker size (in pixels) to be used when none was set with the marker itself. Defaults to 5.
@@ -48,7 +44,7 @@ sub definition {
     my $definition = $class->SUPER::definition(@_);
 
     my $properties = {
-        plotMarkers     => 1,
+        plotMarkers => 1,
     };
 
     return { %$definition, %$properties };
@@ -72,19 +68,10 @@ sub getSymbolDef {
     my $ds      = shift;
 
     return {
-        line    => $self->colors->[ $ds ],
         marker  => $self->markers->[ $ds ],
+        line    => $self->colors->[ $ds ],
     };
 }
-
-sub inRange {
-    my $self    = shift;
-    my $coord   = shift;
-
-    return ( $coord->[0] >= $self->axis->get('xStart') && $coord->[0] <= $self->axis->get('xStop') );
-}
-
-
 
 #--------------------------------------------------------------------
 
@@ -100,44 +87,33 @@ sub plot {
     my $axis    = $self->axis;
 
     my $datasetCount =  $self->dataset->datasetCount;
-    my $previousCoord;
 
-    # Cache palette and instaciate markers
-    my @colors  = @{ $self->colors  };
-    my @markers = @{ $self->markers };
-
-    my ( @paths, @coords );
+    my $drawMarkers = $self->get('plotMarkers');
 
     # Draw the graphs
-    foreach my $x ( grep { $self->inRange( $_ ) }  @{ $self->dataset->getCoords } ) {
-        for my $ds ( 0 .. $datasetCount - 1) {
+    foreach my $x ( @{ $self->dataset->getCoords } ) {
+        foreach my $ds ( 0 .. $datasetCount - 1 ) {
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
             next unless defined $y;
 
-            my @to = ( $x, $y );
+            my ($x1, $y1) = $axis->project( $x, [ 0 ] );
+            my ($x2, $y2) = $axis->project( $x, $y    );
 
-            push @{ $coords[ $ds ] }, $axis->toPx( @to );
-        }
-    }
+            #$x1 -= 0.5;
+            #$x2 -= 0.5;
 
+            $canvas->Draw(
+                primitive   => 'Line',
+                stroke      => $self->colors->[ $ds ]->getStrokeColor,
+                strokewidth => 1,
+                points      => "$x1,$y1 $x2,$y2",
+            #    antialias   => 0,
+            );
 
-    foreach my $ds (0..$datasetCount - 1) {
-        my $color = $colors[$ds];
+            next unless $drawMarkers && $self->markers->[ $ds ];
 
-        $canvas->Draw(
-            primitive	=> 'polyline',
-            stroke		=> $color->getStrokeColor,
-            points		=> join( ' ', @{ $coords[$ds] } ),
-            fill		=> 'none',
-        );
-       
-        next unless $self->get('plotMarkers') && $markers[ $ds ];
-        
-        my $marker = $markers[ $ds ];
-        
-        foreach ( @{ $coords[$ds] } ) {
-            $marker->draw( split( /,/, $_ ), $canvas );
+            $self->markers->[$ds]->draw( $x2, $y2, $canvas, { fill => 'white' } );
         }
     }
 }

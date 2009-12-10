@@ -1197,6 +1197,7 @@ sub toPxX {
 
     my $x = $self->plotOption( 'xPxOffset' )
         + $self->transformX( $coord ) * $self->getPxPerXUnit;
+
     return int $x;
 }
 

@@ -460,7 +460,7 @@ sub draw {
 
     $self->plotLast;
 
-    return;
+    return $self->im;
 }
 
 #---------------------------------------------

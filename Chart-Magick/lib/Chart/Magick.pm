@@ -1,70 +1,74 @@
 package Chart::Magick;
 
 use strict;
-use Image::Magick;
-#use Chart::Magick::Axis::LinLog;
+use warnings;
+
+use Carp;
+use Chart::Magick::Matrix;
 
 our $VERSION = '0.1.0';
 
+#--------------------------------------------------------------------
+sub loadAndInstanciate {
+    my $class   = shift;
+    my @params  = @_;
 
-sub addAxis {
-    my $self    = shift;
-    my $axis    = shift;
-    my $x       = shift;
-    my $y       = shift;
+    my $result = eval "require $class; 1";
 
-    push @{ $self->{axes} }, { x => $x, y => $y, axis => $axis };
-}
-
-
-sub draw {
-    my $self = shift;
-
-    foreach my $axis ( @{ $self->{axes} } ) {
-        $axis->{axis}->draw;
-
-        $self->im->Composite(
-            x       => $axis->{x},
-            y       => $axis->{y},
-            image   => $axis->{axis}->im,
-        );
+    unless ( $result ) {
+        carp "Couldn't load class $class because $@";
+        return;
     }
+
+    my $instance = $class->new( @params );
+
+    return $instance;
 }
 
-sub getAxis {
-    my $self    = shift;
-    my $index   = shift;
+#--------------------------------------------------------------------
+sub AUTOLOAD {
+    my $class = shift;
+	my %params = @_;
+    
+	our $AUTOLOAD;
+	my $name = ucfirst( ( split( /::/, $AUTOLOAD ) )[-1] );
 
-    die "invalid axis" if $index >= scalar( @{ $self->{ axes } } );
+    my $chartClass = "Chart::Magick::Chart::$name";
+    
+    my $chart   = loadAndInstanciate( "Chart::Magick::Chart::$name" );
+    croak "Cannot load class $chartClass" unless $chart;
 
-    return $self->{ axes }->[ $index ]->{ axis };
+    my $axis =
+          ref     $params{ axisType }   ? $params{ axisType }
+        : defined $params{ axisType }   ? loadAndInstanciate( "Chart::Magick::Axis::$params{ axisType }" )
+        :                                 loadAndInstanciate( $chart->getDefaultAxisClass ) 
+        ;
+    croak "Cannot load axis class." unless $axis;
+
+    foreach my $data ( @{ $params{data} } ) {
+        $chart->addDataset( @{ $data } );
+    }
+
+    $axis->addChart( $chart );
+    
+    $chart->set(        $params{ chart  } || {} );
+    $axis->set(         $params{ axis   } || {} );
+    $axis->legend->set( $params{ legend } || {} ); 
+
+    return $axis->draw;
 }
 
-sub im {
-    my $self = shift;
-
-    return $self->{ im };
-}
-
+#--------------------------------------------------------------------
 sub matrix {
     my $self    = shift;
-    my @layout  = @_;
+    my $width   = shift;
+    my $height  = shift;
+    my $layout  = shift;
 
-#    my $xc      = shift;
-#    my $yc      = shift;
-#    my $types   = shift;
-    my $m   = 20;
+    my $matrix  = Chart::Magick::Matrix->new( $width, $height, 20 );
 
-    my $yCount = scalar @layout;
-
-    my $axisHeight  = ( $self->{ options }->{ height } - $m - $m - ($yCount - 1) * $m ) / $yCount;
-    my $y = 0;
-    foreach my $row (@layout) {
-        my $xCount = scalar @$row;
-
-        my $axisWidth   = ( $self->{ options }->{ width } - ( ( 1 + $xCount ) * $m ) ) / $xCount;
-
-        my $x = 0;
+    foreach my $row (@$layout) {
+        my @row;
 
         foreach my $type ( @$row ) {
             my $class = "Chart::Magick::Axis::$type";
@@ -72,37 +76,13 @@ sub matrix {
             my $ok = eval "require $class; 1";
             die "Cannot instanciate axis class $class because: $@" if !$ok || $@;
 
-            $self->addAxis(
-                $class->new( { width => $axisWidth, height => $axisHeight } ),
-                $x * ( $axisWidth +  $m ) + $m,
-                $y * ( $axisHeight + $m ) + $m,
-            );
-            $x++;
+            push @row, [ $class->new(), 1 ]
         }
 
-        $y++;
+        push @{ $matrix->rows }, \@row;
     }
 
-}
-
-    
-
-sub new {
-    my $class   = shift;
-    my $w       = shift;
-    my $h       = shift;
-
-    my $magick  = Image::Magick->new(
-        size        => $w.'x'.$h,
-    );
-    $magick->Read('xc:grey40');
-
-    my $options = {
-        width   => $w,
-        height  => $h,
-    };
-
-    bless { im => $magick, axes => [ ], options => $options }, $class;
+    return $matrix;
 }
 
 1;

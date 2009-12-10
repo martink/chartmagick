@@ -78,11 +78,13 @@ sub draw {
     my $x       = shift;
     my $y       = shift;
     my $im      = shift || $self->axis->im;
+    my $override= shift || {};
 
     my $direct = $direct{ id $self };
     if ($direct) {
         $im->Draw(
             %$direct,
+            %$override,
             x   => $x,
             y   => $y,
         );

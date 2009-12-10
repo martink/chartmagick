@@ -46,9 +46,7 @@ sub draw {
         yExpandRange    => 0,
     );
     
-    $self->SUPER::draw( @_ );
-
-    return;
+    return $self->SUPER::draw( @_ );
 }
 
 #--------------------------------------------------------------------
