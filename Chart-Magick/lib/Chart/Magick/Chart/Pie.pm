@@ -31,34 +31,6 @@ sub getSymbolDef {
     };
 }
 
-
-#### TODO: getXOffset en Y offset tov. axis anchor bepalen.
-sub getXOffset {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    return $axis->getChartWidth / 2 + $axis->get('marginLeft');
-}
-
-sub getYOffset {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    return $axis->getChartHeight / 2 + $axis->get('marginTop');
-}
-
-sub project {
-    my $self    = shift;
-    my $x       = shift;
-    my $y       = shift;
-
-    return $self->axis->project(
-        [ $x + $self->getWidth  / 2 ],
-        [ $y + $self->getHeight / 2 ],
-    );
-
-}
-
 sub definition {
     my $self    = shift;
     my %options = %{ $self->SUPER::definition };
@@ -281,12 +253,12 @@ sub calcCoordinates {
     );
 
     my ( $startX, $startY ) = $self->project(
-        $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY )
+        map { [$_] } $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY ) 
     );
     my ( $endX, $endY )     = $self->project(
-        $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY )
+        map { [$_] } $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY )
     );
-    ( $tipX, $tipY )        = $self->project( $tipX, $tipY );
+    ( $tipX, $tipY )        = $self->project( [ $tipX ], [ $tipY ] );
 
     my %coords = (
         %{ $slice },
@@ -483,12 +455,12 @@ sub drawLabel {
     my $stopRadius  = $startRadius + $self->get('stickLength');
 
     my ( $startPointX, $startPointY ) = $self->project( 
-         $startRadius * cos $angle, 
-        -$startRadius * $tiltScale * sin $angle 
+        [  $startRadius * cos $angle                ], 
+        [ -$startRadius * $tiltScale * sin $angle   ], 
     );
     my ( $endPointX, $endPointY     ) = $self->project(
-         $stopRadius  * cos $angle,
-        -$stopRadius  * $tiltScale * sin $angle
+        [  $stopRadius  * cos $angle                ],
+        [ -$stopRadius  * $tiltScale * sin $angle   ],
     );
 
     if ($self->get('tiltAngle')) {
