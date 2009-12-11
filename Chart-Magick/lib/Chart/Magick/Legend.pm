@@ -325,7 +325,7 @@ sub draw {
     foreach my $item ( @{ $self->items } ) {
         $self->drawSymbol( $x1, $y1, $item->{ symbol } );
 
-        $self->axis->text( 
+        $self->im->text( 
             text        => $item->{ label },
             x           => $x1 + $self->get('symbolWidth') + $self->get('labelSpacing'),
             y           => $y1,

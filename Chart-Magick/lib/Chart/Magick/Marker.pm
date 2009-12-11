@@ -7,6 +7,7 @@ use Class::InsideOut qw{ :std };
 use Carp;
 use List::Util qw{ max };
 use Scalar::Util qw{ blessed };
+use Chart::Magick::ImageMagick;
 
 readonly axis       => my %axis;
 readonly im         => my %im;
@@ -116,7 +117,7 @@ sub createMarkerFromFile {
     my $id          = id $self;
 
     # open image
-    my $im      = Image::Magick->new;
+    my $im      = Chart::Magick::ImageMagick->new;
     my $error   = $im->Read( $filename );
     croak "getMarkerFromFile could not open file $filename because $error" if $error;
 

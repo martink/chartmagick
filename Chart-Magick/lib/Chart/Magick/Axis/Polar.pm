@@ -192,7 +192,7 @@ sub plotTicks {
 
         my ($x, $y) = $self->project( [ $tick ], [ $tickTo + $self->get('xLabelTickOffset') / $self->plotOption('yPxPerUnit')   ] );
 
-        $self->text(
+        $self->im->text(
             text        => $self->getTickLabel( $tick, 0 ),
             halign      => $halign, 
             valign      => $valign,
@@ -208,7 +208,7 @@ sub plotTicks {
     foreach my $tick ( @{ $self->getYTicks } ) {
         my ($x, $y) = $self->project( [ 0 ], [ $tick ] );
 
-        $self->text(
+        $self->im->text(
             text        => $self->getTickLabel( $tick, 1 ),
             halign      => 'center', 
             valign      => 'top',

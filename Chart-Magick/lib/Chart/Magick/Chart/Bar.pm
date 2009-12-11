@@ -293,7 +293,7 @@ sub preprocessData {
     $self->SUPER::preprocessData;
 
 #   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
-   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
+#   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
 }
 
 sub layoutHints {

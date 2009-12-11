@@ -832,7 +832,7 @@ sub plotAxisTitles {
     my $self = shift;
 
     # X label
-    $self->text(
+    $self->im->text(
         text        => $self->get('xTitle'),
         font        => $self->get('xTitleFont'),
         pointsize   => $self->get('xTitleFontSize'),
@@ -845,7 +845,7 @@ sub plotAxisTitles {
     );
 
     # Y label
-    $self->text(
+    $self->im->text(
         text        => $self->get('yTitle'),
         font        => $self->get('yTitleFont'),
         pointsize   => $self->get('yTitleFontSize'),
@@ -1003,7 +1003,7 @@ sub drawTick {
 
     return if $args->{ subtick };
 
-    $self->text(
+    $self->im->text(
         text        => $self->getTickLabel( $tick, $isX ? 0 : 1 ),
         halign      => $args->{ halign } || $isX ? 'center' : 'right',
         valign      => $args->{ valign } || $isX ? 'top'    : 'center',

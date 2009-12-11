@@ -539,7 +539,7 @@ sub drawLabel {
     my $maxWidth = $anchorX;
     $maxWidth = $self->axis->get('width') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
 
-    $self->axis->text(
+    $self->im->text(
         text            => $text,
         halign          => $horizontalAlign,
         align           => ucfirst $horizontalAlign,
