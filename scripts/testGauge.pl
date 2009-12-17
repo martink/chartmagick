@@ -48,7 +48,7 @@ $axis->set( {
 } );
 
 # Setup chart
-my $chart   = Chart::Magick::Chart::Gauge->new( { clockwise => 1, scaleRadius => 50} );
+my $chart   = Chart::Magick::Chart::Gauge->new( { clockwise => 1, scaleRadius => 50, needleType => 'compass' } );
 $chart->setData( $ds );
 
 $axis->addChart( $chart );

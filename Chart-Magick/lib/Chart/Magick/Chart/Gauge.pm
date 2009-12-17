@@ -19,6 +19,11 @@ sub getNeedlePath {
             shape   => 'l %f,%f',
             points  => [ 1, 0 ],
         },
+        compass => {
+            length  => 25,
+            shape   =>   'm%f%f  l%f,%f  l%f,%f  l%f,%f Z',
+            points  => [ 25, 0,  -25, 1,  -1,-1,   1,-1 ],
+        },
         fancy => {
             length  => 100,
             shape   => 'm%f,%f l%f,%f l%f,%f a%f,%f 0 1,0 %f,%f l%f,%f Z',
@@ -64,8 +69,10 @@ sub definition {
         subtickInset        => 2,
         radius              => 100,
         rimMargin           => 10,
+        rimWidth            => 10,
         minTickWidth        => 40,
         ticks               => [],
+        needleType          => 'fancy',
     };
 
     return $definition;
@@ -132,11 +139,16 @@ sub drawNeedles {
 
     my $palette = $self->getPalette;
 
-    my $needlePath = $self->getNeedlePath( 'fancy', $self->get('scaleRadius') );
+    my $needlePath = $self->getNeedlePath( $self->get('needleType'), $self->get('scaleRadius') );
     my ($x, $y) = $self->project( 0,0 );
 
     foreach my $coord ( @{ $self->dataset->getCoords( 0 ) } ) {
         my $color = $palette->getNextColor;
+
+        # Calc (co)sine from angle for the affine rotation.
+        my $angle   = deg2rad( $self->transform( $coord->[0] ) * ( $self->get('clockwise') ? 1 : -1 ) );
+        my $sin     = sin $angle;
+        my $cos     = cos $angle;
 
         $canvas->Draw(
             primitive   => 'Path',
@@ -144,8 +156,8 @@ sub drawNeedles {
             fill        => $color->getFillColor,
             stroke      => $color->getStrokeColor,
             strokewidth => 1,
-            rotate      => $self->transform( $coord->[0] ) * ( $self->get('clockwise') ? 1 : -1 ),
-            affine      => [ 1, 0, 0, 1, $x, $y ], 
+            gravity     => 'Center',
+            affine      => [ $cos, $sin, -$sin, $cos, $x, $y ], 
         );
     }
 }
@@ -160,7 +172,7 @@ sub drawRim {
     $canvas->Draw(
         primitive   => 'Circle',
         points      => $self->toPx( 0, 0 ) . ' ' . $self->toPx( 0, $radius ),
-        strokewidth => 10,
+        strokewidth => $self->get('rimWidth'),
         stroke      => $self->get('rimColor'),
         fill        => 'none',
     );
@@ -291,7 +303,7 @@ sub autoRange {
     my $self = shift;
 
     # figure out available radii
-    my $radius      = min( $self->getWidth, $self->getHeight ) / 2;
+    my $radius      = ( min( $self->getWidth, $self->getHeight ) - $self->get('rimWidth') ) / 2;
     my $scaleRadius = $radius - $self->get('tickOutset') - $self->get('rimMargin');
 
     # autoset number of ticks
