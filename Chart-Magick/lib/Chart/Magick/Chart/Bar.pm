@@ -56,7 +56,7 @@ sub definition {
     my %overrides = (
         barWidth    => 20,
         barSpacing  => 0.05,
-        groupSpacing=> sub { $_[0]->get('barSpacing') * 3 },
+        groupSpacing=> sub { abs $_[0]->get('barSpacing') * 3 },
         drawMode    => 'sideBySide',
     );  
 
