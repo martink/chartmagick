@@ -577,7 +577,13 @@ sub preprocessData {
     $self->set( 'marginTop', $marginTop );
     $self->plotOption( 'titleOffset', $titleOffset);
     
-    my $legendMargins = $self->legend->getRequiredMargins;
+    my @legendMargins = $self->legend->getRequiredMargins;
+    $self->set( 
+        marginLeft      => $self->get('marginLeft'  ) + $legendMargins[0],
+        marginRight     => $self->get('marginRight' ) + $legendMargins[1],
+        marginTop       => $self->get('marginTop'   ) + $legendMargins[2],
+        marginBottom    => $self->get('marginBottom') + $legendMargins[3],
+    );
 
     # global
     my $axisWidth  = $self->get('width') - $self->get('marginLeft') - $self->get('marginRight');
