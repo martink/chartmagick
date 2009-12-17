@@ -52,10 +52,17 @@ sub AUTOLOAD {
     $axis->addChart( $chart );
     $axis->set( width => $params{ width }, height => $params{ height } );
 
-
+    # Apply settings to chart, axis and legend.
     $chart->set(        $params{ chart  } || {} );
     $axis->set(         $params{ axis   } || {} );
     $axis->legend->set( $params{ legend } || {} ); 
+
+    # Add labels to axis.
+    my @labels  = @{ $params{labels} || [] };
+    my $index   = 0;
+    foreach my $set ( @labels ) {
+        $axis->addLabels( $set, $index++ );
+    }
 
     return $axis->draw;
 }
