@@ -8,7 +8,7 @@ use Chart::Magick::Data;
 use Image::Magick;
 #use IMSVG;
 
-use Data::Dumper;
+use Data::Dump qw( dd );
 
 
 use constant pi => 3.14159265358979;
@@ -56,6 +56,10 @@ $axis->addChart( $chart );
 # Set labels for the axis ticks
 $axis->addLabels( { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr da\'s nou ook niet echt een hele lange naam toch?', 5 => 'eeennnn hele lange maand naam zoals bijvoorbeld zoiets als mei of misschien ook nog wel iets anders zeg maar' } );
 $axis->draw;
+
+dd $axis->get;
+dd $axis->plotOption;
+
 
 # Write graph
 

@@ -176,6 +176,13 @@ sub drawRim {
         stroke      => $self->get('rimColor'),
         fill        => 'none',
     );
+    $canvas->Draw(
+        primitive   => 'Circle',
+        points      => $self->toPx( 0, 0 ) . ' ' . $self->toPx( 0, $radius ),
+        strokewidth => 1,
+        stroke      => 'black',
+        fill        => 'none',
+    );
 
     return;
 
@@ -303,7 +310,7 @@ sub autoRange {
     my $self = shift;
 
     # figure out available radii
-    my $radius      = ( min( $self->getWidth, $self->getHeight ) - $self->get('rimWidth') ) / 2;
+    my $radius      = int( min( $self->getWidth, $self->getHeight ) / 2 - $self->get('rimWidth') / 2 - 2 );
     my $scaleRadius = $radius - $self->get('tickOutset') - $self->get('rimMargin');
 
     # autoset number of ticks
