@@ -103,9 +103,10 @@ sub plot {
             #$x1 -= 0.5;
             #$x2 -= 0.5;
 
+            my $stroke = $self->colors->[ $ds ]->getStrokeColor;
             $canvas->Draw(
                 primitive   => 'Line',
-                stroke      => $self->colors->[ $ds ]->getStrokeColor,
+                stroke      => $stroke,
                 strokewidth => 1,
                 points      => "$x1,$y1 $x2,$y2",
             #    antialias   => 0,
@@ -113,7 +114,7 @@ sub plot {
 
             next unless $drawMarkers && $self->markers->[ $ds ];
 
-            $self->markers->[$ds]->draw( $x2, $y2, $canvas, { fill => 'white' } );
+            $self->markers->[$ds]->draw( $x2, $y2, $canvas, { stroke => $stroke, fill => 'white' } );
         }
     }
 }

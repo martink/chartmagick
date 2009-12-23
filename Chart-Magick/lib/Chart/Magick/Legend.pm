@@ -396,7 +396,7 @@ sub drawSymbol {
     }
 
     if ( exists $symbol->{ marker } && $symbol->{ marker } ) {
-        $symbol->{ marker }->draw( ($x2 + $x1) / 2, $y, $self->im  );
+        $symbol->{ marker }->draw( ($x2 + $x1) / 2, $y, $self->im );
     }
     
 }

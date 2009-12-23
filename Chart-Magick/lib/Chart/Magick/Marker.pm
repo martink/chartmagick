@@ -14,6 +14,7 @@ readonly direct     => my %direct;
 readonly size       => my %size;
 readonly anchorX    => my %anchorX;
 readonly anchorY    => my %anchorY;
+readonly color      => my %color;
 
 #---------------------------------------------
 our %DEFAULT_MARKERS = (
@@ -80,6 +81,9 @@ sub draw {
 
     my $direct = $direct{ id $self };
     if ($direct) {
+        if ( $self->color ) {
+            $direct->{ stroke } = $self->color->getStrokeColor;
+        }
         $im->Draw(
             %$direct,
             %$override,
@@ -141,7 +145,7 @@ sub createMarkerFromFile {
     return $im;
 }
 
-#---------------------------------------------
+#-------------------------------------------
 sub createMarkerFromDefault {
     my $self        = shift;
     my $shape       = shift || 'square';
@@ -165,6 +169,15 @@ sub createMarkerFromDefault {
 
     return;
 }    
+
+#-------------------------------------------
+sub setColor {
+    my $self    = shift;
+    my $color   = shift;
+    $color{ id $self } = $color;
+
+    return $self;
+}
 
 1;
 

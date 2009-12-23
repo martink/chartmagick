@@ -67,7 +67,7 @@ sub getSymbolDef {
     my $ds      = shift;
 
     return {
-        marker  => $self->markers->[ $ds ],
+        marker  => $self->markers->[ $ds ]->setColor( $self->colors->[ $ds ] ),
     };
 }
 
