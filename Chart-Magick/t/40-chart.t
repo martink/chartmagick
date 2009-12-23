@@ -7,7 +7,7 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis;
 
-use Test::More tests => 42;
+use Test::More tests => 43;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart', 'Chart::Magick::Chart can be used' );
@@ -50,7 +50,12 @@ BEGIN {
 {
     my $chart = Chart::Magick::Chart->new;
 
-    cmp_deeply( $chart->definition, {}, 'definition defines no properties for base class' );
+    cmp_deeply( 
+        $chart->definition, 
+        { 
+            markerSize => re('^\d+$'),              # default marker size must be a non-negative integer
+        }, 
+        'definition defines correct properties' );
 }
 
 #####################################################################
@@ -105,33 +110,30 @@ BEGIN {
     eval { $chart->setMarker };
     ok( $@, 'setMarker dies when no marker name is passed' );
     
-    eval { $chart->setMarker( 0, 'marker1' ) };
+    eval { $chart->setMarker( 0, 'square' ) };
     ok( !$@, 'setMarker doesn\'t die when a marker name is passed' );
     
-    my $expect = [
-        { name => 'marker1', size => undef },
-    ];
+    my $expect = [ isa('Chart::Magick::Marker') ];
     cmp_deeply(
         $chart->markers,
         $expect,
-        'setMarker adds marker def with correct data on correct spot',
+        'setMarker adds marker object to marker array',
     );
+    my $marker0 = refaddr( $chart->markers->[0] );
+    
+    $chart->setMarker( 3, 'triangle', 10 );
+    $expect->[3] = isa('Chart::Magick::Marker');
+    cmp_deeply(
+        $chart->markers,
+        $expect,
+        'setMarker adds additional marker objects to the  given location',
+    );
+    cmp_ok( refaddr( $chart->markers->[0] ), '==', $marker0, 'setMarker does not interfere with marker objects at other locations' );
 
-    $chart->setMarker( 3, 'marker2', 10 );
-    $expect->[3] = { name => 'marker2', size => 10 };
-    cmp_deeply(
-        $chart->markers,
-        $expect,
-        'setMarker adds additianl defs to given location without interfering with other defs',
-    );
+    $chart->setMarker( 0, 'circle', 12 );
+    cmp_ok( refaddr( $chart->markers->[0] ), '!=', $marker0, 'setMarker overwrites marker defs at given location if present' );
 
-    $chart->setMarker( 0, 'marker3', 12 );
-    $expect->[0] = { name => 'marker3', size => 12 };
-    cmp_deeply(
-        $chart->markers,
-        $expect,
-        'setMarker overwrites marker defs at given location if present',
-    );
+
 }
 
 #####################################################################
@@ -175,11 +177,11 @@ BEGIN {
 
     my $coords2 = [ 5, 6, 7 ];
     my $values2 = [ 1, 2, 3 ];
-    $chart->addDataset( $coords, $values, 'marker1', 43 );
+    $chart->addDataset( $coords, $values, 'label', 'square', 43 );
     cmp_ok( $data->datasetCount, '==', 2, 'addDataset adds a new dataset to the Data object' );
     cmp_deeply(
         $chart->markers,
-        [ undef, { name => 'marker1', size => 43 } ],
+        [ undef, isa('Chart::Magick::Marker') ],
         'addDataset adds the correct marker def at the correct location',
     );
 }

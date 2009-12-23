@@ -21,26 +21,26 @@ The following methods are available from this class:
 
 #--------------------------------------------------------------------
 
-=head2 adjustXRangeToOrigin ( )
+=head2 adjustXRange ( )
 
-See Chart::Magick::Axis::Lin::adjustXRangeToOrigin.
+See Chart::Magick::Axis::Lin::adjustXRange.
 
 =cut
 
-sub adjustXRangeToOrigin {
+sub adjustXRange {
     my $self = shift;
     return @_;
 }
 
 #--------------------------------------------------------------------
 
-=head2 adjustYRangeToOrigin ( )
+=head2 adjustYRange ( )
 
-See Chart::Magick::Axis::Lin::adjustYRangeToOrigin.
+See Chart::Magick::Axis::Lin::adjustYRange.
 
 =cut
 
-sub adjustYRangeToOrigin {
+sub adjustYRange {
     my $self = shift;
     return @_;
 }

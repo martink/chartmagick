@@ -19,16 +19,16 @@ The following methods are available from this class:
 
 #--------------------------------------------------------------------
 
-=head2 adjustYRangeToOrigin ( )
+=head2 adjustYRange ( )
 
-See Chart::Magick::Axis::Lin::adjustYRangeToOrigin.
+See Chart::Magick::Axis::Lin::adjustYRange.
 
 =cut
 
-sub adjustYRangeToOrigin {
+sub adjustYRange {
     my $self = shift;
 
-    return $self->Chart::Magick::Axis::Lin::adjustYRangeToOrigin( @_ );
+    return $self->Chart::Magick::Axis::Lin::adjustYRange( @_ );
 }
 
 #--------------------------------------------------------------------

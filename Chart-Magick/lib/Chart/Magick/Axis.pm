@@ -50,11 +50,15 @@ sub _buildObject {
 
     my $id = id $self;
 
-    $charts{ $id        } = [];
+    # We need to explicitly read an image for QueryFontMetrics and friends to work...
+    # This temp image is deleted and replaced with the right canvas size in draw().
+    my $image = Chart::Magick::ImageMagick->new( size=>'1x1' );
+    $image->Read('xc:white');
+
+    $magick{ $id        } = $image;
+    $charts{ $id        } = [ ];
     $axisLabels{ $id    } = [ ];
     $legend{ $id        } = Chart::Magick::Legend->new( $self );
-    $magick{ $id        } = Chart::Magick::ImageMagick->new;
-
 
     $self->{ _plotOptions } = {};
     return $self;
@@ -150,7 +154,9 @@ sub getChartWidth {
 sub getLabelDimensions {
     my $self        = shift;
     my $label       = shift;
-    my $wrapWidth   = shift;
+    my $wrapWidth   = shift || 0;
+
+    return [ 0, 0 ] unless $label;
 
     my %properties = (
         text        => $label,
@@ -400,7 +406,10 @@ sub draw {
     my $self    = shift;
     my $charts  = $charts{ id $self };
 
-    # Prepare canvas
+    # Delete tmp 1x1 pixel image ( see _buildObj )
+    @{ $self->im } = ();
+
+    # Prepare canvas of correct dimensions.
     $self->im->Set( size => $self->get('width') . 'x' . $self->get('height') );
     $self->im->Read( $self->get('background') );
 

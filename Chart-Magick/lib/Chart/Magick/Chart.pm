@@ -330,14 +330,14 @@ sub preprocessData {
 
         push @{ $colors{ id $self } }, $color;
 
-        if ( exists $self->markers->[ $ds ] ) {
-            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
-            $size ||= $markerSize;
-
-            $self->markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $self->axis, {
-                strokeColor => $color->getStrokeColor,
-            } );
-        }
+#        if ( exists $self->markers->[ $ds ] ) {
+#            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
+#            $size ||= $markerSize;
+#
+#            $self->markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, {
+#                strokeColor => $color->getStrokeColor,
+#            } );
+#        }
     }
 
     return;
@@ -445,14 +445,15 @@ sub setMarker {
     my $self    = shift;
     my $index   = shift;
     my $marker  = shift || croak "Need a marker";
-    my $size    = shift;
+    my $size    = shift || $self->get('markerSize');
 
-    my $def = { 
-        name    => $marker,
-        size    => $size 
-    };
-
-    $markers{ id $self }->[ $index ] = $def;
+#    my $def = { 
+#        name    => $marker,
+#        size    => $size 
+#    };
+#
+#    $markers{ id $self }->[ $index ] = $def;
+    $markers{ id $self }->[ $index ] = Chart::Magick::Marker->new( $marker, $size );
 
     return;
 }

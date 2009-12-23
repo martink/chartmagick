@@ -9,7 +9,6 @@ use List::Util qw{ max };
 use Scalar::Util qw{ blessed };
 use Chart::Magick::ImageMagick;
 
-readonly axis       => my %axis;
 readonly im         => my %im;
 readonly direct     => my %direct;
 readonly size       => my %size;
@@ -48,7 +47,6 @@ sub new {
     my $class   = shift;
     my $marker  = shift || q{};
     my $size    = shift || 5;
-    my $axis    = shift;
     my $args    = shift || {};
     
     my $self    = bless {}, $class;
@@ -56,7 +54,6 @@ sub new {
 
     my $id = id $self;
 
-    $axis{ $id }    = $axis;
     $size{ $id }    = $size;
     $im{ $id }  = 
           ( $self->isDefaultMarker( $marker ) ) ? 
@@ -78,7 +75,7 @@ sub draw {
     my $self    = shift;
     my $x       = shift;
     my $y       = shift;
-    my $im      = shift || $self->axis->im;
+    my $im      = shift;
     my $override= shift || {};
 
     my $direct = $direct{ id $self };
@@ -106,6 +103,10 @@ sub draw {
 sub createMarkerFromIM {
     my $self    = shift;
     my $im      = shift;
+    my $id      = id $self;
+
+    $anchorX{ $id } = $im->get('width')  / 2;
+    $anchorY{ $id } = $im->get('height') / 2;
 
     return $im;
 }

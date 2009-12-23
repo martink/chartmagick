@@ -299,7 +299,7 @@ BEGIN {
     no warnings 'redefine';
 
     my @invocations;
-    local *Chart::Magick::Axis::text = sub { push @invocations, { class => shift, args => { @_ } } };
+    local *Chart::Magick::ImageMagick::text = sub { push @invocations, { class => shift, args => { @_ } } };
 
     my $axis = Chart::Magick::Axis::Lin->new;
     foreach ( qw{ Title TitleFontSize TitleColor TitleFont } ) {
@@ -384,8 +384,8 @@ BEGIN {
     $axis->addChart( $chart );
 
     my ( @text, @draw );
-    local *Chart::Magick::Axis::text = sub { shift; push @text, { @_ } };
-    local *Image::Magick::Draw       = sub { shift; push @draw, { @_ } };
+    local *Chart::Magick::ImageMagick::text = sub { shift; push @text, { @_ } };
+    local *Image::Magick::Draw              = sub { shift; push @draw, { @_ } };
 
     my %expectText = (
         font        => '__labelFont',

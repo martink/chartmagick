@@ -38,7 +38,7 @@ BEGIN {
     );
 
     cmp_deeply(
-        [ $axis->adjustYRangeToOrigin( 1, 2 ) ],
+        [ $axis->adjustYRange( 1, 2 ) ],
         [ 0, 2 ],
         'adjustYRangeToOrigin is not disabled',
     );

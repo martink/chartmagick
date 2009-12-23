@@ -128,7 +128,9 @@ sub plot {
             # point.
             my $marker = $markers[ $ds ];
             if ( $marker && $self->get('plotMarkers') && exists $previousCoord->[ $ds ] ) {
-                $marker->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas );
+                $marker->draw( $axis->project( @{ $previousCoord->[$ds] } ), $canvas, {
+                    stroke  => $color->getStrokeColor
+                } );
             }
 
             # Store the current position of this dataset

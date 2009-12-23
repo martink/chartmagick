@@ -67,14 +67,14 @@ BEGIN {
     );
 
     cmp_deeply(
-        [ $axis->adjustXRangeToOrigin( 1, 2 ) ],
+        [ $axis->adjustXRange( 1, 2 ) ],
         [ 1, 2 ],
-        'adjustXRangeToOrigin overrides superclass method to never include origin',
+        'adjustXRange overrides superclass method to never include origin',
     );
     cmp_deeply(
-        [ $axis->adjustYRangeToOrigin( 1, 2 ) ],
+        [ $axis->adjustYRange( 1, 2 ) ],
         [ 1, 2 ],
-        'adjustYRangeToOrigin overrides superclass method to never include origin',
+        'adjustYRange overrides superclass method to never include origin',
     );
 }
 
@@ -89,14 +89,14 @@ BEGIN {
     my $state = {}; 
     local *Chart::Magick::Axis::Lin::draw = sub { 
         my $self = shift;
-        $state->{ x } = $self->get('xAlignAxesWithTicks');
-        $state->{ y } = $self->get('yAlignAxesWithTicks');
+        $state->{ x } = $self->get('xExpandRange');
+        $state->{ y } = $self->get('yExpandRange');
     };
 
     my $axis = Chart::Magick::Axis::Log->new;
     $axis->set(
-        xAlignAxesWithTicks => 1,
-        yAlignAxesWithTicks => 1,
+        xExpandRange => 1,
+        yExpandRange => 1,
     );
 
     $axis->draw;
