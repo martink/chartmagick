@@ -125,7 +125,30 @@ sub text {
     return;
 }
 
+sub shade {
+    my $self    = shift;
+    my $opacity = shift || 100;
+    my $sigma   = shift || 3;
 
+    my $shadow = $self->Clone;
+    $shadow->set( background    => 'black' );
+    $shadow->Shadow(
+        #geometry    => '60x3+10+10',
+        opacity     => $opacity,
+        sigma       => $sigma,
+        x           => 100,
+        y           => 100,
+    );
+    $shadow->Composite(
+        image       => $self,
+        compose     => 'DstOut',
+    );
+
+    $self->Composite(
+        image       => $shadow,
+#        compose     => 'In',
+    );
+}
 
 1;
 

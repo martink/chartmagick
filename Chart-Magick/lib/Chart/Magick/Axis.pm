@@ -443,6 +443,8 @@ sub draw {
     foreach my $chart (@{ $charts }) {
         $chart->plot( $chartCanvas ); #$self );
     }
+    
+    $chartCanvas->shade( 50, 2 );
 
     $chartCanvas->Crop(
         x       => $self->plotOption('chartAnchorX') + 1,
