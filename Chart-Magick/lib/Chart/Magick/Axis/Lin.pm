@@ -44,7 +44,181 @@ sub applyLayoutHints {
 
 =head2 definition ( )
 
-Defines additional properties for this class:
+Defines additional properties for this class in addition to those defined in Chart::Magick::Axis::definition:
+
+=over 4
+
+=item plotBox
+
+If set to a true value a box will be drawn around the charting area. Defaults to 1.
+
+=item boxColor
+
+The color of the box around the charting area. Defaults to 'black'.
+
+=item plotAxes
+
+If set to a true value the axis ( x = 0 and y = 0 ) will be drawn. This property can be overriden on a per axis
+base by the x- and yPlotAxis properties. Defaults to 1.
+
+=item axisColor
+
+The color in which the axes should be drawn. Overridable on a per axis base by the x- and yAxisColor properties.
+Defaults to grey50.
+
+=item ticksOutside
+
+If set to a true value the ticks will be drawn on the border of the charting area, otherwise the ticks will be
+drawn directly on the x and y axes, even when they are inside the drawing area. If an axis lies outside the range
+of the chart, the ticks are always drawn on the border of the charting area.
+
+=item tickColor
+
+The color of the ticks. Overridable per axis with x- and yTickColor. Defaults to the color set by the boxColor
+property.
+        
+=item subtickColor
+
+The color of the subticks. Overridable per axis with the x- and ySubtickColor properties. Defaults to the color set
+by the tickColor property.
+
+=item plotRulers
+
+If set to a true value rulers wil bee drawn at tick positions. Overridable per axis via the x- and yPlotRulers
+properties. Defaults to 1.
+
+=item rulerColor
+
+The color of the rulers. Overridable with the x- and yRulerColor properties. Defaults to 'lightgrey',
+
+=item expandRange
+
+If set to a true value the x and y ranges will be adjusted such that both start and end on tick positions. This
+option is overridable on a per axis basis through the x- and yExpandRange options.
+
+=item minTickWidth
+
+Defines the minimum number of pixels that ticks should be apart. Used for autoranging ticks. Defaults to 25.
+        
+=back
+
+Additionally there are properties you can set on a per axis basis. Listed below are the properties that work on the
+x axis. The y axis properties are named the same except that they start with a y instead of an x.
+
+=item xTickCount
+
+Sets the number of ticks on the x axis. If set to undef this value will be autoranged, which is what you want in
+general. Note that this property will be ignored if xTickWidth is given. Defaults to undef.
+
+=item xTickWidth
+
+The width between two x axis ticks in terms of x axis values, not pixels. If set to 0 or undef, this value will be
+autoranged, which is what you want in most cases. If you want tick to be a multiple of some value, don't use this
+option to do that but xLabelUnits instead. Defaults to 0.
+
+=item xTickInset / xSubtickInset
+
+The number of pixels a (sub)tick should extend into the chart. Defaults to 4 and 2 respectively.
+
+=item xTickOutset / ySubtickInset
+
+The number of pixels a (sub)tick should extend out of the chart. Defaults to 8 and 2 repectively.
+
+=item xSubtickCount
+        
+TODO
+
+=item xTicks
+
+Array ref containtaing the values of the ticks on the x axis. If an empty array ref is passed these locations will
+be auto generated. Defaults to an empty array ref. In virtually any case you'll want tick to be auto generated, and
+change the way the auto generation works by adjusting xTickWidth or xLabelUnits.
+
+=item xTickColor / xSubtickColor   => sub { $_[0]->get('subtickColor') },
+
+The color in which (sub)ticks should be drawn. Defaults to the value given for tickColor and subtickColor
+respectively.
+
+=item xLabelFormat
+
+A printf compatible string that formats the numerical value of the labels on the x axis. Defaults to '%s',
+yLabelFormat defaults to '%.1f'.
+
+=item xLabelUnits
+
+The values of the ticks will be normalized (divided) by this value. Defaults to 1.
+
+=item xTitleBorderOffset
+
+The distance in pixels between the title of the x axis and the margin of the axis. Defaults to 0.
+
+=item xTitleLabelOffset
+
+The distance in pixels between the title of the x axis and its tick labels. Defaults to 10.
+
+=item xLabelTickOffset
+
+The distance in pixels between the the ticks of the x axis and their labels. Defaults to 3.
+
+=item xPlotRulers
+
+If set to a true value rulers will be drawn for x axis ticks. Defaults to the value of the plotRulers property.
+
+=item xRulerColor
+
+The color in which the x axis rulers should be drawn. Defaults to the color set by the rulerColor property.
+
+=item xTitle
+
+The title of the x axis. Defaults to '', ie. no title.
+
+=item xTitleFont
+
+The font in which the x axis title should be rendered. Defaults to the font set by the font property.
+
+=item xTitleFontSize
+
+The pointsize of the x axis title. Defaults to 1.5 time the default pointsize set by the fontSize property.
+
+=item xTitleColor
+
+The color of the x axis title. Defaults to the color set by the fontColor property.
+
+#        xTitleAngle
+#        xLabelAngle
+
+=item xStart
+
+The value of the start of the range covered by the x axis. If set to undef this value will be autoranged. Defaults
+to undef.
+
+=item xStop
+
+The value of the end of the range covered by the x axis. If set to undef this value will be autoranged. Defaults
+to undef.
+
+=item xIncludeOrigin
+
+If set to a true value the origin will always be included in the tha x axis range, otherwise automatic inclusion of
+the origin into the x axis range depends on a number of conditions, see the extendRangeToOrigin method. Defaults to 0.
+
+=item xNoAdjustRange
+
+If set to a true value the range of the x axis will not be adjusted at all. Overrides xIncludeOrigin. Defaults to
+0.
+
+=item xExpandRange
+
+If set to a true value the range of the x axis will be expanded such, that its boundaries conincide with a tick.
+Defaults to the value of the expandRange property.
+
+=item xTickOffset
+
+Sets the number of units (in terms of x values, not pixels) that the actual chart should be indented wrt. the
+bounding box of the chart. Note that the chart is indented on both sides and the indent per side is half the value
+you give here. Defaults to 0.
+
+=back
 
 =cut
 
@@ -53,7 +227,6 @@ sub definition {
     my %options = (
         minTickWidth    => 25,
 
-        xAxisLocation   => undef,
         xTickOffset     => 0,
 
         xTickCount      => undef,
@@ -92,8 +265,6 @@ sub definition {
 
         xIncludeOrigin  => 0,
         xNoAdjustRange  => 1,
-
-        centerChart     => 0,
 
         yTickOffset     => 0,
 

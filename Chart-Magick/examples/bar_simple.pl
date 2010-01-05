@@ -24,5 +24,5 @@ Chart::Magick->bar(
         backgroundColor => 'none',
         position        => 'bottom center',
     },
-)->Write( 'simple_bar.png' );
+)->Write( 'bar_simple.png' );
 

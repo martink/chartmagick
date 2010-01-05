@@ -702,6 +702,28 @@ sub project {
     croak "Chart::Magick::Axis->project must be overloaded by sub class";
 }
 
+#-------------------------------------------------------------------
+
+=head2 write ( filename )
+
+Writes the chart and its charts to a file.
+
+=head3 filename
+
+Full path to the file to which the chart must be written.
+
+=cut
+
+sub write {
+    my $self        = shift;
+    my $filename    = shift || croak 'No filename passed';
+
+    my $error = $self->im->Write( $filename );
+
+    croak "Could not write file $filename because $error";
+
+    return;
+}
 
 1;
 
