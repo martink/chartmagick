@@ -132,6 +132,7 @@ sub shade {
 
     my $shadow = $self->Clone;
     $shadow->set( background    => 'black' );
+#    $shadow->set( background    => 'white' );
     $shadow->Shadow(
         #geometry    => '60x3+10+10',
         opacity     => $opacity,
@@ -141,11 +142,17 @@ sub shade {
     );
     $shadow->Composite(
         image       => $self,
-        compose     => 'DstOut',
+#        image       => $self->Fx( expression => '(a > 0.0) ? 1.0 : 0.0', channel => 'alpha' ),
+        compose     => 'DstIn',
+#        compose     => 'DstOut',
     );
 
     $self->Composite(
         image       => $shadow,
+#        compose     => 'Over',
+#        compose     => 'Min',
+        compose     => 'Multiply',
+#        compose     => 'DstIn',
 #        compose     => 'In',
     );
 }

@@ -444,7 +444,7 @@ sub draw {
         $chart->plot( $chartCanvas ); #$self );
     }
     
-    $chartCanvas->shade( 50, 2 );
+    $chartCanvas->shade( 100, 3 );
 
     $chartCanvas->Crop(
         x       => $self->plotOption('chartAnchorX') + 1,
