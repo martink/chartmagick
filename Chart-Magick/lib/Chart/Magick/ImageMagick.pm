@@ -155,17 +155,17 @@ sub shade {
         y           => 100,
     );
     $shadow->Composite(
-        image       => $self,
-#        image       => $self->Fx( expression => '(a > 0.0) ? 1.0 : 0.0', channel => 'alpha' ),
-        compose     => 'DstIn',
-#        compose     => 'DstOut',
+#        image       => $self,
+        image       => $self->Fx( expression => '(a > 0.1) ? 1.0 : 0.0', channel => 'alpha' ),
+#        compose     => 'DstIn',
+        compose     => 'DstOut',
     );
 
     $self->Composite(
         image       => $shadow,
 #        compose     => 'Over',
 #        compose     => 'Min',
-        compose     => 'Multiply',
+#       compose     => 'Multiply',
 #        compose     => 'DstIn',
 #        compose     => 'In',
     );
