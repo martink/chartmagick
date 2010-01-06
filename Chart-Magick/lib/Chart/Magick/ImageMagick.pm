@@ -8,6 +8,20 @@ use Text::Wrap;
 
 use base qw{ Image::Magick };
 
+=head2 NAME
+
+Chart::Magick::ImageMagick
+
+=head2 DESCRIPTION
+
+Extends Image::Magick to add a number of methods that are regularly used within Chart::Magick.
+
+=head2 SYNOPSIS
+
+my $im = Chart::Magick::ImageMagick->new( size => '100x100' );
+$im->Read('xc:white');
+
+
 #-------------------------------------------------------------------
 
 =head2 wrapText ( properties )

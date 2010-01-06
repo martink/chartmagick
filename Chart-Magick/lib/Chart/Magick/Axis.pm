@@ -20,6 +20,7 @@ private  plotOptions    => my %plotOptions;
 readonly im             => my %magick;
 private  axisLabels     => my %axisLabels;
 readonly legend         => my %legend;
+readonly isDrawn        => my %isDrawn;
 
 =head1 NAME
 
@@ -59,6 +60,7 @@ sub _buildObject {
     $charts{ $id        } = [ ];
     $axisLabels{ $id    } = [ ];
     $legend{ $id        } = Chart::Magick::Legend->new( $self );
+    $isDrawn{ $id       } = 0;
 
     $self->{ _plotOptions } = {};
     return $self;
@@ -460,6 +462,8 @@ sub draw {
 
     $self->plotLast;
 
+    $isDrawn{ id $self } = 1;
+
     return $self->im;
 }
 
@@ -718,9 +722,23 @@ sub write {
     my $self        = shift;
     my $filename    = shift || croak 'No filename passed';
 
+    $self->draw unless $self->isDrawn;
+
     my $error = $self->im->Write( $filename );
 
-    croak "Could not write file $filename because $error";
+    croak "Could not write file $filename because $error" if $error;
+
+    return;
+}
+
+sub display {
+    my $self        = shift;
+
+    $self->draw unless $self->isDrawn;
+
+    my $error = $self->im->Display;
+
+    croak "Could not open display because $error" if $error;
 
     return;
 }

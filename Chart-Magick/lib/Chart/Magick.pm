@@ -49,6 +49,10 @@ sub AUTOLOAD {
         $chart->addDataset( @{ $data } );
     }
 
+    if ( $params{ palette } ) {
+        $chart->setPalette( $params{ palette } );
+    }
+
     $axis->addChart( $chart );
     $axis->set( width => $params{ width }, height => $params{ height } );
 
@@ -64,7 +68,45 @@ sub AUTOLOAD {
         $axis->addLabels( $set, $index++ );
     }
 
-    return $axis->draw;
+    bless { _axis => $axis, _chart => $chart }, $class;
+    #return $axis->draw;
+}
+
+#--------------------------------------------------------------------
+sub axis {
+    my $self = shift;
+
+    return $self->{ _axis };
+}
+
+#--------------------------------------------------------------------
+sub chart {
+    my $self = shift;
+
+    return $self->{ _chart };
+}
+
+#--------------------------------------------------------------------
+sub add {
+    my $self    = shift;
+    my $chart   = shift;
+
+    $self->axis->addChart( $chart->chart );
+};
+
+#--------------------------------------------------------------------
+sub write {
+    my $self        = shift;
+    my $filename    = shift;
+
+    $self->axis->write( $filename );
+}
+
+#--------------------------------------------------------------------
+sub display {
+    my $self = shift;
+
+    $self->axis->display;
 }
 
 #--------------------------------------------------------------------
@@ -92,6 +134,13 @@ sub matrix {
     }
 
     return $matrix;
+}
+
+# Explicitly define DESTROY to prevent AUTOLOAD from trying to load Chart::Magick::Chart::DESTROY.
+sub DESTROY {
+    my $self = shift;
+    undef $self->{ _chart   };
+    undef $self->{ _axis    };
 }
 
 1;
