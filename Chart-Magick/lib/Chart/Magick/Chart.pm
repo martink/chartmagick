@@ -101,7 +101,7 @@ Defines the properties of your plugin as well as their default values.
 
 sub definition {
     return {
-        markerSize      => 5,
+        markerSize      => 6,
     };
 }
 
