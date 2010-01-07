@@ -119,5 +119,24 @@ sub setWeight {
     return;
 }
 
+sub write {
+    my $self        = shift;
+    my $filename    = shift || croak 'No filename passed';
+
+    my $error = $self->im->Write( $filename );
+    croak "Could not write file $filename because $error" if $error;
+
+    return;
+}
+
+sub display {
+    my $self        = shift;
+
+    my $error = $self->im->Display;
+    croak "Could not open display because $error" if $error;
+
+    return;
+}
+
 1;
 

@@ -119,18 +119,20 @@ sub matrix {
     my $matrix  = Chart::Magick::Matrix->new( $width, $height, 20 );
 
     foreach my $row (@$layout) {
-        my @row;
+        push @{ $matrix->rows }, [ map { [ $_->axis, 1 ] } @{ $row } ];
 
-        foreach my $type ( @$row ) {
-            my $class = "Chart::Magick::Axis::$type";
-
-            my $ok = eval "require $class; 1";
-            die "Cannot instanciate axis class $class because: $@" if !$ok || $@;
-
-            push @row, [ $class->new(), 1 ]
-        }
-
-        push @{ $matrix->rows }, \@row;
+#        my @row;
+#
+#        foreach my $type ( @$row ) {
+#            my $class = "Chart::Magick::Axis::$type";
+#
+#            my $ok = eval "require $class; 1";
+#            die "Cannot instanciate axis class $class because: $@" if !$ok || $@;
+#
+#            push @row, [ $class->new(), 1 ]
+#        }
+#
+#        push @{ $matrix->rows }, \@row;
     }
 
     return $matrix;
