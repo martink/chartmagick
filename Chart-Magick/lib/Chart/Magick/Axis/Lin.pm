@@ -6,6 +6,7 @@ use warnings;
 use List::Util qw{ min max reduce };
 use Text::Wrap;
 use POSIX qw{ floor ceil };
+use Carp;
 
 use base qw{ Chart::Magick::Axis };
 
@@ -242,6 +243,7 @@ sub definition {
         xSubtickColor   => sub { $_[0]->get('subtickColor') },
 
         xLabelFormat    => '%s',
+        xLabelFormatter => sub { sub { sprintf $_[0]->get('xLabelFormat'), $_[1] / $_[2] } },
         xLabelUnits     => 1,
 
         xTitleBorderOffset  => 0,
@@ -295,6 +297,7 @@ sub definition {
         yNoAdjustRange  => 0,
 
         yLabelFormat    => '%.1f',
+        yLabelFormatter => sub { sub { sprintf $_[0]->get('yLabelFormat'), $_[1] / $_[2] } },
         yLabelUnits     => 1,
 
         yTitleBorderOffset  => 0,
@@ -411,12 +414,12 @@ sub getTickLabel {
     my $value   = shift;
     my $index   = shift || 0;
 
-    my $format  = $self->get( $index ? 'yLabelFormat' : 'xLabelFormat' ) || '%s';
-    my $units   = $self->get( $index ? 'yLabelUnits'  : 'xLabelUnits'  ) || 1;
+    my $units       = $self->get( $index ? 'yLabelUnits'     : 'xLabelUnits'     ) || 1;
+    my $formatter   = $self->get( $index ? 'yLabelFormatter' : 'xLabelFormatter' ) || croak "No label formatter";
 
     my $label   =     
-        $self->getLabels( $index, $value )
-        || sprintf( $format, $value / $units );
+           $self->getLabels( $index, $value )
+        || $formatter->( $self, $value, $units );
 
     return $label;
 }
