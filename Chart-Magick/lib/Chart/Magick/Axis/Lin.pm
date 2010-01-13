@@ -243,7 +243,12 @@ sub definition {
         xSubtickColor   => sub { $_[0]->get('subtickColor') },
 
         xLabelFormat    => '%s',
-        xLabelFormatter => sub { sub { sprintf $_[0]->get('xLabelFormat'), $_[1] / $_[2] } },
+        xLabelFormatter => sub { 
+            sub { 
+                my $format = $_[0]->get('xLabelFormat') || '%s';
+                return sprintf $format, $_[1] / $_[2];
+            } 
+        },
         xLabelUnits     => 1,
 
         xTitleBorderOffset  => 0,
@@ -297,7 +302,12 @@ sub definition {
         yNoAdjustRange  => 0,
 
         yLabelFormat    => '%.1f',
-        yLabelFormatter => sub { sub { sprintf $_[0]->get('yLabelFormat'), $_[1] / $_[2] } },
+        yLabelFormatter => sub { 
+            sub { 
+                my $format = $_[0]->get('yLabelFormat') || '%s';
+                return sprintf $format, $_[1] / $_[2] ;
+            } 
+        },
         yLabelUnits     => 1,
 
         yTitleBorderOffset  => 0,
