@@ -202,7 +202,6 @@ sub plot {
                     : $barCount
                     ;
 
-    my $minSpacing;
     my $p;
 
     my @coords = @{ $self->dataset->getCoords };

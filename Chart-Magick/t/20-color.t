@@ -2,7 +2,9 @@
 
 use Test::Deep;
 
-use Test::More tests => 24;
+use Test::More tests => 24 + 1;
+use Test::NoWarnings;
+
 BEGIN {
     use_ok( 'Chart::Magick::Color', 'Chart::Magick::Color can be used' );
 }

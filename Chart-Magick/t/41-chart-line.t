@@ -8,7 +8,8 @@ use List::MoreUtils     qw{ all     };
 use List::Util          qw{ sum     };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 14;
+use Test::More tests => 14 + 1;
+use Test::NoWarnings;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart::Line', 'Chart::Magick::Chart::Line can be used' );
@@ -164,9 +165,9 @@ sub setupDummyData {
     }
     
     my $palette = Chart::Magick::Palette->new( [
-        { strokeAlpha => 0 },
-        { strokeAlpha => 1 },
-        { strokeAlpha => 2 },
+        { strokeAlpha => '0' },
+        { strokeAlpha => '1' },
+        { strokeAlpha => '2' },
     ] );
     $chart->setPalette( $palette );
 
@@ -178,7 +179,7 @@ sub setupDummyData {
 
 #--------------------------------------------------------------------
 
-=head2 processDraw
+=head2 registerDraw
 
 Used to keep track of all draw operations.
 
@@ -199,7 +200,7 @@ sub registerDraw {
 
     # Create lookup key
     my $key     = exists $args{ stroke } ? $args{ stroke } : -1;
-    $key        =~ s{^#(\d+)$}{$1};
+    $key        =~ s{^#(\d+)$}{$1}i;
     $key        += 0; #convert to number ( 000001 => 1 )
 
     if ( exists $store->{ $key } ) {

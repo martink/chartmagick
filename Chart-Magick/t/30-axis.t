@@ -6,7 +6,8 @@ no warnings 'redefine';
 use Test::Deep;
 use Scalar::Util qw{ refaddr };
 
-use Test::More tests => 34;
+use Test::More tests => 34 + 1;
+use Test::NoWarnings;
 BEGIN {
     use_ok( 'Chart::Magick::Axis', 'Chart::Magick::Axis can be used' );
 }

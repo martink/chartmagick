@@ -7,7 +7,8 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 9;
+use Test::More tests => 9 + 1;
+use Test::NoWarnings;
 BEGIN {
     use_ok( 'Chart::Magick::Axis::LogLin', 'Chart::Magick::Axis::Lin can be used' );
 }
