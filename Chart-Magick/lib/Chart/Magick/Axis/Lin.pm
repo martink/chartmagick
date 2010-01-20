@@ -106,6 +106,8 @@ Defines the minimum number of pixels that ticks should be apart. Used for autora
 Additionally there are properties you can set on a per axis basis. Listed below are the properties that work on the
 x axis. The y axis properties are named the same except that they start with a y instead of an x.
 
+=over 4
+
 =item xTickCount
 
 Sets the number of ticks on the x axis. If set to undef this value will be autoranged, which is what you want in
