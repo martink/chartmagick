@@ -6,15 +6,34 @@ use warnings;
 #use Color::Calc;
 use Class::InsideOut qw{ :std };
 
-public  strokeTriplet   => my %strokeTriplet, {
-    set_hook => sub { s{ ^[#]? ([0-9a-f]+) $ }{$1}xgi }
-};
-public  strokeAlpha     => my %strokeAlpha;
-public  fillTriplet     => my %fillTriplet, {
-    set_hook => sub { s{ ^[#]? ([0-9a-f]+) $ }{$1}xgi }
-};
-public  fillAlpha       => my %fillAlpha;
+sub _checkTriplet {
+    my $triplet = shift;
 
+    return '000000' unless defined $triplet;
+
+    if ( $triplet =~ m{ ^[#]? ([0-9a-f]+) $ }xgi ) {
+        return lc $1;
+    }
+        
+    return '000000';
+}
+
+sub _checkAlpha {
+    my $alpha = shift;
+
+    return 'ff' unless defined $alpha;
+
+    if ( $alpha =~ m{ ^ [0-9a-f]{1,2} $ }xgi ) {
+        return lc $alpha;
+    }
+
+    return 'ff';
+}
+
+public  strokeTriplet   => my %strokeTriplet;
+public  strokeAlpha     => my %strokeAlpha;
+public  fillTriplet     => my %fillTriplet;
+public  fillAlpha       => my %fillAlpha;
 
 =head1 NAME
 
@@ -176,10 +195,10 @@ sub new {
 #	$strokeTriplet{ $id }   => $properties->{ strokeTriplet } || '#000000';
 #	$strokeAlpha{ $id }     => $properties->{ strokeAlpha   } || '00';
 
-	$self->fillTriplet(   $properties->{ fillTriplet   } || '000000'  );
-	$self->fillAlpha(     $properties->{ fillAlpha     } || 'ff'      );
-	$self->strokeTriplet( $properties->{ strokeTriplet } || '000000'  );
-	$self->strokeAlpha(   $properties->{ strokeAlpha   } || 'ff'      );
+	$self->fillTriplet(   _checkTriplet( $properties->{ fillTriplet   } ) );# || '000000'  );
+	$self->fillAlpha(     _checkAlpha(   $properties->{ fillAlpha     } ) );# || 'ff'      );
+	$self->strokeTriplet( _checkTriplet( $properties->{ strokeTriplet } ) );# || '000000'  );
+	$self->strokeAlpha(   _checkAlpha(   $properties->{ strokeAlpha   } ) );# || 'ff'      );
 		
     return $self;
 }

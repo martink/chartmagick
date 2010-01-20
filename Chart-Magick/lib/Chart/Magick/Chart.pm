@@ -249,20 +249,6 @@ sub getWidth {
 
 #-------------------------------------------------------------------
 
-=head2 im ( )
-
-Returns the Image::Magick object of the axis tied to chart.
-
-=cut
-
-sub im {
-    my $self = shift;
-
-    return $self->axis->im;
-}
-
-#-------------------------------------------------------------------
-
 =head2 hasBlockSymbols ( )
 
 Returns a boolean telling whether the symbols in the legend should be drawn as colored blocks instead of line/marker

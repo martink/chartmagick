@@ -5,7 +5,14 @@ use warnings;
 use constant pi => 3.14159265358979;
 
 use List::Util qw{ min };
+use Class::InsideOut qw{ :std };
+
+readonly canvas => my %canvas;
+
+
 use Data::Dumper;
+
+
 
 use base qw{ Chart::Magick::Chart };
 
@@ -154,8 +161,8 @@ sub addSlice {
         rimColor        => $sideColor,
 
         # geometric properties
-        topHeight       => $self->get('topHeight') * sin(2 * pi * $self->get('tiltAngle') / 360),
-        bottomHeight    => $self->get('bottomHeight') * sin(2 * pi * $self->get('tiltAngle') / 360),
+        topHeight       => $self->get('topHeight')    * sin( 2 * pi * $self->get('tiltAngle') / 360 ),
+        bottomHeight    => $self->get('bottomHeight') * sin( 2 * pi * $self->get('tiltAngle') / 360 ),
         explosionRadius => $explosionRadius,
         widthReduction  => $explosionRadius * sin( $angle / 2 ),
         scaleFactor     => ($self->get('scaleFactor') - 1) * $percentage + 1,
@@ -344,9 +351,11 @@ Draws the pie chart.
 =cut
 
 sub plot {
-    my $self = shift;
-    my $axis = $self->axis;
-    my $canvas = shift;
+    my $self    = shift;
+    my $axis    = $self->axis;
+    my $canvas  = shift;
+
+    $canvas{ id $self } = $canvas;
 
     $self->processDataset;
 
@@ -356,20 +365,14 @@ sub plot {
     # First draw the bottom planes and the labels behind the chart.
     foreach my $slice (@slices) {
         # Draw bottom
-        if ( $self->get('tiltAngle') <= 90 ) {
-            $self->drawBottom( $slice );
-        }
-        else {
-            $self->drawTop( $slice );
-        }
+        $self->drawBottom( $slice );
 
         if ( $slice->{avgAngle} > 0 && $slice->{avgAngle} <= pi ) {
-            $self->drawLabel($slice);
+            $self->drawLabel( $slice );
         }
     }
 
-    # Secondly draw the sides
-    # Only 3d pies have sides
+    # Secondly draw the sides, which only 3d pies have
     if ($self->get('tiltAngle') != 0) {
         my @parts =
             sort    sortSlices                          # sort slice parts in drawing order
@@ -395,12 +398,7 @@ sub plot {
 
     # Finally draw the top planes of each slice and the labels that are in front of the chart.
     foreach my $slice (@slices) {
-        if ( $self->get('tiltAngle') <= 90 ) {
-            $self->drawTop( $slice ) if $self->get('tiltAngle') != 0;
-        }
-        else {
-            $self->drawBottom( $slice );
-        }
+        $self->drawTop( $slice ) if $self->get('tiltAngle') != 0;
 
         if ( $slice->{avgAngle} > pi ) {
             $self->drawLabel( $slice );
@@ -476,7 +474,7 @@ sub drawLabel {
 
     # Draw the stick
     if ($self->get('stickLength')){
-        $self->im->Draw(
+        $self->canvas->Draw(
             primitive   => 'Path',
             stroke      => $self->get('stickColor'),
             strokewidth => 3,
@@ -511,7 +509,7 @@ sub drawLabel {
     my $maxWidth = $anchorX;
     $maxWidth = $self->axis->get('width') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
 
-    $self->im->text(
+    $self->canvas->text(
         text            => $text,
         halign          => $horizontalAlign,
         align           => ucfirst $horizontalAlign,
@@ -597,7 +595,7 @@ sub drawPieSlice {
 
     $path .= 'Z';
 
-    $self->im->Draw(
+    $self->canvas->Draw(
         primitive   => 'Path',
         stroke      => $slice->{strokeColor},
         points      => $path,
@@ -665,7 +663,7 @@ sub drawRim {
     my $bigCircle                = $self->bigCircle( $slice->{ angle } );
 
     # Draw curvature
-    $self->im->Draw(
+    $self->canvas->Draw(
         primitive       => 'Path',
         stroke          => $slice->{strokeColor},
         points      =>
@@ -727,7 +725,7 @@ sub drawSide {
         y   => $slice->{$cornerName}->{y} + $slice->{bottomHeight}
     );
 
-    $self->im->Draw(
+    $self->canvas->Draw(
         primitive   => 'Path',
         stroke      => $slice->{strokeColor},
         points      =>

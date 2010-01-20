@@ -6,7 +6,8 @@ use Test::Deep;
 use Image::Magick;
 use Chart::Magick::Axis;
 
-use Test::More tests => 26;
+use Test::More tests => 26 + 1;
+use Test::NoWarnings;
 
 BEGIN {
     use_ok( 'Chart::Magick::Marker', 'Chart::Magick::Marker can be used' );
@@ -50,7 +51,8 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
     isa_ok( $marker, 'Chart::Magick::Marker', 'new invoked with a default returns the correct object' );
 
     # image magick objects
-    my $magick = Image::Magick->new;
+    my $magick = Image::Magick->new( size => '1x1' );
+    $magick->Read('xc:white');
     eval { $marker = Chart::Magick::Marker->new( $magick ); };
     ok( !$@, 'new accepts image magick objects' );
     isa_ok( $marker, 'Chart::Magick::Marker', 'new invoked with an Image::Magick object returns the correct object' );
@@ -114,7 +116,7 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
     cmp_ok( $args{ x }, '==', 1 - $marker->anchorX, 'draw composites on the correct x coordinate' );
     cmp_ok( $args{ y }, '==', 2 - $marker->anchorY, 'draw composites on the correct y coordinate' );
 
-    my %args_without = %args;
+    %args_without = %args;
     $marker->draw( 1, 2, $canvas, { over => 'Ride' } );
     cmp_deeply(
         { %args         },
@@ -131,7 +133,8 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
 {
     my $marker = Chart::Magick::Marker->new( $VALID_DEFAULT );
 
-    my $newMarker = Image::Magick->new;
+    my $newMarker = Image::Magick->new( size => '1x1' );
+    $newMarker->Read('xc:white');
     my $generatedMarker = $marker->createMarkerFromIM( $newMarker );
 
     is( $generatedMarker, $newMarker, 'createMarkerFromIM returns the IM object that is passed to it' );

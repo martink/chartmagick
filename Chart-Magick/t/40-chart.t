@@ -7,7 +7,8 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis;
 
-use Test::More tests => 43;
+use Test::More tests => 43 + 1;
+use Test::NoWarnings;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart', 'Chart::Magick::Chart can be used' );

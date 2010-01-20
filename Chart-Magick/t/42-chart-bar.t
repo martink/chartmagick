@@ -8,7 +8,8 @@ use List::MoreUtils     qw{ uniq    };
 use List::Util          qw{ min max };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 20;
+use Test::More tests => 20 + 1;
+use Test::NoWarnings;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart::Bar', 'Chart::Magick::Chart::Bar can be used' );

@@ -7,7 +7,9 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 44;
+use Test::More tests => 52 + 1;
+use Test::NoWarnings;
+use Test::Warn;
 BEGIN {
     use_ok( 'Chart::Magick::Axis::Log', 'Chart::Magick::Axis::Lin can be used' );
 }
@@ -260,23 +262,62 @@ BEGIN {
     my $axis = Chart::Magick::Axis::Log->new;
     $axis->set( xStart => 0.1, yStart => 0.01 );
 
+    my $result;
+
     # transformX
     cmp_ok( $axis->transformX( 10 ), '==', 1,  'transformX returns correct value for valid input' );
-    cmp_ok( $axis->transformX( 0  ), '==', -1, 'transformX transform xStart for zero input' );
-    cmp_ok( $axis->transformX( -2 ), '==', -1, 'transformX transform xStart for negative input' );
+
+    warning_is
+        { $result = $axis->transformX( 0 ) }
+        { carped => 'Cannot transform x value 0 to a logarithmic scale. Using 0.1 instead!' },
+        'transformX carps for zero input';
+    cmp_ok( $result, '==', -1, 'transformX transform xStart for zero input' );
+
+    warning_is
+        { $result = $axis->transformX( -2 ) }
+        { carped => 'Cannot transform x value -2 to a logarithmic scale. Using 0.1 instead!' },
+        'transformX carps for negative input';
+    cmp_ok( $result, '==', -1, 'transformX transform xStart for negative input' );
 
     $axis->set( xStart => 0 );
-    cmp_ok( $axis->transformX( 0  ), '==', 0,  'transformX returns 0 for zero input and zero xStart' );
-    cmp_ok( $axis->transformX( -2 ), '==', 0,  'transformX returns 0 for negative input and zero xStart' );
+    warning_is 
+        { $result = $axis->transformX( 0  ) }
+        { carped => 'Cannot transform x value 0 to a logarithmic scale. Using 0 instead!' },
+        'transformX carps for zero input';
+    cmp_ok( $result, '==', 0,  'transformX returns 0 for zero input and zero xStart' );
+
+    warning_is
+        { $result = $axis->transformX( -2 ) }
+        { carped => 'Cannot transform x value -2 to a logarithmic scale. Using 0 instead!' },
+        'transformX carps for negative input';
+    cmp_ok( $result, '==', 0,  'transformX returns 0 for negative input and zero xStart' );
 
     # transformY
     cmp_ok( $axis->transformY( 10 ), '==', 1,  'transformY returns correct value for valid input' );
-    cmp_ok( $axis->transformY( 0  ), '==', -2, 'transformY transform yStart for zero input' );
-    cmp_ok( $axis->transformY( -2 ), '==', -2, 'transformY transform yStart for negative input' );
+    warning_is
+        { $result = $axis->transformY( 0 ) }
+        { carped => 'Cannot transform y value 0 to a logarithmic scale. Using 0.01 instead!' },
+        'transformY carps for zero input';
+    cmp_ok( $result, '==', -2, 'transformY transforms yStart for zero input' );
+
+    warning_is
+        { $result = $axis->transformY( -2 ) }
+        { carped => 'Cannot transform y value -2 to a logarithmic scale. Using 0.01 instead!' },
+        'transformY carps for negative input';
+    cmp_ok( $result, '==', -2, 'transformY transforms yStart for negative input' );
 
     $axis->set( yStart => 0 );
-    cmp_ok( $axis->transformY( 0  ), '==', 0,  'transformY returns 0 for zero input and zero yStart' );
-    cmp_ok( $axis->transformY( -2 ), '==', 0,  'transformY returns 0 for negative input and zero yStart' );
+    warning_is 
+        { $result = $axis->transformY( 0  ) }
+        { carped => 'Cannot transform y value 0 to a logarithmic scale. Using 0 instead!' },
+        'transformY carps for zero input';
+    cmp_ok( $result, '==', 0,  'transformY returns 0 for zero input and zero yStart' );
+
+    warning_is
+        { $result = $axis->transformY( -2 ) }
+        { carped => 'Cannot transform y value -2 to a logarithmic scale. Using 0 instead!' },
+        'transformY carps for negative input';
+    cmp_ok( $result, '==', 0,  'transformY returns 0 for negative input and zero yStart' );
 
 }
 

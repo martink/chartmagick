@@ -106,6 +106,8 @@ Defines the minimum number of pixels that ticks should be apart. Used for autora
 Additionally there are properties you can set on a per axis basis. Listed below are the properties that work on the
 x axis. The y axis properties are named the same except that they start with a y instead of an x.
 
+=over 4
+
 =item xTickCount
 
 Sets the number of ticks on the x axis. If set to undef this value will be autoranged, which is what you want in
@@ -243,7 +245,12 @@ sub definition {
         xSubtickColor   => sub { $_[0]->get('subtickColor') },
 
         xLabelFormat    => '%s',
-        xLabelFormatter => sub { sub { sprintf $_[0]->get('xLabelFormat'), $_[1] / $_[2] } },
+        xLabelFormatter => sub { 
+            sub { 
+                my $format = $_[0]->get('xLabelFormat') || '%s';
+                return sprintf $format, $_[1] / $_[2];
+            } 
+        },
         xLabelUnits     => 1,
 
         xTitleBorderOffset  => 0,
@@ -297,7 +304,12 @@ sub definition {
         yNoAdjustRange  => 0,
 
         yLabelFormat    => '%.1f',
-        yLabelFormatter => sub { sub { sprintf $_[0]->get('yLabelFormat'), $_[1] / $_[2] } },
+        yLabelFormatter => sub { 
+            sub { 
+                my $format = $_[0]->get('yLabelFormat') || '%s';
+                return sprintf $format, $_[1] / $_[2] ;
+            } 
+        },
         yLabelUnits     => 1,
 
         yTitleBorderOffset  => 0,
