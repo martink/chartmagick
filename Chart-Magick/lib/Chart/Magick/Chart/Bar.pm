@@ -296,9 +296,15 @@ sub preprocessData {
 }
 
 sub layoutHints {
+    my $self = shift;
+
+    my $coords     = $self->dataset->getCoords;
+    my $minSpacing = min map { $coords->[ $_ + 1 ]->[0] - $coords->[ $_ ]->[0] } ( 0 .. @$coords - 2 );
+
     return {
         coordPadding    => [ 0.5 ],
         valuePadding    => [ 0   ],
+        tickWidth       => $minSpacing,
     };
 }
 

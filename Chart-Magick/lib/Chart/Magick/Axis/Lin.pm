@@ -38,6 +38,10 @@ sub applyLayoutHints {
         $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
     };
 
+    if ( exists $hints->{ tickWidth    } ) {
+        $self->set( 'xTickWidth', $hints->{ tickWidth } ) ;
+    };
+
     return;
 }
 
@@ -475,12 +479,10 @@ sub optimizeMargins {
             );
 
         # Adjust the chart ranges so that they align with the 0 axes if desired.
-#        if ( $self->get('yAlignAxesWithTicks') ) {
         if ( $self->get('yExpandRange') ) {
             $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
             $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
         }
-#        if ( $self->get('xAlignAxesWithTicks') ) {
         if ( $self->get('xExpandRange') ) {
             $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
             $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
@@ -491,11 +493,11 @@ sub optimizeMargins {
         my @yLabels = map { $self->getTickLabel( $_, 1 ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
 
         my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-        my $xAddUnit    = $self->get('xTickOffset');
+        my $xAddUnit    = $self->get('xTickOffset') * $xTickWidth;
         my $xPxPerUnit  = $chartWidth / ( $xUnits + $xAddUnit );
 
         my $yUnits      = ( $self->transformY( $maxY ) - $self->transformY( $minY ) ) || 1;
-        my $yAddUnit    = $self->get('yTickOffset');
+        my $yAddUnit    = $self->get('yTickOffset') * $yTickWidth;
         my $yPxPerUnit  = $chartHeight / ( $yUnits + $yAddUnit );
 
         # Calc max label lengths
@@ -527,9 +529,9 @@ sub optimizeMargins {
                 chartWidth      => $chartWidth,
                 chartHeight     => $chartHeight,
                 xPxPerUnit      => $xPxPerUnit,
-                xTickOffset     => $xAddUnit / 2 * $xPxPerUnit,
+                xTickOffset     => $xAddUnit / 2,
                 yPxPerUnit      => $yPxPerUnit,
-                yTickOffset     => $yAddUnit / 2 * $yPxPerUnit,
+                yTickOffset     => $yAddUnit / 2,
                 chartAnchorX    => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
                 chartAnchorY    => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
             );
@@ -847,10 +849,10 @@ sub preprocessData {
     );
 
     $self->plotOption( 
-        yChartStop  => $maxY + $self->get('yTickOffset') / 2,
-        yChartStart => $minY - $self->get('yTickOffset') / 2,
-        xChartStop  => $maxX + $self->get('xTickOffset') / 2,
-        xChartStart => $minX - $self->get('xTickOffset') / 2,
+        yChartStop  => $maxY + $self->plotOption('yTickOffset'),
+        yChartStart => $minY - $self->plotOption('yTickOffset'),
+        xChartStop  => $maxX + $self->plotOption('xTickOffset'),
+        xChartStart => $minX - $self->plotOption('xTickOffset'),
 
 #        chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
 #        chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
@@ -859,13 +861,13 @@ sub preprocessData {
     # Precalc toPx offsets.
     $self->plotOption( 'xPxOffset'  => 
           $self->plotOption('chartAnchorX') 
-        + $self->plotOption('xTickOffset') 
+        + $self->plotOption('xTickOffset') * $self->getPxPerXUnit
         - $self->transformX( $self->get('xStart') ) * $self->getPxPerXUnit
     );
     $self->plotOption( 'yPxOffset'  => 
         $self->plotOption('chartAnchorY') 
         + $self->getChartHeight 
-        - $self->plotOption('yTickOffset')
+        - $self->plotOption('yTickOffset') * $self->getPxPerYUnit
         + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
     );
 
