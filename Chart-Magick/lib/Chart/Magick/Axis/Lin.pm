@@ -266,6 +266,7 @@ sub definition {
         
         xPlotRulers     => sub { $_[0]->get('plotRulers') },
         xRulerColor     => sub { $_[0]->get('rulerColor') },
+        xSubrulerColor  => sub { $_[0]->get('xRulerColor') },
 
         xTitle          => '',
         xTitleFont      => sub { $_[0]->get('font') },
@@ -294,7 +295,7 @@ sub definition {
         
         yPlotRulers     => sub { $_[0]->get('plotRulers') },
         yRulerColor     => sub { $_[0]->get('rulerColor') },
-
+        ySubrulerColor  => sub { $_[0]->get('yRulerColor') },
         yTitle          => '',
         yTitleFont      => sub { $_[0]->get('font') },
         yTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
@@ -1085,6 +1086,33 @@ You'll probably never need to call this method manually.
 
 =cut
 
+sub drawRuler {
+    my $self    = shift;
+    my $tick    = shift;
+    my $isX     = shift;
+    my $color   = shift;
+
+    my ($from, $to);
+    if ($isX) {
+        $from   = $self->toPx( [ $tick ], [ $self->plotOption('yChartStart') ] );
+        $to     = $self->toPx( [ $tick ], [ $self->plotOption('yChartStop')  ] );
+    }
+    else {
+        $from   = $self->toPx( [ $self->plotOption('xChartStart') ], [ $tick ] );
+        $to     = $self->toPx( [ $self->plotOption('xChartStop')  ], [ $tick ] );
+    }
+
+    $self->im->Draw(
+        primitive   => 'Path',
+        stroke      => $color || $self->get('rulerColor'),
+        points      => "M $from L $to",
+        fill        => 'none',
+    );
+
+    return;
+}
+
+
 sub plotRulers {
     my $self = shift;
 
@@ -1092,18 +1120,15 @@ sub plotRulers {
     my $maxY = $self->get('yStop');
 
     if ( $self->get('yPlotRulers') ) {
-        for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
+        for my $tick ( @{ $self->getYSubticks } ) {
             next if $tick < $minY || $tick > $maxY;
-        
-            $self->im->Draw(
-                primitive   => 'Path',
-                stroke      => $self->get('yRulerColor'),
-                points      => 
-                      " M " . $self->toPx( [ $self->plotOption('xChartStart') ], [ $tick ] ) 
-                    . " L " . $self->toPx( [ $self->plotOption('xChartStop')  ], [ $tick ] ),
-                fill        => 'none',
-            );
-            
+
+            $self->drawRuler( $tick, 0, $self->get('ySubrulerColor') );
+        }
+        for my $tick ( @{ $self->getYTicks } ) {
+            next if $tick < $minY || $tick > $maxY;
+
+            $self->drawRuler( $tick, 0, $self->get('yRulerColor') );
         }
     }
 
@@ -1111,17 +1136,15 @@ sub plotRulers {
     my $maxX = $self->get('xStop');
 
     if ( $self->get('xPlotRulers') ) {
-        for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
+        for my $tick ( @{ $self->getXSubticks } ) {
             next if $tick < $minX || $tick > $maxX;
 
-            $self->im->Draw(
-                primitive   => 'Path',
-                stroke      => $self->get('xRulerColor'),
-                points      =>
-                      " M " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStart') ] ) 
-                    . " L " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStop')  ] ),
-                fill        => 'none',
-            );
+            $self->drawRuler( $tick, 1, $self->get('xSubrulerColor') );
+        }
+        for my $tick ( @{ $self->getXTicks } ) {
+            next if $tick < $minX || $tick > $maxX;
+
+            $self->drawRuler( $tick, 1, $self->get('xRulerColor') );
         }
     }
 
