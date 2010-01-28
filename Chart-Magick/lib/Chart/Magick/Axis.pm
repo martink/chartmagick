@@ -139,6 +139,13 @@ sub checkFont {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getChartHeight ( )
+
+Returns the height of the chart in pixels.
+
+=cut
+
 sub getChartHeight {
     my $self = shift;
 
@@ -147,6 +154,13 @@ sub getChartHeight {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getChartWidth {
+
+Returns the width of chart in pixels.
+
+=cut
+
 sub getChartWidth {
     my $self = shift;
 
@@ -155,6 +169,21 @@ sub getChartWidth {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getLabelDimensions ( label, wrapWidth )
+
+Returns an arrayref containing the width and height of label wrapped to the given width.
+
+=head3 label
+
+The label to calculate the dimensions of.
+
+=head3 wrapWidth
+
+The width in pixels to which the label should be wrapped before calculation its dimensions.
+
+=cut
+
 sub getLabelDimensions {
     my $self        = shift;
     my $label       = shift;
@@ -271,6 +300,20 @@ sub addChart {
 }
 
 #---------------------------------------------
+
+=head2 applyLayoutHints ( hints )
+
+Layout hints are suggestions of Chart plugins to the Axis object to change the values of some of its properties. It
+is up to the Axis plugin to do something with these suggestions, but it doesn't have to.
+
+If you subclass can handle some of these hints you should extend this method and process them here.
+
+=head3 hints
+
+Hashref containing the the hints and their value in a hint => value key/value pairs/
+
+=cut
+
 sub applyLayoutHints {
     return;
 }
@@ -730,6 +773,17 @@ sub write {
 
     return;
 }
+
+#-------------------------------------------------------------------
+
+=head2 display ( )
+
+Opens a window and displays the chart in it. The window is opened by the Imagemagick Display method and therefore
+imagemagick must be compiled to include the risght delegate library for this.
+
+Croaks if no windows could be opened.
+
+=cut
 
 sub display {
     my $self        = shift;

@@ -17,6 +17,15 @@ use Data::Dumper;
 use base qw{ Chart::Magick::Chart };
 
 #--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
 sub getDefaultAxisClass {
     return 'Chart::Magick::Axis::None';
 }

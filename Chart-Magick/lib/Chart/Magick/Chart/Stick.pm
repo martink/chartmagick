@@ -51,6 +51,15 @@ sub definition {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
 sub getDefaultAxisClass {
     return 'Chart::Magick::Axis::Lin';
 }

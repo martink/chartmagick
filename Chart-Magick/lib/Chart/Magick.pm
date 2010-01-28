@@ -85,15 +85,15 @@ as you'd like, so the data property is required.
 
 =item width
 
-The width of the chart in pixels. This property will be ignored when adding this chart to a matrix (see L<matrix>)
-or another chart (see L<add>).
+The width of the chart in pixels. This property will be ignored when adding this chart to a matrix (see L<"matrix">)
+or another chart (see L<"add">).
 
-=height 
+=item height 
 
-The height of the chart in pixels. This property will be ignored when adding this chart to a matrix (see L<matrix>)
-or another chart (see L<add>).
+The height of the chart in pixels. This property will be ignored when adding this chart to a matrix (see L<"matrix">)
+or another chart (see L<"add">).
 
-=data
+=item data
 
 The data points to be plotted. Pass as an array ref of array refs. Each inner array ref has two elements which are
 array refs containing coordinates and values respectively (eg. x and y values), and must have the same number of

@@ -26,6 +26,27 @@ The following methods are available from this class:
 =cut
 
 #---------------------------------------------
+
+=head2 applyLayoutHints ( hints )
+
+Applies the provided layout hints if applicable. See L<Chart::Magick::Axis::applyLayoutHints> for more information.
+
+=head3 hints
+
+Hash ref containing the hints. Chart::Magick::Axis::Lin processes the following hints:
+
+=over 4
+
+=item coordPadding
+
+=item valuePadding
+
+=item tickWidth
+
+=back
+
+=cut
+
 sub applyLayoutHints {
     my $self    = shift;
     my $hints   = shift;
@@ -381,6 +402,15 @@ sub getCoordDimension {
 }
 
 #---------------------------------------------
+
+=head2 getDataRange ( )
+
+See L<Chart::Magick::Axis::getDataRange>.
+
+This method overrides the data range given by the superclass with the xStart, xStop, yStart and yStop properties is
+those are set.
+
+=cut
 
 sub getDataRange {
     my $self = shift;
@@ -1075,14 +1105,23 @@ sub plotBox {
     return;
 }
 
-
 #---------------------------------------------
 
-=head2 plotRulers ( )
+=head2 drawRuler ( position, isX, color )
 
-Draws the rulers.
+Draws a ruler.
 
-You'll probably never need to call this method manually.
+=head3 position
+
+The location of the ruler (ie. x coordinate for vertical and y coordinate for horizontal rulers.
+
+=head3 isX
+
+Boolean indicating whether the ruler belongs to the x-axis ( ie. if the ruler is vertical )
+
+=head3 color
+
+Color of the ruler. Pass in a format that Image::Magick understands.
 
 =cut
 
@@ -1112,6 +1151,15 @@ sub drawRuler {
     return;
 }
 
+#---------------------------------------------
+
+=head2 plotRulers ( )
+
+Draws the rulers.
+
+You'll probably never need to call this method manually.
+
+=cut
 
 sub plotRulers {
     my $self = shift;

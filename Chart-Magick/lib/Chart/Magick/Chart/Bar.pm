@@ -160,6 +160,15 @@ sub getDataRange {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
 sub getDefaultAxisClass {
     return 'Chart::Magick::Axis::Lin';
 }
@@ -294,6 +303,22 @@ sub preprocessData {
 #   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
 #   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
 }
+
+=head2 layoutHints ( )
+
+Returns the layout hints for this plugin. Hints that:
+
+=over 4
+
+=item *
+    coordPadding should be ( half a tick width ) to make room for the first and last bars. 
+
+=item *
+    tickWidth should be the smallest interval between two adjecent x coordinates in the data set.
+
+=back
+
+=cut
 
 sub layoutHints {
     my $self = shift;

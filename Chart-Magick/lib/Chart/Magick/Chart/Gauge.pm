@@ -8,6 +8,22 @@ use List::Util qw{ min };
 
 use base qw{ Chart::Magick::Chart };
 
+#---------------------------------------------------------------------
+
+=head2 getNeedlePath ( name, size )
+
+Returns the svg path for one of the predefined needle shapes scaled to size.
+
+=head3 name
+
+The name of the predefined path. You can choose from 'simple', 'compass' and 'fancy'.
+
+=head3 size
+
+The length of the needle in pixels.
+
+=cut
+
 sub getNeedlePath {
     my $self = shift;
     my $name = shift;
@@ -38,7 +54,22 @@ sub getNeedlePath {
     return $path;
 }
 
-#-------------------------------------------------------------------
+#---------------------------------------------------------------------
+
+=head2 definition ( )
+
+Defines the properties for this class. See also Chart::Magick::Chart::definition.
+
+The following properties can be set:
+
+=over 4
+
+####TODO: Add these items.
+
+=back
+
+=cut
+
 sub definition {
     my $self = shift;
 
@@ -79,6 +110,13 @@ sub definition {
 }
 
 #--------------------------------------------------------------------
+
+=head2 drawBackPane ( canvas )
+
+Draws the the backpane of the gauge on the passed canvas.
+
+=cut
+
 sub drawBackPane {
     my $self    = shift;
     my $canvas  = shift;
@@ -95,6 +133,13 @@ sub drawBackPane {
 }
 
 #--------------------------------------------------------------------
+
+=head2 drawLabels ( canvas )
+
+Draws the tick labels on the provided canvas.
+
+=cut
+
 sub drawLabels {
     my $self    = shift;
     my $canvas  = shift;
@@ -133,6 +178,13 @@ sub drawLabels {
 }
 
 #--------------------------------------------------------------------
+
+=head2 drawNeedles ( canvas )
+
+Draws the needles on the canvas.
+
+=cut
+
 sub drawNeedles {
     my $self    = shift;
     my $canvas  = shift;
@@ -163,6 +215,13 @@ sub drawNeedles {
 }
 
 #--------------------------------------------------------------------
+
+=head2 drawRim ( canvas ) 
+
+Draws the gauge rim onto the canvas.
+
+=cut
+
 sub drawRim {
     my $self    = shift;
     my $canvas  = shift;
@@ -189,6 +248,13 @@ sub drawRim {
 }
 
 #--------------------------------------------------------------------
+
+=head2 drawScale ( canvas ) 
+
+Draws the scale (or the axis if you like) onto the canvas.
+
+=cut
+
 sub drawScale {
     my $self    = shift;
     my $canvas  = shift;
@@ -219,6 +285,13 @@ sub drawScale {
 }
 
 #--------------------------------------------------------------------
+
+=head2 drawTicks ( canvas )
+
+Draws the ticks onto the canvas.
+
+=cut
+
 sub drawTicks {
     my $self    = shift;
     my $canvas  = shift;
@@ -259,11 +332,27 @@ sub drawTicks {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
 sub getDefaultAxisClass {
     return 'Chart::Magick::Axis::None';
 }
 
 #--------------------------------------------------------------------
+
+=head2 getTicks
+
+Returns an array containing the ticks for this gauge.
+
+=cut
+
 sub getTicks {
     my $self = shift;
 
@@ -277,11 +366,25 @@ sub getTicks {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getSubticks ( )
+
+Returns an arrayref containing the subticks for this gauge.
+
+=cut
+
 sub getSubticks {
     return ();
 }
 
 #--------------------------------------------------------------------
+
+=head2 getSymbolDef ( dataset )
+
+See Chart::Magick::Chart::getSymBolDef.
+
+=cut
+
 sub getSymbolDef {
     my $self    = shift;
     my $ds      = shift;
@@ -292,6 +395,13 @@ sub getSymbolDef {
 }
 
 #--------------------------------------------------------------------
+
+=head2 plot ( canvas )
+
+See Chart::Magick::Chart::plot.
+
+=cut
+
 sub plot {
     my $self    = shift;
     my $canvas  = shift; 
@@ -340,6 +450,13 @@ sub autoRange {
 }
 
 #--------------------------------------------------------------------
+
+=head2 project ( value, radius )
+
+See Chart::Magick::Chart::project.
+
+=cut
+
 sub project {
     my $self    = shift;
     my $value   = shift;
@@ -356,6 +473,13 @@ sub project {
 }
 
 #--------------------------------------------------------------------
+
+=head2 transform ( value )
+
+Transforms a value to an angle.
+
+=cut
+
 sub transform {
     my $self    = shift;
     my $value   = shift;
