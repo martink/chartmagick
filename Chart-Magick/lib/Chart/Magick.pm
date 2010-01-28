@@ -41,6 +41,141 @@ $chart->write( 'line_bar.png' );
 
 =cut
 
+=head1 USAGE
+
+=head2 Introduction
+
+Chart::Magick separates the actual graphs and the coordinate systems they are projected onto. Coordinate systems
+are provided by the Chart::Magick::Axis classes while the visualization of the data is taken care of by the
+classes in the Chart::Magick::Chart namespace. Data is provided through the Chart::Magick::Data abstraction layer
+which allows for NxM dimensional data sets.
+
+In terms of hierarchy data and palette are added to a chart and charts are added to an axis.
+
+=head2 Code examples
+
+Apart from the examples here in the pod there are a number of example scripts in the examples directory in the
+distribution. 
+
+=head2 Simple usage
+
+Although Chart::Magick can be used by instanciating all of its components manually, it's often more convenient to
+use the Chart::Magick class, which does a lot of work for you. Basically you create a new chart by 
+
+    my $chart = Chart::Magick->chart_type(
+        options
+    );
+
+where chart_type can be any of the Chart::Magick::Chart subclasses that are supplied with Chart::Magick. Options is
+a hash with configuration data which is discussed below.
+
+For instance, for a scatter plot, which is provided by Chart::Magick::Scatter, you'd use:
+
+    my $scatter = Chart::Magick->scatter(
+        options
+    );
+
+=head3 Configuration
+
+The configuration may contain the following keys listed below. Note that these properties serve merely as overrides
+for defaults: none of these keys have to be passed. However, a chart without any data might be not as informational
+as you'd like, so the data property is required.
+
+=over 4
+
+=item width
+
+The width of the chart in pixels. This property will be ignored when adding this chart to a matrix (see L<matrix>)
+or another chart (see L<add>).
+
+=height 
+
+The height of the chart in pixels. This property will be ignored when adding this chart to a matrix (see L<matrix>)
+or another chart (see L<add>).
+
+=data
+
+The data points to be plotted. Pass as an array ref of array refs. Each inner array ref has two elements which are
+array refs containing coordinates and values respectively (eg. x and y values), and must have the same number of
+elements.
+
+For example:
+
+    # Create some dummy data sets
+    @x1     = ( 1, 2, 3     );
+    @y1     = ( 2, 7, 19    );
+    @x2     = ( 1, 4, 5, 7  );
+    @y2     = ( 4, 8, 2, -1 );
+
+    %config = (
+        ...
+        data => [
+            [ \@x1, \@y1 ],
+            [ \@x2, \@y2 ],
+        ],
+        ...
+    );
+
+=item chart
+
+Hash ref containing directives to configure the chart object. The configuration properties that are available vary
+from chart type to chart type. See the documentation of the definition method for the various
+Chart::Magick::Chart::* modules for a list of available properties.
+
+=item axis
+
+Hash ref containing directives to configure the axis object. The configuration properties that are available vary
+from axis type to axis type. See the documentation of the definition method for the various Chart::Magick::Axis::*
+modules for a list of available properties.
+
+=item legend
+
+Hash ref containing directives to configure the legend of the chart. See the documentation of the definition method
+for the Chart::Magick::Legend for a list of available properties.
+
+=item palette
+
+Array ref of hash refs containing the palette definition that you want to use.
+
+=item labels
+
+Array ref of hash refs. Each hash ref defines the labels for one axis in the chart in a value => label fashion.
+Eg. (when the axis is Chart::Magick::Axis::Lin):
+
+    [
+        { 1 => 2009,    2 => 2010,                  },  # x labels
+        { 0 => 'Bad', 2.5 => 'Avarage', 5 => 'Good' },  # y labels
+    ]
+
+Note that the hash ref to axis mapping depends is determined by the Chart::Magick::Axis plugin you use.
+
+=item axisType
+
+The Chart::Magick::Axis plugin you want to use to draw this chart. If ommitted the default axis defined by the
+chart plugin will be used.
+
+You can either pass a full class name, the classname without the Chart::Magick::Axis part or an instanciated
+Chart::Magick::Axis object.
+
+These are equivalent:
+
+    %config = (
+        axisType => 'LinLog',
+    );
+
+    %config = (
+        axisType => 'Chart::Magick::Axis::LinLog',
+    );
+
+    $axis   = Chart::Magick::Axis::LinLog->new;
+    %config = (
+        axisType => $axis,
+    );
+
+=back
+
+=cut
+
 #--------------------------------------------------------------------
 sub _loadAndInstanciate {
     my $class   = shift;
@@ -57,27 +192,6 @@ sub _loadAndInstanciate {
 
     return $instance;
 }
-
-=head2 USAGE
-
-Although Chart::Magick can be used by instanciating all of its components manually, it's often more convenient to
-use the Chart::Magick class, which does a lot of work for you. Basically you create a new chart by 
-
-    my $chart = Chart::Magick->chart_type(
-        options
-    );
-
-Where chart_type can be any of the Chart::Magick::Chart subclasses that are supplied with Chart::Magick.
-
-For instance for a scatter plot, which is provided by Chart::Magick::Scatter, you'd use:
-
-    my $scatter = Chart::Magick->scatter(
-        options
-    );
-
-
-
-=cut
 
 #--------------------------------------------------------------------
 sub AUTOLOAD {
