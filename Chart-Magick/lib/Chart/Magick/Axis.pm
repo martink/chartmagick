@@ -453,6 +453,10 @@ sub draw {
     my $self    = shift;
     my $charts  = $charts{ id $self };
 
+    # Save state.
+    my $config          = $self->getRaw;
+    my $legendConfig    = $self->legend->getRaw;
+
     # Delete tmp 1x1 pixel image ( see _buildObj )
     @{ $self->im } = ();
 
@@ -486,7 +490,7 @@ sub draw {
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->plot( $chartCanvas ); #$self );
+        $chart->plot( $chartCanvas );
     }
 
     $chartCanvas->Crop(
@@ -506,6 +510,10 @@ sub draw {
     $self->plotLast;
 
     $isDrawn{ id $self } = 1;
+
+    # Restore state
+    $self->set( $config );
+    $self->legend->set( $legendConfig );
 
     return $self->im;
 }

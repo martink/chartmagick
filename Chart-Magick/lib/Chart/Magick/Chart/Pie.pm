@@ -9,7 +9,6 @@ use Class::InsideOut qw{ :std };
 
 readonly canvas => my %canvas;
 
-
 use Data::Dumper;
 
 
@@ -826,6 +825,7 @@ sub processDataset {
     my $divisor     = $self->dataset->datasetData->[0]->{ coordCount }; # avoid division by zero
     my $stepsize    = ( $self->get('topHeight') + $self->get('bottomHeight') ) / $divisor;
 
+    @{ $self->{ _slices } } = ();
     for my $coord ( @{ $self->dataset->getCoords } ) {
         my $x = $coord->[0];
         my $y = $self->dataset->getDataPoint( $coord, 0 )->[0];

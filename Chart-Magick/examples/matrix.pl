@@ -116,8 +116,15 @@ my $matrix = Chart::Magick->matrix( 800, 750, [
     [ $barChart, $logChart  ],
     [ $pieChart, $gauge     ],
 ] );
-$matrix->setWeight( 1, 1, 2 );      # stretch the logchart
 
+$matrix->draw;
+$matrix->write( 'm1.png' );
+
+$matrix->setWeight( 1, 1, 2 );      # stretch the logchart
+$matrix->draw( 1 );
+$matrix->write( 'm2.png' );
+
+exit;
 
 ## Fourth chart
 #$axis = $matrix->getAxis( 2, 0 );

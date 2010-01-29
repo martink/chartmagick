@@ -156,6 +156,10 @@ Renders the matrix.
 sub draw {
     my $self = shift;
 
+    # Delete any other canvases that are in the Image::Magick object.
+    @{ $im{ id $self } } = ();
+
+    # Create a new canvas of the correct size.
     $self->im->Set(
         size    => $self->width .'x'. $self->height,
     );
