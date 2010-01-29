@@ -416,6 +416,15 @@ sub plot {
 }
 
 #--------------------------------------------------------------------
+
+=head2 autoRange ( )
+
+See Chart::Magick::Chart::autoRange.
+
+Calcs and sets radius and scaleRadius etc. so that the Gauge fits in the canvas supplied by the axis.
+
+=cut
+
 sub autoRange {
     my $self = shift;
 

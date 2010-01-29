@@ -467,7 +467,7 @@ sub draw {
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
         $chart->setAxis( $self );
-        $chart->preprocessData( ); #$self );
+        $chart->preprocessData( );
         $chart->addToLegend;
 
         $self->applyLayoutHints( $chart->layoutHints );

@@ -86,6 +86,13 @@ sub addToLegend {
 
 #-------------------------------------------------------------------
 
+=head2 autoRange ( )
+
+This method is a hook which is called after the axis has set its diemensions. You can use this method to precalc
+values that have to scale with the axis. 
+
+=cut
+
 sub autoRange {
     return;
 }
