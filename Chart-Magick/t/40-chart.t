@@ -7,7 +7,7 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis;
 
-use Test::More tests => 43 + 1;
+use Test::More tests => 42 + 1;
 use Test::NoWarnings;
 
 BEGIN {
@@ -222,7 +222,7 @@ BEGIN {
 
 #####################################################################
 #
-# im / setAxis / axis
+# setAxis / axis
 #
 #####################################################################
 {
@@ -231,7 +231,6 @@ BEGIN {
     $chart->setAxis( $axis );
      
     is( $chart->axis, $axis,     'axis returns correct axis object' );
-    is( $chart->im,   $axis->im, 'im returns the correct object'    );
 }
 
 #####################################################################
