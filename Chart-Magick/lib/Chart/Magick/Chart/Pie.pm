@@ -192,19 +192,6 @@ sub addSlice {
 
 #--------------------------------------------------------------------
 
-sub bigCircle {
-    my $self    = shift;
-    my $angle   = shift;
-    my $tilt    = $self->get('tiltAngle');
-
-    return
-          $tilt <= 90 && $angle <= pi   ? '0'
-        : $tilt <= 90 && $angle >  pi   ? '1'
-        : $tilt >  90 && $angle <= pi   ? '1'
-        : $tilt >  90 && $angle >  pi   ? '0'
-        : 0;
-}
-
 =head2 getIntersect ( radius, alpha, x0, y0 )
 
 Returns the point at which a line through x0,y0 and angle alpha intersects an ellipse cenred at 0,0.
@@ -591,8 +578,8 @@ sub drawPieSlice {
     # Construct path for slice
     my $path = " M $tipX,$tipY L $fromX,$fromY ";
 
-    # We need to draw to top and bottom slices in parts as well, for two reasons: First to prevent the rims fom
-    # drawing with a different curvature than the top/bottom parts (probably due to rounding errors. 2) To revent
+    # We need to draw to top and bottom slices in parts as well, for two reasons: First to prevent the rims from
+    # drawing with a different curvature than the top/bottom parts (probably due to rounding errors. 2) To prevent
     # Image magick from segfaulting when a slice of 100% is being drawn.
     foreach my $part ( $self->splitSlice( $slice ) ) {
         my $toX     = $part->{endCorner}->{x};
@@ -668,7 +655,6 @@ sub drawRim {
     );
 
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
-    my $bigCircle                = $self->bigCircle( $slice->{ angle } );
 
     # Draw curvature
     $self->canvas->Draw(
@@ -676,9 +662,9 @@ sub drawRim {
         stroke          => $slice->{strokeColor},
         points      =>
             " M $startSideBottom{x},$startSideBottom{y} ".
-            " A $pieWidth,$pieHeight 0 $bigCircle,0 $endSideBottom{x},$endSideBottom{y} ".
+            " A $pieWidth,$pieHeight 0 0,0 $endSideBottom{x},$endSideBottom{y} ".
             " L $endSideTop{x}, $endSideTop{y} ".
-            " A $pieWidth,$pieHeight 0 $bigCircle,1 $startSideTop{x},$startSideTop{y}".
+            " A $pieWidth,$pieHeight 0 0,1 $startSideTop{x},$startSideTop{y}".
             " Z",
         fill        => $slice->{rimColor},
     );
