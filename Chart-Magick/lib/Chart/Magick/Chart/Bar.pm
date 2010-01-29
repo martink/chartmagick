@@ -274,35 +274,37 @@ sub plot {
     }
 }
 
-#--------------------------------------------------------------------------
-
-=head2 preprocessData ( )
-
-See Chart::Magick::Chart::preprocessData.
-
-Please note the following:
-
-=over 4
-
-=item *
-
-Sets the xTickOffset axis property to 1, unless it has been set to something else already.
-
-=item *
-
-Forces the xTickCount axis property to the number of bar(group)s. Even when xTickCount has been set already.
-
-=cut
-
-sub preprocessData {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    $self->SUPER::preprocessData;
-
-#   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
-#   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
-}
+##--------------------------------------------------------------------------
+#
+#=head2 preprocessData ( )
+#
+#See Chart::Magick::Chart::preprocessData.
+#
+#Please note the following:
+#
+#=over 4
+#
+#=item *
+#
+#Sets the xTickOffset axis property to 1, unless it has been set to something else already.
+#
+#=item *
+#
+#Forces the xTickCount axis property to the number of bar(group)s. Even when xTickCount has been set already.
+#
+#=back
+#
+#=cut
+#
+#sub preprocessData {
+#    my $self = shift;
+#    my $axis = $self->axis;
+#
+#    $self->SUPER::preprocessData;
+#
+##   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
+##   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
+#}
 
 =head2 layoutHints ( )
 

@@ -1,5 +1,8 @@
 MANIFEST\.SKIP
 
+examples/*\.png$
+
+
 #!start included /data/wre/prereqs/lib/perl5/5.10.0/ExtUtils/MANIFEST.SKIP
 # Avoid version control files.
 \bRCS\b
