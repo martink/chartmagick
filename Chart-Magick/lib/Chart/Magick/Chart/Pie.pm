@@ -983,7 +983,7 @@ sub sortSlices {
             ;
     } else {
         return
-              $aStop  <= 1.5 * pi && $bStop  <= 1.5 * pi    ? $aStop  <=> $bStop    # A and B in quadrant III
+              $aStop  <= 1.5 * pi && $bStop  <= 1.5 * pi    ? $bStop  <=> $aStop    # A and B in quadrant III
             : $aStart >= 1.5 * pi && $bStart >= 1.5 * pi    ? $bStart <=> $aStart   # A and B in quadrant IV
             : $aStart <= 1.5 * pi && $aStop  >= 1.5 * pi    ? 1                     # A in both quadrants III and IV
             : -1                                                                    # B in both quadrants III and IV
