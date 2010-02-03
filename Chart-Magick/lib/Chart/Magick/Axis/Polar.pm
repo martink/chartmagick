@@ -34,8 +34,8 @@ sub optimizeMargins {
     
     my $xLabelHeight    = ceil max map { int $self->getLabelDimensions( $_ )->[1] } @xLabels; 
     my $yLabelWidth     = ceil max map { int $self->getLabelDimensions( $_ )->[0] } @xLabels;
-    my $baseWidth       = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
-    my $baseHeight      = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
+    my $baseWidth       = $self->getChartWidth; 
+    my $baseHeight      = $self->getChartHeight;
 
     my $chartWidth  = $baseWidth  - ( $yLabelWidth + $self->get('xTickOutset') + $self->get('xLabelTickOffset')) * 2;
     my $chartHeight = $baseHeight - ( $xLabelHeight + $self->get('xTickOutset') + $self->get('xLabelTickOffset')) * 2;
@@ -47,8 +47,8 @@ sub optimizeMargins {
         yPxPerUnit      => ( 0.5 * $chartHeight ) / ($maxY - $minY),
         xTickOffset     => 0,
         yTickOffset     => 0,
-        chartAnchorX    => $self->plotOption( 'axisMarginLeft' ) + ( $yLabelWidth + $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
-        chartAnchorY    => $self->plotOption( 'axisMarginTop'  ) + ( $xLabelHeight+ $self->get('xTickOutset') + $self->get('xLabelTickOffset')),
+        centerX         => $self->plotOption( 'chartAnchorX' ) + $baseWidth / 2,
+        centerY         => $self->plotOption( 'chartAnchorY' ) + $baseHeight / 2,
     );
 
     return ( $minX, $maxX, $minY, $maxY );
@@ -69,6 +69,7 @@ sub definition {
 
     my %def = (
         xExpandRange    => 0,
+        xTickCount      => 9,
     );
 
     return { %{ $self->SUPER::definition }, %def };
@@ -267,8 +268,8 @@ sub project {
     my $value   = shift;
 
     my $angle   = $coord->[0] * $self->getPxPerXUnit;
-    my $centerX = $self->plotOption( 'chartAnchorX' ) + $self->getChartWidth  / 2;
-    my $centerY = $self->plotOption( 'chartAnchorY' ) + $self->getChartHeight / 2;
+    my $centerX = $self->plotOption( 'centerX' );
+    my $centerY = $self->plotOption( 'centerY' );
     my $scale   = $self->plotOption( 'yPxPerUnit' );
 
     return (
