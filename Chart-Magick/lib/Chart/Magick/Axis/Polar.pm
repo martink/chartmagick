@@ -10,11 +10,19 @@ use Math::Trig;
 
 use base qw{ Chart::Magick::Axis::Lin };
 
+=head2 rad2rad
 
-sub rad2rad {
-    return Math::Trig::rad2rad( shift );
-}
+Math::Trig doesn't export its rad2rad function. So we get it here.
 
+=cut
+
+*rad2rad = *Math::Trig::rad2rad;
+
+=head2 optimizeMargins ( )
+
+See L<Chart::Magick::Axis::Lin::optimizeMargins>.
+
+=cut
 
 sub optimizeMargins { 
     my ( $self, $minX, $maxX, $minY, $maxY ) = @_;
@@ -46,6 +54,15 @@ sub optimizeMargins {
     return ( $minX, $maxX, $minY, $maxY );
 };
 
+#--------------------------------------------------------------------
+
+=head2 definition ( )
+
+See Chart::Magick::Axis::Lin::definition.
+
+Changes default for xExpandRange to 0.
+
+=cut
 
 sub definition {
     my $self = shift;
@@ -222,6 +239,8 @@ sub plotTicks {
     }
 }
 
+#--------------------------------------------------------------------
+
 =head2 preprocessData ()
 
 See Chart::Magick::Axis::preprocessData.
@@ -233,6 +252,8 @@ sub preprocessData {
 
     $self->SUPER::preprocessData;
 }
+
+#--------------------------------------------------------------------
 
 =head2 project ( coord, value )
 

@@ -45,8 +45,8 @@ for ( 0 .. 7 ) {
 #           scaleFactor => 2,
 #            radius      => 100,
         },
-        data    => [ $data2 ],
-        palette => $palette,
+        data    => [ [ [1, 2 ], [1, 0.1] ] ], #[ $data2 ],
+#        palette => $palette,
         labels  => [ { 1 => 'jan', 2 => 'feb', 3 => 'mrt', 4 => 'apr', 5 => 'mei' } ],
     );
     

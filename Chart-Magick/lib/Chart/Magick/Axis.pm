@@ -139,6 +139,13 @@ sub checkFont {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getChartHeight ( )
+
+Returns the height of the chart in pixels.
+
+=cut
+
 sub getChartHeight {
     my $self = shift;
 
@@ -147,6 +154,13 @@ sub getChartHeight {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getChartWidth {
+
+Returns the width of chart in pixels.
+
+=cut
+
 sub getChartWidth {
     my $self = shift;
 
@@ -155,10 +169,29 @@ sub getChartWidth {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getLabelDimensions ( label, wrapWidth )
+
+Returns an arrayref containing the width and height of label wrapped to the given width.
+
+=head3 label
+
+The label to calculate the dimensions of.
+
+=head3 wrapWidth
+
+The width in pixels to which the label should be wrapped before calculation its dimensions.
+
+=cut
+
 sub getLabelDimensions {
     my $self        = shift;
     my $label       = shift;
     my $wrapWidth   = shift || 0;
+
+    if ( exists $self->{ _labeldims }{ $label }{ $wrapWidth } ) {
+        return $self->{ _labeldims }{ $label }{ $wrapWidth };
+    }
 
     return [ 0, 0 ] unless $label;
 
@@ -177,6 +210,8 @@ sub getLabelDimensions {
 
         ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
     }
+
+    $self->{ _labeldims }{ $label }{ $wrapWidth } = [ $w, $h ];
 
     return [ $w, $h ];
 }
@@ -271,6 +306,20 @@ sub addChart {
 }
 
 #---------------------------------------------
+
+=head2 applyLayoutHints ( hints )
+
+Layout hints are suggestions of Chart plugins to the Axis object to change the values of some of its properties. It
+is up to the Axis plugin to do something with these suggestions, but it doesn't have to.
+
+If you subclass can handle some of these hints you should extend this method and process them here.
+
+=head3 hints
+
+Hashref containing the the hints and their value in a hint => value key/value pairs/
+
+=cut
+
 sub applyLayoutHints {
     return;
 }
@@ -410,6 +459,10 @@ sub draw {
     my $self    = shift;
     my $charts  = $charts{ id $self };
 
+    # Save state.
+    my $config          = $self->getRaw;
+    my $legendConfig    = $self->legend->getRaw;
+
     # Delete tmp 1x1 pixel image ( see _buildObj )
     @{ $self->im } = ();
 
@@ -420,7 +473,7 @@ sub draw {
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
         $chart->setAxis( $self );
-        $chart->preprocessData( ); #$self );
+        $chart->preprocessData( );
         $chart->addToLegend;
 
         $self->applyLayoutHints( $chart->layoutHints );
@@ -443,7 +496,7 @@ sub draw {
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->plot( $chartCanvas ); #$self );
+        $chart->plot( $chartCanvas );
     }
     
     $chartCanvas->shade( 100, 3 );
@@ -465,6 +518,10 @@ sub draw {
     $self->plotLast;
 
     $isDrawn{ id $self } = 1;
+
+    # Restore state
+    $self->set( $config );
+    $self->legend->set( $legendConfig );
 
     return $self->im;
 }
@@ -732,6 +789,17 @@ sub write {
 
     return;
 }
+
+#-------------------------------------------------------------------
+
+=head2 display ( )
+
+Opens a window and displays the chart in it. The window is opened by the Imagemagick Display method and therefore
+imagemagick must be compiled to include the risght delegate library for this.
+
+Croaks if no windows could be opened.
+
+=cut
 
 sub display {
     my $self        = shift;

@@ -16,7 +16,42 @@ readonly anchorX    => my %anchorX;
 readonly anchorY    => my %anchorY;
 readonly color      => my %color;
 
+=head1 NAME
+
+Chart::Magick::Marker
+
+=head1 DESCRIPTION
+
+A module that provides markers for use within the Chart::Magick system.
+
+=head1 SYNOPSIS
+
+=cut
+
 #---------------------------------------------
+
+=head1 DEFAULT MARKERS
+
+Currently there are three default markers defined:
+
+=over 4
+
+=item *
+
+triangle
+
+=item *
+
+square
+
+=item *
+
+cicrle
+
+=back
+
+=cut
+
 our %DEFAULT_MARKERS = (
     triangle => {
         size    => 1,
@@ -35,7 +70,24 @@ our %DEFAULT_MARKERS = (
     },
 );
 
+=head1 METHODS
+
+These methods are provided by this class:
+
+=cut
+
 #---------------------------------------------
+
+=head2 isDefaultMarker ( name )
+
+Returns a true value if name is the identifier of a default marker. See L</"DEFAULT MARKERS">.
+
+=head3 name
+
+The identifier you want to check.
+
+=cut
+
 sub isDefaultMarker {
     my $class = shift;
     my $label = shift || return 0;
@@ -44,6 +96,42 @@ sub isDefaultMarker {
 }
 
 #---------------------------------------------
+
+=head3 new ( marker, size, args )
+
+Constructor.
+
+=head3 marker
+
+The marker you want to use. This could be any of the following:
+
+=over 4
+
+=item *
+
+The name of a default marker. See L</"DEFAULT MARKERS">.
+
+=item *
+
+The path to an image file, that should be used as marker.
+
+=item *
+
+An instanciated Image::Magick object, which contains the image for the marker.
+
+=back
+
+=head3 size
+
+The size of the marker in pixels. Markers will be scaled to this size in such way that neither width or height of
+the image exeeds this value.
+
+=head3 args
+
+TODO: Do we still need these?
+
+=cut
+
 sub new {
     my $class   = shift;
     my $marker  = shift || q{};
@@ -72,6 +160,30 @@ sub new {
 }
 
 #---------------------------------------------
+
+=head2 draw ( x, y, canvas, override )
+
+Draws a marker onto canvas at coordinate x,y.
+
+=head3 x
+
+X coordinate of the markers on the canvas.
+
+=head3 y
+
+Y coordinate of the markers on the canvas.
+
+=head3 canvas
+
+Instanciated Image::Magick object onto which the marker should be drawn.
+
+=head3 override
+
+Optional hashref containing key value pairs that Image::Magick->Draw can understand. Mostly useful to override
+stroke and fill. Only has effect for default markers.
+
+=cut
+
 sub draw {
     my $self    = shift;
     my $x       = shift;
@@ -104,6 +216,18 @@ sub draw {
 }
 
 #---------------------------------------------
+
+=head2 createMarkerFromIM ( im )
+
+Takes an Image::Magick object that should be used as a marker. Returns an Image::Magick object that can be used as
+a marker.
+
+=head3 im
+
+An Image::Magick object that should be used as marker.
+
+=cut
+
 sub createMarkerFromIM {
     my $self    = shift;
     my $im      = shift;
@@ -116,6 +240,17 @@ sub createMarkerFromIM {
 }
 
 #---------------------------------------------
+
+=head3 createMarkerFromFile ( filename )
+
+Loads an image file and creates an Image::Magick object from it that can be used as the actual marker.
+
+=head3 filename
+
+The file that should be used as marker.
+
+=cut
+
 sub createMarkerFromFile {
     my $self        = shift;
     my $filename    = shift || croak 'getMarkerFromFile requires a filename.';
@@ -146,6 +281,27 @@ sub createMarkerFromFile {
 }
 
 #-------------------------------------------
+
+=head2 createMarkerFromDefault ( name, stroke, fill )
+
+Set the current marker to a default.
+
+=head3 name
+
+The name of the default marker to use. See L</"DEFAULT MARKERS">.
+
+=head3 stroke
+
+Optional default stroke color for this marker. Color must be in a format that Image::Magick understands.
+Defaults to 'black'.
+
+=head3 fill
+
+Optional default fill color for this marker. Color must be in a format that Image::Magick understands.
+Defaults to 'none'.
+
+=cut
+
 sub createMarkerFromDefault {
     my $self        = shift;
     my $shape       = shift || 'square';
@@ -171,6 +327,17 @@ sub createMarkerFromDefault {
 }    
 
 #-------------------------------------------
+
+=head2 setColor ( color )
+
+Sets the color to draw default markers with.
+
+=head3 color
+
+A Chart::Magick::Color object.
+
+=cut
+
 sub setColor {
     my $self    = shift;
     my $color   = shift;

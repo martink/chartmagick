@@ -26,6 +26,27 @@ The following methods are available from this class:
 =cut
 
 #---------------------------------------------
+
+=head2 applyLayoutHints ( hints )
+
+Applies the provided layout hints if applicable. See L<Chart::Magick::Axis::applyLayoutHints> for more information.
+
+=head3 hints
+
+Hash ref containing the hints. Chart::Magick::Axis::Lin processes the following hints:
+
+=over 4
+
+=item coordPadding
+
+=item valuePadding
+
+=item tickWidth
+
+=back
+
+=cut
+
 sub applyLayoutHints {
     my $self    = shift;
     my $hints   = shift;
@@ -36,6 +57,10 @@ sub applyLayoutHints {
 
     if ( exists $hints->{ valuePadding } ) {
         $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
+    };
+
+    if ( exists $hints->{ tickWidth    } ) {
+        $self->set( 'xTickWidth', $hints->{ tickWidth } ) ;
     };
 
     return;
@@ -262,6 +287,7 @@ sub definition {
         
         xPlotRulers     => sub { $_[0]->get('plotRulers') },
         xRulerColor     => sub { $_[0]->get('rulerColor') },
+        xSubrulerColor  => sub { $_[0]->get('xRulerColor') },
 
         xTitle          => '',
         xTitleFont      => sub { $_[0]->get('font') },
@@ -290,7 +316,7 @@ sub definition {
         
         yPlotRulers     => sub { $_[0]->get('plotRulers') },
         yRulerColor     => sub { $_[0]->get('rulerColor') },
-
+        ySubrulerColor  => sub { $_[0]->get('yRulerColor') },
         yTitle          => '',
         yTitleFont      => sub { $_[0]->get('font') },
         yTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
@@ -376,6 +402,15 @@ sub getCoordDimension {
 }
 
 #---------------------------------------------
+
+=head2 getDataRange ( )
+
+See L<Chart::Magick::Axis::getDataRange>.
+
+This method overrides the data range given by the superclass with the xStart, xStop, yStart and yStop properties is
+those are set.
+
+=cut
 
 sub getDataRange {
     my $self = shift;
@@ -475,12 +510,10 @@ sub optimizeMargins {
             );
 
         # Adjust the chart ranges so that they align with the 0 axes if desired.
-#        if ( $self->get('yAlignAxesWithTicks') ) {
         if ( $self->get('yExpandRange') ) {
             $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
             $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
         }
-#        if ( $self->get('xAlignAxesWithTicks') ) {
         if ( $self->get('xExpandRange') ) {
             $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
             $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
@@ -491,11 +524,11 @@ sub optimizeMargins {
         my @yLabels = map { $self->getTickLabel( $_, 1 ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
 
         my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-        my $xAddUnit    = $self->get('xTickOffset');
+        my $xAddUnit    = $self->get('xTickOffset') * $xTickWidth;
         my $xPxPerUnit  = $chartWidth / ( $xUnits + $xAddUnit );
 
         my $yUnits      = ( $self->transformY( $maxY ) - $self->transformY( $minY ) ) || 1;
-        my $yAddUnit    = $self->get('yTickOffset');
+        my $yAddUnit    = $self->get('yTickOffset') * $yTickWidth;
         my $yPxPerUnit  = $chartHeight / ( $yUnits + $yAddUnit );
 
         # Calc max label lengths
@@ -527,9 +560,9 @@ sub optimizeMargins {
                 chartWidth      => $chartWidth,
                 chartHeight     => $chartHeight,
                 xPxPerUnit      => $xPxPerUnit,
-                xTickOffset     => $xAddUnit / 2 * $xPxPerUnit,
+                xTickOffset     => $xAddUnit / 2,
                 yPxPerUnit      => $yPxPerUnit,
-                yTickOffset     => $yAddUnit / 2 * $yPxPerUnit,
+                yTickOffset     => $yAddUnit / 2,
                 chartAnchorX    => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
                 chartAnchorY    => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
             );
@@ -847,10 +880,10 @@ sub preprocessData {
     );
 
     $self->plotOption( 
-        yChartStop  => $maxY + $self->get('yTickOffset') / 2,
-        yChartStart => $minY - $self->get('yTickOffset') / 2,
-        xChartStop  => $maxX + $self->get('xTickOffset') / 2,
-        xChartStart => $minX - $self->get('xTickOffset') / 2,
+        yChartStop  => $maxY + $self->plotOption('yTickOffset'),
+        yChartStart => $minY - $self->plotOption('yTickOffset'),
+        xChartStop  => $maxX + $self->plotOption('xTickOffset'),
+        xChartStart => $minX - $self->plotOption('xTickOffset'),
 
 #        chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
 #        chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
@@ -859,13 +892,13 @@ sub preprocessData {
     # Precalc toPx offsets.
     $self->plotOption( 'xPxOffset'  => 
           $self->plotOption('chartAnchorX') 
-        + $self->plotOption('xTickOffset') 
+        + $self->plotOption('xTickOffset') * $self->getPxPerXUnit
         - $self->transformX( $self->get('xStart') ) * $self->getPxPerXUnit
     );
     $self->plotOption( 'yPxOffset'  => 
         $self->plotOption('chartAnchorY') 
         + $self->getChartHeight 
-        - $self->plotOption('yTickOffset')
+        - $self->plotOption('yTickOffset') * $self->getPxPerYUnit
         + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
     );
 
@@ -1072,6 +1105,51 @@ sub plotBox {
     return;
 }
 
+#---------------------------------------------
+
+=head2 drawRuler ( position, isX, color )
+
+Draws a ruler.
+
+=head3 position
+
+The location of the ruler (ie. x coordinate for vertical and y coordinate for horizontal rulers.
+
+=head3 isX
+
+Boolean indicating whether the ruler belongs to the x-axis ( ie. if the ruler is vertical )
+
+=head3 color
+
+Color of the ruler. Pass in a format that Image::Magick understands.
+
+=cut
+
+sub drawRuler {
+    my $self    = shift;
+    my $tick    = shift;
+    my $isX     = shift;
+    my $color   = shift;
+
+    my ($from, $to);
+    if ($isX) {
+        $from   = $self->toPx( [ $tick ], [ $self->plotOption('yChartStart') ] );
+        $to     = $self->toPx( [ $tick ], [ $self->plotOption('yChartStop')  ] );
+    }
+    else {
+        $from   = $self->toPx( [ $self->plotOption('xChartStart') ], [ $tick ] );
+        $to     = $self->toPx( [ $self->plotOption('xChartStop')  ], [ $tick ] );
+    }
+
+    $self->im->Draw(
+        primitive   => 'Path',
+        stroke      => $color || $self->get('rulerColor'),
+        points      => "M $from L $to",
+        fill        => 'none',
+    );
+
+    return;
+}
 
 #---------------------------------------------
 
@@ -1090,18 +1168,15 @@ sub plotRulers {
     my $maxY = $self->get('yStop');
 
     if ( $self->get('yPlotRulers') ) {
-        for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
+        for my $tick ( @{ $self->getYSubticks } ) {
             next if $tick < $minY || $tick > $maxY;
-        
-            $self->im->Draw(
-                primitive   => 'Path',
-                stroke      => $self->get('yRulerColor'),
-                points      => 
-                      " M " . $self->toPx( [ $self->plotOption('xChartStart') ], [ $tick ] ) 
-                    . " L " . $self->toPx( [ $self->plotOption('xChartStop')  ], [ $tick ] ),
-                fill        => 'none',
-            );
-            
+
+            $self->drawRuler( $tick, 0, $self->get('ySubrulerColor') );
+        }
+        for my $tick ( @{ $self->getYTicks } ) {
+            next if $tick < $minY || $tick > $maxY;
+
+            $self->drawRuler( $tick, 0, $self->get('yRulerColor') );
         }
     }
 
@@ -1109,17 +1184,15 @@ sub plotRulers {
     my $maxX = $self->get('xStop');
 
     if ( $self->get('xPlotRulers') ) {
-        for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
+        for my $tick ( @{ $self->getXSubticks } ) {
             next if $tick < $minX || $tick > $maxX;
 
-            $self->im->Draw(
-                primitive   => 'Path',
-                stroke      => $self->get('xRulerColor'),
-                points      =>
-                      " M " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStart') ] ) 
-                    . " L " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStop')  ] ),
-                fill        => 'none',
-            );
+            $self->drawRuler( $tick, 1, $self->get('xSubrulerColor') );
+        }
+        for my $tick ( @{ $self->getXTicks } ) {
+            next if $tick < $minX || $tick > $maxX;
+
+            $self->drawRuler( $tick, 1, $self->get('xRulerColor') );
         }
     }
 

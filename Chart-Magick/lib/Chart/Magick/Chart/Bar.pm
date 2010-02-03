@@ -160,6 +160,15 @@ sub getDataRange {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
 sub getDefaultAxisClass {
     return 'Chart::Magick::Axis::Lin';
 }
@@ -265,40 +274,64 @@ sub plot {
     }
 }
 
-#--------------------------------------------------------------------------
+##--------------------------------------------------------------------------
+#
+#=head2 preprocessData ( )
+#
+#See Chart::Magick::Chart::preprocessData.
+#
+#Please note the following:
+#
+#=over 4
+#
+#=item *
+#
+#Sets the xTickOffset axis property to 1, unless it has been set to something else already.
+#
+#=item *
+#
+#Forces the xTickCount axis property to the number of bar(group)s. Even when xTickCount has been set already.
+#
+#=back
+#
+#=cut
+#
+#sub preprocessData {
+#    my $self = shift;
+#    my $axis = $self->axis;
+#
+#    $self->SUPER::preprocessData;
+#
+##   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
+##   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
+#}
 
-=head2 preprocessData ( )
+=head2 layoutHints ( )
 
-See Chart::Magick::Chart::preprocessData.
-
-Please note the following:
+Returns the layout hints for this plugin. Hints that:
 
 =over 4
 
 =item *
-
-Sets the xTickOffset axis property to 1, unless it has been set to something else already.
+    coordPadding should be ( half a tick width ) to make room for the first and last bars. 
 
 =item *
+    tickWidth should be the smallest interval between two adjecent x coordinates in the data set.
 
-Forces the xTickCount axis property to the number of bar(group)s. Even when xTickCount has been set already.
+=back
 
 =cut
 
-sub preprocessData {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    $self->SUPER::preprocessData;
-
-#   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
-#   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
-}
-
 sub layoutHints {
+    my $self = shift;
+
+    my $coords     = $self->dataset->getCoords;
+    my $minSpacing = min map { $coords->[ $_ + 1 ]->[0] - $coords->[ $_ ]->[0] } ( 0 .. @$coords - 2 );
+
     return {
         coordPadding    => [ 0.5 ],
         valuePadding    => [ 0   ],
+        tickWidth       => $minSpacing,
     };
 }
 

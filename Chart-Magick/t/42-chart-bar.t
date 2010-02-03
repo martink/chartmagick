@@ -8,7 +8,7 @@ use List::MoreUtils     qw{ uniq    };
 use List::Util          qw{ min max };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 20 + 1;
+use Test::More tests => 21 + 1;
 use Test::NoWarnings;
 
 BEGIN {
@@ -97,9 +97,13 @@ BEGIN {
         {
             coordPadding    => [ 0.5 ],
             valuePadding    => [ 0   ],
+            tickWidth       => 1,
         },
         'layoutHints returns the correct hints',
     );
+
+    $chart->dataset->addDataPoint( [ 1.5 ], [ 1 ] );
+    cmp_ok( $chart->layoutHints->{ tickWidth }, '==', 0.5, 'layoutHints->{tickWidth} scales correctly with datapoints' );
 }
 
 #####################################################################

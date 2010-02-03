@@ -254,9 +254,9 @@ sub definition {
 
 #--------------------------------------------------------------------
 
-=head2 getAnchr
+=head2 getAnchor
 
-returns the x,y coordinate of the legend anchor.
+Returns the x,y coordinate of the legend anchor.
 
 =cut
 

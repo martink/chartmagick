@@ -86,6 +86,13 @@ sub addToLegend {
 
 #-------------------------------------------------------------------
 
+=head2 autoRange ( )
+
+This method is a hook which is called after the axis has set its diemensions. You can use this method to precalc
+values that have to scale with the axis. 
+
+=cut
+
 sub autoRange {
     return;
 }
@@ -227,6 +234,14 @@ sub getSymbolDef {
     };
 }
 
+#-------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+Returns the default axis class for this chart. Your subclass must override this method.
+
+=cut
+
 sub getDefaultAxisClass {
     my $self = shift;
 
@@ -264,13 +279,18 @@ sub hasBlockSymbols {
 
 #-------------------------------------------------------------------
 
+=head2 layoutHints ( )
+
+Returns a hashref containing the layout hints for this plugin. 
+
+=cut
+
 sub layoutHints {
     return {
         coordPadding    => [ 0 ],
         valuePadding    => [ 0 ],
     };
 }
-
 
 #-------------------------------------------------------------------
 
@@ -330,6 +350,13 @@ sub preprocessData {
 }
 
 #-------------------------------------------------------------------
+
+=head2 project ( coords, values )
+
+See Chat::Magick::Axis::project.
+
+=cut
+
 sub project {
     my ($self, @params) = @_;
 
@@ -361,6 +388,14 @@ sub setAxis {
 }
 
 #-------------------------------------------------------------------
+
+=head2 toPx ( coords, values )
+
+Convenience method. Calls C<project> and returns its results joined by a comma as a sting which directly usable as
+a point in Image::Magick Draw oprations.
+
+=cut
+
 sub toPx {
     my ( $self, @params ) = @_;
 
