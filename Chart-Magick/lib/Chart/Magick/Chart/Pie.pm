@@ -2,16 +2,13 @@ package Chart::Magick::Chart::Pie;
 
 use strict;
 use warnings;
-use constant pi => 3.14159265358979;
 
-use List::Util qw{ min };
-use Class::InsideOut qw{ :std };
+use Math::Trig;         # exports pi
+use List::Util          qw{ min };
+use Class::InsideOut    qw{ :std };
 
 readonly canvas => my %canvas;
-
-use Data::Dumper;
-
-
+readonly slices => my %slices;
 
 use base qw{ Chart::Magick::Chart };
 
@@ -94,7 +91,7 @@ The text label that is drawn along with the slice.
 sub addSlice {
     my $self        = shift;
     my $properties  = shift;
-    my $slices      = $self->{_slices};
+    my $slices      = $self->slices;
 
     my $percentage  = $properties->{percentage};
     # Work around a bug in imagemagick where an A path with the same start and end point will segfault.
@@ -467,7 +464,7 @@ sub plot {
     $self->processDataset;
 
     # Draw slices in the correct order or you'll get an MC Escher.
-    my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
+    my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->slices };
 
     # First draw the bottom planes and the labels behind the chart.
     foreach my $slice (@slices) {
@@ -902,7 +899,9 @@ sub new {
     my $class = shift;
 
     my $self = $class->SUPER::new(@_);
-    $self->{_slices} = [];
+    register $self;
+
+    $slices{ id $self } = [];
 
     return $self;
 }
@@ -933,7 +932,8 @@ sub processDataset {
     my $divisor     = $self->dataset->datasetData->[0]->{ coordCount }; # avoid division by zero
     my $stepsize    = ( $self->get('topHeight') + $self->get('bottomHeight') ) / $divisor;
 
-    @{ $self->{ _slices } } = ();
+    $slices{ id $self } = [ ];
+
     for my $coord ( @{ $self->dataset->getCoords } ) {
         my $x = $coord->[0];
         my $y = $self->dataset->getDataPoint( $coord, 0 )->[0];
