@@ -5,7 +5,7 @@ use warnings;
 
 use Carp;
 use POSIX qw{ ceil };
-use List::Util qw{ max };
+use List::Util qw{ max min };
 use Math::Trig;
 
 use base qw{ Chart::Magick::Axis::Lin };
@@ -27,28 +27,39 @@ See L<Chart::Magick::Axis::Lin::optimizeMargins>.
 sub optimizeMargins { 
     my ( $self, $minX, $maxX, $minY, $maxY ) = @_;
 
-    $self->SUPER::optimizeMargins( $minX, $maxX, $minY, $maxY );
+#    $self->SUPER::optimizeMargins( $minX, $maxX, $minY, $maxY );
+    my $baseWidth   = $self->getChartWidth; 
+    my $baseHeight  = $self->getChartHeight;
+    my $baseRadius  = 0.5 * min( $baseWidth, $baseHeight );
 
-    my $xTickWidth = $self->get('xTickWidth') || ( $minX - $maxX ) / 8;
+    my $xTickWidth = $self->get('xTickWidth') 
+        || $self->calcTickWidth( $minX, $maxX, 2*pi*$baseRadius, $self->get('xTickCount'), $self->get('xLabelUnits') );
+
+    my $yTickWidth = $self->get('yTickWidth')
+        || $self->calcTickWidth( $minY, $maxY, $baseRadius, $self->get('yTickCount'), $self->get('yLabelUnits') );
+
+    #my $xTickWidth = $self->get('xTickWidth') || ( $minX - $maxX ) / 8;
     my @xLabels = map { $self->getTickLabel( $_, 0 ) } @{ $self->generateTicks( $minX, $maxX, $xTickWidth ) };
     
     my $xLabelHeight    = ceil max map { int $self->getLabelDimensions( $_ )->[1] } @xLabels; 
     my $yLabelWidth     = ceil max map { int $self->getLabelDimensions( $_ )->[0] } @xLabels;
-    my $baseWidth       = $self->getChartWidth; 
-    my $baseHeight      = $self->getChartHeight;
 
     my $chartWidth  = $baseWidth  - ( $yLabelWidth + $self->get('xTickOutset') + $self->get('xLabelTickOffset')) * 2;
     my $chartHeight = $baseHeight - ( $xLabelHeight + $self->get('xTickOutset') + $self->get('xLabelTickOffset')) * 2;
 
     $self->plotOption(
-        chartWidth      => $chartWidth,
-        chartHeight     => $chartHeight,
+        chartWidth      => $baseWidth,
+        chartHeight     => $baseHeight,
         xPxPerUnit      => 2 * pi / $maxX,
         yPxPerUnit      => ( 0.5 * $chartHeight ) / ($maxY - $minY),
         xTickOffset     => 0,
         yTickOffset     => 0,
         centerX         => $self->plotOption( 'chartAnchorX' ) + $baseWidth / 2,
         centerY         => $self->plotOption( 'chartAnchorY' ) + $baseHeight / 2,
+    );
+    $self->set(
+        xTickWidth      => $xTickWidth,
+        yTickWidth      => $yTickWidth,
     );
 
     return ( $minX, $maxX, $minY, $maxY );
@@ -70,6 +81,7 @@ sub definition {
     my %def = (
         xExpandRange    => 0,
         xTickCount      => 9,
+        xRange          => undef,
     );
 
     return { %{ $self->SUPER::definition }, %def };

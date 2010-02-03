@@ -135,6 +135,7 @@ sub plot {
         $canvas->Draw(
             primitive	=> 'polyline',
             stroke		=> $color->getStrokeColor,
+            strokewidth => 1,
             points		=> join( ' ', @{ $coords[$ds] } ),
             fill		=> 'none',
         );

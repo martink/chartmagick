@@ -482,12 +482,14 @@ Iteratively tries to get the optimal sizes for margin and graph widths and heigh
 sub optimizeMargins {
     my ( $self, @params ) = @_;
 
-    my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
-    my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
-    my $yLabelWidth  = 0;
-    my $xLabelHeight = 0;
-    my $prevXLabelHeight = 0;
-    my $prevYLabelWidth = 0;
+    #my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
+    #my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
+    my $baseWidth           = $self->plotOption( 'chartWidth'   );
+    my $baseHeight          = $self->plotOption( 'chartHeight'  );
+    my $yLabelWidth         = 0;
+    my $xLabelHeight        = 0;
+    my $prevXLabelHeight    = 0;
+    my $prevYLabelWidth     = 0;
 
     my $ready;
     while ( !$ready ) {
@@ -638,6 +640,13 @@ sub calcBaseMargins {
 
     # calc axisMarginTop
     $self->plotOption( axisMarginTop => 0 );
+
+    my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
+    my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
+    $self->plotOption(
+        chartWidth  => $baseWidth,
+        chartHeight => $baseHeight,
+    );
 
     return;
 }
