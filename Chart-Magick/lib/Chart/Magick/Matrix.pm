@@ -253,6 +253,8 @@ sub write {
     my $self        = shift;
     my $filename    = shift || croak 'No filename passed';
 
+    $self->draw unless $self->isDrawn;
+
     my $error = $self->im->Write( $filename );
     croak "Could not write file $filename because $error" if $error;
 
@@ -268,6 +270,8 @@ thus imagemagick should be compiled with the correct delegate for your windowing
 
 sub display {
     my $self        = shift;
+
+    $self->draw unless $self->isDrawn;
 
     my $error = $self->im->Display;
     croak "Could not open display because $error" if $error;

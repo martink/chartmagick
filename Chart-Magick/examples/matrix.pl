@@ -117,28 +117,7 @@ my $matrix = Chart::Magick->matrix( 800, 750, [
     [ $pieChart, $gauge     ],
 ] );
 
-$matrix->draw;
-$matrix->write( 'm1.png' );
-
 $matrix->setWeight( 1, 1, 2 );      # stretch the logchart
-$matrix->draw( 1 );
-$matrix->write( 'm2.png' );
 
-exit;
-
-## Fourth chart
-#$axis = $matrix->getAxis( 2, 0 );
-#$axis->addChart( $pieChart );
-#$axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
-#$axis->set(
-#    title       =>  'Pie!',
-#    );
-#
-#$axis = $matrix->getAxis( 2, 1 );
-#$axis->addChart( $gauge );
-#$axis->addLabels( { 1 => 'aaa', 2 => 'bbb', 3 => 'ccc', 4 => 'ddd', 5 => 'eee' } );
-#$axis->set('title', 'Gauge');
-#
-
-$matrix->draw;
+#$matrix->draw;
 $matrix->write('matrix.png');
