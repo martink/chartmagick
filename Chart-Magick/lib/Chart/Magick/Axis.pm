@@ -189,6 +189,10 @@ sub getLabelDimensions {
     my $label       = shift;
     my $wrapWidth   = shift || 0;
 
+    if ( exists $self->{ _labeldims }{ $label }{ $wrapWidth } ) {
+        return $self->{ _labeldims }{ $label }{ $wrapWidth };
+    }
+
     return [ 0, 0 ] unless $label;
 
     my %properties = (
@@ -206,6 +210,8 @@ sub getLabelDimensions {
 
         ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
     }
+
+    $self->{ _labeldims }{ $label }{ $wrapWidth } = [ $w, $h ];
 
     return [ $w, $h ];
 }
