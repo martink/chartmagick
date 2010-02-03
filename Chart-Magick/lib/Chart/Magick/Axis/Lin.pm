@@ -473,6 +473,18 @@ sub getTickLabel {
 
 #---------------------------------------------
 
+=head2 handlesOutOfRange ( )
+
+See Chart::Magick::Axis::handlesOutOfRange.
+
+=cut
+
+sub handlesOutOfRange {
+    return [ 0, 0 ];
+}
+
+#---------------------------------------------
+
 =head2 optimizeMargins ( )
 
 Iteratively tries to get the optimal sizes for margin and graph widths and heights.

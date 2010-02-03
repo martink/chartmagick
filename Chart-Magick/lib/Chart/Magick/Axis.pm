@@ -252,6 +252,18 @@ sub getLabels {
 
 #----------------------------------------------
 
+=head2 handlesOutOfRange ( )
+
+Returns an array ref telling whether axes can draw datapoint outside the range of their scales.
+
+=cut
+
+sub handlesOutOfRange {
+    croak "Your axis plugin must override handlesOutOfRange";
+}
+
+#----------------------------------------------
+
 =head2 im ( )
 
 Returns the Image::Magick object that is used for drawing. Will automatically create a new Image::Magick object if

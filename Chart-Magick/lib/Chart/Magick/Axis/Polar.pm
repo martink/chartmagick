@@ -89,6 +89,18 @@ sub definition {
 
 #--------------------------------------------------------------------
 
+=head2 handlesOutOfRange ( )
+
+See Chart::Magick::Axis::handlesOutOfRange.
+
+=cut
+
+sub handlesOutOfRange {
+    return [ 1, 0 ];
+}
+
+#--------------------------------------------------------------------
+
 =head2 plotAxes ( )
 
 See Chart::Magick::Axis::Lin::plotAxes.
