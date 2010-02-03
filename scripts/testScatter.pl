@@ -10,27 +10,26 @@ use Time::HiRes qw( gettimeofday tv_interval );
 
 my $cnt = 1000;
 
-my (@dsx, @dsy);
-# Generate dataset 1
+my (@dsx, @dsy, @dsx2, @dsy2);
+# Generate datasets
 for ( 1 .. $cnt ) {
     my $r = rand( 10 );
     my $t = rand() * 2 * pi;
 
     push @dsx, $r * cos( $t );
     push @dsy, $r * sin( $t );
-}
 
-# Generate dataset 2
-my $dsx2 = [ map { 0.1 / ( $_ || 1 ) } @dsx ];
-my $dsy2 = [ map { 0.1 / ( $_ || 1 ) } @dsy ];
+    push @dsx2, ( 19 - $r ) * cos $t;
+    push @dsy2, ( 19 - $r ) * sin $t;
+}
 
 # Timekeeping
 my $time = [ gettimeofday ];
 
 # Create chart and add datasets to it
 my $chart = Chart::Magick::Chart::Scatter->new();
-$chart->addDataset( \@dsx, \@dsy,   'Transordinary wobble scale', 'square' );
-$chart->addDataset( $dsx2, $dsy2, 'Octopode scale', 'gooey.png', 18 ); 
+$chart->addDataset( \@dsx, \@dsy,   'Transordinary wobble scale', 'square', 6 );
+$chart->addDataset( \@dsx2, \@dsy2, 'Octopode scale', 'gooey.png', 10 ); 
 
 # Create coordinate system
 my $axis = Chart::Magick::Axis::Lin->new( {
@@ -51,10 +50,10 @@ my $axis = Chart::Magick::Axis::Lin->new( {
     yTitle          => 'Outcome',
 
 #    drawLegend      => 0,
-    xStart          => -100,
-    yStart          => -100,
-    xStop           => 100,
-    yStop           => 100,
+#    xStart          => -100,
+#    yStart          => -100,
+#    xStop           => 100,
+#    yStop           => 100,
 
     xTickOffset     => 1,
     yTickOffset     => 1,

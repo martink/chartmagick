@@ -50,6 +50,15 @@ sub definition {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
 sub getDefaultAxisClass {
     return 'Chart::Magick::Axis::Lin';
 }
@@ -67,7 +76,7 @@ sub getSymbolDef {
     my $ds      = shift;
 
     return {
-        marker  => $self->markers->[ $ds ],
+        marker  => $self->markers->[ $ds ]->setColor( $self->colors->[ $ds ] ),
     };
 }
 

@@ -2,90 +2,15 @@ package Chart::Magick::Chart::Pie;
 
 use strict;
 use warnings;
-use constant pi => 3.14159265358979;
 
-use List::Util qw{ min };
-use Data::Dumper;
+use Math::Trig;         # exports pi
+use List::Util          qw{ min };
+use Class::InsideOut    qw{ :std };
+
+readonly canvas => my %canvas;
+readonly slices => my %slices;
 
 use base qw{ Chart::Magick::Chart };
-
-#--------------------------------------------------------------------
-sub getDefaultAxisClass {
-    return 'Chart::Magick::Axis::None';
-}
-
-#--------------------------------------------------------------------
-
-=head2 getSymbolDef ( )
-
-See Chart::Magick::Chart::getSymbolDef.
-
-=cut
-
-sub getSymbolDef {
-    my $self    = shift;
-    my $ds      = shift;
-
-    return {
-        block   => $self->markers->[ $ds ],
-    };
-}
-
-
-#### TODO: getXOffset en Y offset tov. axis anchor bepalen.
-sub getXOffset {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    return $axis->getChartWidth / 2 + $axis->get('marginLeft');
-}
-
-sub getYOffset {
-    my $self = shift;
-    my $axis = $self->axis;
-
-    return $axis->getChartHeight / 2 + $axis->get('marginTop');
-}
-
-sub project {
-    my $self    = shift;
-    my $x       = shift;
-    my $y       = shift;
-
-    return $self->axis->project(
-        [ $x + $self->getWidth  / 2 ],
-        [ $y + $self->getHeight / 2 ],
-    );
-
-}
-
-sub definition {
-    my $self    = shift;
-    my %options = %{ $self->SUPER::definition };
-
-    my %overrides = (
-        bottomHeight        => 0,
-        explosionLength     => 0,
-        explosionWidth      => 0,
-        labelPosition       => 'top',
-        labelOffset         => 10,
-        pieMode             => 'normal',
-        radius              => 100,
-        scaleFactor         => 1,
-        startAngle          => 0,
-        shadedSides         => 1,
-        stickColor          => '#333333',
-        stickLength         => 0,
-        stickOffset         => 0,
-        tiltAngle           => 55,
-        topHeight           => 20,
-    );
-
-    return { %options, %overrides };
-}
-
-
-
 
 =head1 NAME
 
@@ -136,10 +61,37 @@ sub _mod2pi {
 }
 
 #-------------------------------------------------------------------
+
+=head2 addSlice ( properties ) 
+
+Adds a slice definition to the pie.
+
+=head3 properties
+
+Hashref containing the slice definition. The following properties can be passed:
+
+=over 4
+
+=item percentage
+
+The percentage of the slice. May be a value between 0 and 1.
+
+=item color
+
+A Chart::Magick::Color object.
+
+=item label
+
+The text label that is drawn along with the slice.
+
+=back
+
+=cut
+
 sub addSlice {
     my $self        = shift;
     my $properties  = shift;
-    my $slices      = $self->{_slices};
+    my $slices      = $self->slices;
 
     my $percentage  = $properties->{percentage};
     # Work around a bug in imagemagick where an A path with the same start and end point will segfault.
@@ -182,8 +134,8 @@ sub addSlice {
         rimColor        => $sideColor,
 
         # geometric properties
-        topHeight       => $self->get('topHeight') * sin(2 * pi * $self->get('tiltAngle') / 360),
-        bottomHeight    => $self->get('bottomHeight') * sin(2 * pi * $self->get('tiltAngle') / 360),
+        topHeight       => $self->get('topHeight')    * sin( 2 * pi * $self->get('tiltAngle') / 360 ),
+        bottomHeight    => $self->get('bottomHeight') * sin( 2 * pi * $self->get('tiltAngle') / 360 ),
         explosionRadius => $explosionRadius,
         widthReduction  => $explosionRadius * sin( $angle / 2 ),
         scaleFactor     => ($self->get('scaleFactor') - 1) * $percentage + 1,
@@ -205,18 +157,118 @@ sub addSlice {
 
 #--------------------------------------------------------------------
 
-sub bigCircle {
-    my $self    = shift;
-    my $angle   = shift;
-    my $tilt    = $self->get('tiltAngle');
+=head2 definition
 
-    return
-          $tilt <= 90 && $angle <= pi   ? '0'
-        : $tilt <= 90 && $angle >  pi   ? '1'
-        : $tilt >  90 && $angle <= pi   ? '1'
-        : $tilt >  90 && $angle >  pi   ? '0'
-        : 0;
+See Chart::Magick::Chart::definition.
+
+Pie defines the following properties:
+
+=over 4
+
+=item bottomHeight
+
+Defaults to 0.
+
+=item explosionLength
+
+Defaults to 0.
+
+=item explosionWidth
+
+Defaults to 0.
+
+=item labelPosition
+
+Defaults to 'top'.
+
+=item labelOffset
+
+Defaults to 10.
+
+=item pieMode
+
+Defaults to 'normal'.
+
+=item radius
+
+Defaults to 100.
+
+=item scaleFactor
+
+Defaults to 1.
+
+=item startAngle
+
+Defaults to 0.
+
+=item shadedSides
+
+Defaults to 1.
+
+=item stickColor
+
+Defaults to '#333333'.
+
+=item stickLength
+
+Defaults to 0.
+
+=item stickOffset
+
+Defaults to 0.
+
+=item tiltAngle
+
+Defaults to 55.
+
+=item topHeight
+
+Defaults to 20.
+
+=back
+
+=cut
+
+sub definition {
+    my $self    = shift;
+    my %options = %{ $self->SUPER::definition };
+
+    my %overrides = (
+        bottomHeight        => 0,
+        explosionLength     => 0,
+        explosionWidth      => 0,
+        labelPosition       => 'top',
+        labelOffset         => 10,
+        pieMode             => 'normal',
+        radius              => 100,
+        scaleFactor         => 1,
+        startAngle          => 0,
+        shadedSides         => 1,
+        stickColor          => '#333333',
+        stickLength         => 0,
+        stickOffset         => 0,
+        tiltAngle           => 55,
+        topHeight           => 20,
+    );
+
+    return { %options, %overrides };
 }
+
+#--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
+sub getDefaultAxisClass {
+    return 'Chart::Magick::Axis::None';
+}
+
+#--------------------------------------------------------------------
 
 =head2 getIntersect ( radius, alpha, x0, y0 )
 
@@ -256,6 +308,23 @@ sub getIntersect {
     return ( $x, $y );
 }
 
+#--------------------------------------------------------------------
+
+=head2 getSymbolDef ( )
+
+See Chart::Magick::Chart::getSymbolDef.
+
+=cut
+
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+    return {
+        block   => $self->markers->[ $ds ],
+    };
+}
+
 #-------------------------------------------------------------------
 
 =head2 calcCoordinates ( slice )
@@ -281,12 +350,12 @@ sub calcCoordinates {
     );
 
     my ( $startX, $startY ) = $self->project(
-        $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY )
+        map { [$_] } $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY ) 
     );
     my ( $endX, $endY )     = $self->project(
-        $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY )
+        map { [$_] } $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY )
     );
-    ( $tipX, $tipY )        = $self->project( $tipX, $tipY );
+    ( $tipX, $tipY )        = $self->project( [ $tipX ], [ $tipY ] );
 
     my %coords = (
         %{ $slice },
@@ -305,6 +374,20 @@ sub calcCoordinates {
 }
 
 #--------------------------------------------------------------------
+
+=head2 splitSlice
+
+Splits a slice definition in two or three slice defs if necessary, so that each new slice never crosses the
+'x-axis' being the line between angle 0 and angle pi.
+
+Returns an array of sub slices.
+
+=head3 slice
+
+Hashref containing the definition of the slice that might need splitting.
+
+=cut
+
 sub splitSlice {
     my $self    = shift;
     my %slice   = %{ shift || {} };
@@ -365,39 +448,35 @@ sub splitSlice {
 
 #-------------------------------------------------------------------
 
-=head2 draw ( )
+=head2 plot ( )
 
-Draws the pie chart.
+See Chart::Magick::Chart::plot.
 
 =cut
 
 sub plot {
-    my $self = shift;
-    my $axis = $self->axis;
-    my $canvas = shift;
+    my $self    = shift;
+    my $axis    = $self->axis;
+    my $canvas  = shift;
+
+    $canvas{ id $self } = $canvas;
 
     $self->processDataset;
 
     # Draw slices in the correct order or you'll get an MC Escher.
-    my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->{_slices} };
+    my @slices = map { $self->calcCoordinates( $_ ) } @{ $self->slices };
 
     # First draw the bottom planes and the labels behind the chart.
     foreach my $slice (@slices) {
         # Draw bottom
-        if ( $self->get('tiltAngle') <= 90 ) {
-            $self->drawBottom( $slice );
-        }
-        else {
-            $self->drawTop( $slice );
-        }
+        $self->drawBottom( $slice );
 
         if ( $slice->{avgAngle} > 0 && $slice->{avgAngle} <= pi ) {
-            $self->drawLabel($slice);
+            $self->drawLabel( $slice );
         }
     }
 
-    # Secondly draw the sides
-    # Only 3d pies have sides
+    # Secondly draw the sides, which only 3d pies have
     if ($self->get('tiltAngle') != 0) {
         my @parts =
             sort    sortSlices                          # sort slice parts in drawing order
@@ -423,12 +502,7 @@ sub plot {
 
     # Finally draw the top planes of each slice and the labels that are in front of the chart.
     foreach my $slice (@slices) {
-        if ( $self->get('tiltAngle') <= 90 ) {
-            $self->drawTop( $slice ) if $self->get('tiltAngle') != 0;
-        }
-        else {
-            $self->drawBottom( $slice );
-        }
+        $self->drawTop( $slice ) if $self->get('tiltAngle') != 0;
 
         if ( $slice->{avgAngle} > pi ) {
             $self->drawLabel( $slice );
@@ -483,12 +557,12 @@ sub drawLabel {
     my $stopRadius  = $startRadius + $self->get('stickLength');
 
     my ( $startPointX, $startPointY ) = $self->project( 
-         $startRadius * cos $angle, 
-        -$startRadius * $tiltScale * sin $angle 
+        [  $startRadius * cos $angle                ], 
+        [ -$startRadius * $tiltScale * sin $angle   ], 
     );
     my ( $endPointX, $endPointY     ) = $self->project(
-         $stopRadius  * cos $angle,
-        -$stopRadius  * $tiltScale * sin $angle
+        [  $stopRadius  * cos $angle                ],
+        [ -$stopRadius  * $tiltScale * sin $angle   ],
     );
 
     if ($self->get('tiltAngle')) {
@@ -504,7 +578,7 @@ sub drawLabel {
 
     # Draw the stick
     if ($self->get('stickLength')){
-        $self->im->Draw(
+        $self->canvas->Draw(
             primitive   => 'Path',
             stroke      => $self->get('stickColor'),
             strokewidth => 3,
@@ -539,7 +613,7 @@ sub drawLabel {
     my $maxWidth = $anchorX;
     $maxWidth = $self->axis->get('width') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
 
-    $self->axis->text(
+    $self->canvas->text(
         text            => $text,
         halign          => $horizontalAlign,
         align           => ucfirst $horizontalAlign,
@@ -613,8 +687,8 @@ sub drawPieSlice {
     # Construct path for slice
     my $path = " M $tipX,$tipY L $fromX,$fromY ";
 
-    # We need to draw to top and bottom slices in parts as well, for two reasons: First to prevent the rims fom
-    # drawing with a different curvature than the top/bottom parts (probably due to rounding errors. 2) To revent
+    # We need to draw to top and bottom slices in parts as well, for two reasons: First to prevent the rims from
+    # drawing with a different curvature than the top/bottom parts (probably due to rounding errors. 2) To prevent
     # Image magick from segfaulting when a slice of 100% is being drawn.
     foreach my $part ( $self->splitSlice( $slice ) ) {
         my $toX     = $part->{endCorner}->{x};
@@ -625,7 +699,7 @@ sub drawPieSlice {
 
     $path .= 'Z';
 
-    $self->im->Draw(
+    $self->canvas->Draw(
         primitive   => 'Path',
         stroke      => $slice->{strokeColor},
         points      => $path,
@@ -690,17 +764,16 @@ sub drawRim {
     );
 
     my ( $pieWidth, $pieHeight ) = @{ $slice }{ qw( width height ) };
-    my $bigCircle                = $self->bigCircle( $slice->{ angle } );
 
     # Draw curvature
-    $self->im->Draw(
+    $self->canvas->Draw(
         primitive       => 'Path',
         stroke          => $slice->{strokeColor},
         points      =>
             " M $startSideBottom{x},$startSideBottom{y} ".
-            " A $pieWidth,$pieHeight 0 $bigCircle,0 $endSideBottom{x},$endSideBottom{y} ".
+            " A $pieWidth,$pieHeight 0 0,0 $endSideBottom{x},$endSideBottom{y} ".
             " L $endSideTop{x}, $endSideTop{y} ".
-            " A $pieWidth,$pieHeight 0 $bigCircle,1 $startSideTop{x},$startSideTop{y}".
+            " A $pieWidth,$pieHeight 0 0,1 $startSideTop{x},$startSideTop{y}".
             " Z",
         fill        => $slice->{rimColor},
     );
@@ -755,7 +828,7 @@ sub drawSide {
         y   => $slice->{$cornerName}->{y} + $slice->{bottomHeight}
     );
 
-    $self->im->Draw(
+    $self->canvas->Draw(
         primitive   => 'Path',
         stroke      => $slice->{strokeColor},
         points      =>
@@ -772,9 +845,9 @@ sub drawSide {
 
 #-------------------------------------------------------------------
 
-=head2 drawBottom ( slice )
+=head2 drawTop ( slice )
 
-Draws the bottom of the given pie slice.
+Draws the top of the given pie slice.
 
 =head3 slice
 
@@ -792,6 +865,16 @@ sub drawTop {
 }
 
 #-------------------------------------------------------------------
+
+=head2 getPieDimensions ( scale )
+
+Returns the width and height of the pie corrected for tilt angle.
+
+=head3 scale
+
+Optional factor by which the pie radius is scaled.
+
+=cut
 
 sub getPieDimensions {
     my $self    = shift;
@@ -816,7 +899,9 @@ sub new {
     my $class = shift;
 
     my $self = $class->SUPER::new(@_);
-    $self->{_slices} = [];
+    register $self;
+
+    $slices{ id $self } = [];
 
     return $self;
 }
@@ -846,6 +931,8 @@ sub processDataset {
 
     my $divisor     = $self->dataset->datasetData->[0]->{ coordCount }; # avoid division by zero
     my $stepsize    = ( $self->get('topHeight') + $self->get('bottomHeight') ) / $divisor;
+
+    $slices{ id $self } = [ ];
 
     for my $coord ( @{ $self->dataset->getCoords } ) {
         my $x = $coord->[0];

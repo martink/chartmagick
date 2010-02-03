@@ -13,7 +13,8 @@ private properties => my %properties;
 =head2 get ( [ property ] )
 
 Returns a hash ref of all properties in the Axis object. If a specific property is passed only the value belong to
-that property is returned.
+that property is returned. If the value of a property is a coderef, it will be executed and the result will be
+returned.
 
 =head3 property
 
@@ -24,21 +25,46 @@ The property whose value should be returned.
 sub get {
     my $self        = shift;
     my $key         = shift;
-    my $properties  = $properties{ id $self };
 
     if ($key) {
-        #### TODO: handle error and don't croak?
-        croak "invalid key: [$key]" unless exists $properties->{ $key };
-
+        my $value   = $self->getRaw( $key );
         return 
-            ref $properties->{ $key } eq 'CODE'
-                ? $properties->{ $key }->( $self )
-                : $properties->{ $key }
+            ref $value eq 'CODE'
+                ? $value->( $self )
+                : $value
                 ;
     }
     else {
         # We have to process the code refs, so we cannot just return a copy of the properties hash ref.
-        return { map { $_ => $self->get( $_ ) } keys %{ $properties } };
+        return { map { $_ => $self->get( $_ ) } keys %{ $self->getRaw } };
+    }
+}
+
+#--------------------------------------------------------------------
+
+=head2 getRaw ( key )
+
+Return the raw value for the given property. This means that code ref are not automatically executed. In most cases
+you'd want to use the get method. A notable exception is when storing the state temporarily with the intention of
+restoring it again via C<set>.
+
+=head3 key
+
+The name of the property. If not given, a hashref containg all properties and their value will be returned.
+
+=cut
+
+sub getRaw {
+    my $self        = shift;
+    my $key         = shift;
+    my $properties  = $properties{ id $self };
+
+    if ($key) {
+        croak "invalid key: [$key]" unless exists $properties->{ $key };
+        return $properties->{ $key }
+    }
+    else {
+        return { %{ $properties } };
     }
 }
 

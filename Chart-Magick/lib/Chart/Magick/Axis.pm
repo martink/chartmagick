@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Class::InsideOut qw{ :std };
-use Image::Magick;
+use Chart::Magick::ImageMagick;
 use List::Util qw{ min max };
 use Carp;
 use Data::Dumper;
@@ -17,9 +17,10 @@ use base qw{ Chart::Magick::Definition };
 
 readonly charts         => my %charts;
 private  plotOptions    => my %plotOptions;
-private  im             => my %magick;
+readonly im             => my %magick;
 private  axisLabels     => my %axisLabels;
 readonly legend         => my %legend;
+readonly isDrawn        => my %isDrawn;
 
 =head1 NAME
 
@@ -50,9 +51,16 @@ sub _buildObject {
 
     my $id = id $self;
 
-    $charts{ $id        } = [];
+    # We need to explicitly read an image for QueryFontMetrics and friends to work...
+    # This temp image is deleted and replaced with the right canvas size in draw().
+    my $image = Chart::Magick::ImageMagick->new( size=>'1x1' );
+    $image->Read('xc:white');
+
+    $magick{ $id        } = $image;
+    $charts{ $id        } = [ ];
     $axisLabels{ $id    } = [ ];
     $legend{ $id        } = Chart::Magick::Legend->new( $self );
+    $isDrawn{ $id       } = 0;
 
     $self->{ _plotOptions } = {};
     return $self;
@@ -131,24 +139,61 @@ sub checkFont {
 }
 
 #--------------------------------------------------------------------
+
+=head2 getChartHeight ( )
+
+Returns the height of the chart in pixels.
+
+=cut
+
 sub getChartHeight {
     my $self = shift;
 
+    return $self->plotOption( 'axisHeight' );
     return $self->plotOption( 'axisHeight' ) - $self->get('marginTop') - $self->get('marginBottom');
 }
 
 #--------------------------------------------------------------------
+
+=head2 getChartWidth {
+
+Returns the width of chart in pixels.
+
+=cut
+
 sub getChartWidth {
     my $self = shift;
 
+    return $self->plotOption( 'axisWidth' );
     return $self->plotOption( 'axisWidth' ) - $self->get('marginLeft') - $self->get('marginRight');
 }
 
 #--------------------------------------------------------------------
+
+=head2 getLabelDimensions ( label, wrapWidth )
+
+Returns an arrayref containing the width and height of label wrapped to the given width.
+
+=head3 label
+
+The label to calculate the dimensions of.
+
+=head3 wrapWidth
+
+The width in pixels to which the label should be wrapped before calculation its dimensions.
+
+=cut
+
 sub getLabelDimensions {
     my $self        = shift;
     my $label       = shift;
-    my $wrapWidth   = shift;
+    my $wrapWidth   = shift || 0;
+
+    if ( exists $self->{ _labeldims }{ $label }{ $wrapWidth } ) {
+        return $self->{ _labeldims }{ $label }{ $wrapWidth };
+    }
+
+    return [ 0, 0 ] unless $label;
 
     my %properties = (
         text        => $label,
@@ -165,6 +210,8 @@ sub getLabelDimensions {
 
         ($w, $h) = ( $self->im->QueryMultilineFontMetrics( %properties ) )[4,5];
     }
+
+    $self->{ _labeldims }{ $label }{ $wrapWidth } = [ $w, $h ];
 
     return [ $w, $h ];
 }
@@ -211,23 +258,6 @@ Returns the Image::Magick object that is used for drawing. Will automatically cr
 this object has not been associated with one.
 
 =cut
-
-sub im {
-    my $self = shift;
-
-    my $im = $magick{ id $self };
-    return $im if $im;
-
-    my $width   = $self->get('width')   || croak "no height";
-    my $height  = $self->get('height')  || croak "no width";
-    my $magick  = Image::Magick->new(
-        size        => $width.'x'.$height,
-    );
-    $magick->Read( $self->get('background') );
-    $magick{ id $self } = $magick;
-
-    return $magick;
-}
 
 #----------------------------------------------
 
@@ -276,6 +306,20 @@ sub addChart {
 }
 
 #---------------------------------------------
+
+=head2 applyLayoutHints ( hints )
+
+Layout hints are suggestions of Chart plugins to the Axis object to change the values of some of its properties. It
+is up to the Axis plugin to do something with these suggestions, but it doesn't have to.
+
+If you subclass can handle some of these hints you should extend this method and process them here.
+
+=head3 hints
+
+Hashref containing the the hints and their value in a hint => value key/value pairs/
+
+=cut
+
 sub applyLayoutHints {
     return;
 }
@@ -396,7 +440,7 @@ sub definition {
         labelColor      => sub { $_[0]->get('fontColor') },
 
         background      => 'xc:white',
-
+        chartBackground => 'xc:none',
         drawLegend      => 1,
     );
 
@@ -415,10 +459,21 @@ sub draw {
     my $self    = shift;
     my $charts  = $charts{ id $self };
 
+    # Save state.
+    my $config          = $self->getRaw;
+    my $legendConfig    = $self->legend->getRaw;
+
+    # Delete tmp 1x1 pixel image ( see _buildObj )
+    @{ $self->im } = ();
+
+    # Prepare canvas of correct dimensions.
+    $self->im->Set( size => $self->get('width') . 'x' . $self->get('height') );
+    $self->im->Read( $self->get('background') );
+
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
         $chart->setAxis( $self );
-        $chart->preprocessData( ); #$self );
+        $chart->preprocessData( );
         $chart->addToLegend;
 
         $self->applyLayoutHints( $chart->layoutHints );
@@ -436,12 +491,12 @@ sub draw {
     # Plot background stuff
     $self->plotFirst;
 
-    my $chartCanvas = Image::Magick->new( size => $self->get('width') . 'x' . $self->get('height') );
-    $chartCanvas->Read('xc:none');
+    my $chartCanvas = Chart::Magick::ImageMagick->new( size => $self->get('width') . 'x' . $self->get('height') );
+    $chartCanvas->Read( $self->get('chartBackground') );
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->plot( $chartCanvas ); #$self );
+        $chart->plot( $chartCanvas );
     }
 
     $chartCanvas->Crop(
@@ -459,6 +514,12 @@ sub draw {
     );
 
     $self->plotLast;
+
+    $isDrawn{ id $self } = 1;
+
+    # Restore state
+    $self->set( $config );
+    $self->legend->set( $legendConfig );
 
     return $self->im;
 }
@@ -537,7 +598,7 @@ Plots the graph title, set by the title property.
 sub plotTitle {
     my $self = shift;
 
-    $self->text(
+    $self->im->text(
         text        => $self->get('title'),
         pointsize   => $self->get('titleFontSize'),
         font        => $self->get('titleFont'),
@@ -587,8 +648,16 @@ sub preprocessData {
 
     $self->set( 'marginTop', $marginTop );
     $self->plotOption( 'titleOffset', $titleOffset);
-    
-    my $legendMargins = $self->legend->getRequiredMargins;
+   
+    if ( $self->get('drawLegend') ) {
+        my @legendMargins = $self->legend->getRequiredMargins;
+        $self->set( 
+            marginLeft      => $self->get('marginLeft'  ) + $legendMargins[0],
+            marginRight     => $self->get('marginRight' ) + $legendMargins[1],
+            marginTop       => $self->get('marginTop'   ) + $legendMargins[2],
+            marginBottom    => $self->get('marginBottom') + $legendMargins[3],
+        );
+    }
 
     # global
     my $axisWidth  = $self->get('width') - $self->get('marginLeft') - $self->get('marginRight');
@@ -696,117 +765,48 @@ sub project {
 
 #-------------------------------------------------------------------
 
-=head2 wrapText ( properties )
+=head2 write ( filename )
 
-Takes the same properties as text does, and returns the text property wrapped so that it fits within the amount of
-pixels given by the wrapWidth property.
+Writes the chart and its charts to a file.
 
-Note that, for now, the algorithm is very naive in that it assumes all characters to have equal width so in some
-cases the rendered text  might be either less wide than possible or wider than requested. With most readable
-strings you should be fairly safe, though.
+=head3 filename
 
-=head3 properties
-
-See the text method. However, the desired width is passed by means of the wrapWidth property.
+Full path to the file to which the chart must be written.
 
 =cut
 
-sub wrapText {
+sub write {
     my $self        = shift;
-    my %properties  = @_;
+    my $filename    = shift || croak 'No filename passed';
 
-    my $maxWidth    = $properties{ wrapWidth    };
-    my $text        = $properties{ text         }; 
-    my $textWidth   = [ $self->im->QueryFontMetrics( %properties ) ]->[4];
- 
-    if ( $textWidth > $maxWidth ) {
-        # This is not guaranteed to work in every case, but it'll do for now.
+    $self->draw unless $self->isDrawn;
 
-        local $Text::Wrap::columns = int( $maxWidth / $textWidth * length $text );
-        $text = join "\n", wrap( '', '', $text );
-    }
+    my $error = $self->im->Write( $filename );
 
-    return $text;
+    croak "Could not write file $filename because $error" if $error;
+
+    return;
 }
-
 
 #-------------------------------------------------------------------
 
-=head2 text ( properties )
+=head2 display ( )
 
-Extend the imagemagick Annotate method so alignment can be controlled better.
+Opens a window and displays the chart in it. The window is opened by the Imagemagick Display method and therefore
+imagemagick must be compiled to include the risght delegate library for this.
 
-=head3 properties
-
-A hash containing the imagemagick Annotate properties of your choice.
-Additionally you can specify:
-
-	alignHorizontal : The horizontal alignment for the text. Valid values
-		are: 'left', 'center' and 'right'. Defaults to 'left'.
-	alignVertical : The vertical alignment for the text. Valid values are:
-		'top', 'center' and 'bottom'. Defaults to 'top'.
-
-You can use the align property to set the text justification.
+Croaks if no windows could be opened.
 
 =cut
 
-sub text {
-	my $self    = shift;
-	my %prop    = @_;
+sub display {
+    my $self        = shift;
 
-    # Don't bother to draw an empty string...
-    return unless length $prop{ text };
+    $self->draw unless $self->isDrawn;
 
-    # Wrap text if necessary
-    $prop{ text } = $self->wrapText( %prop ) if $prop{ wrapWidth };
+    my $error = $self->im->Display;
 
-    # Find width and height of resulting text block
-    my ( $ascender, $width, $height ) = ( $self->im->QueryMultilineFontMetrics( %prop ) )[ 2, 4, 5 ];
-
-	# Process horizontal alignment
-    my $anchorX  =
-          !defined $prop{ halign }      ? 0
-        : $prop{ halign } eq 'center'   ? $width / 2
-        : $prop{ halign } eq 'right'    ? $width
-        :                                 0;
-
-    # Using the align properties will cause IM to shift its anchor point. We'll have to compensate for that...
-    $anchorX     -=
-          !defined $prop{ align }       ? 0
-        : $prop{ align }  eq 'Center'   ? $width / 2
-        : $prop{ align }  eq 'Right'    ? $width
-        :                                 0;
-
-
-    # IM aparently always anchors at the baseline of the first line of a text block, let's take that into account.
-    my $anchorY =
-          !defined $prop{ valign }      ? $ascender
-        : $prop{ valign } eq 'center'   ? $ascender - $height / 2
-        : $prop{ valign } eq 'bottom'   ? $ascender - $height
-        :                                 $ascender;
-
-    # Convert the rotation angle to radians
-    my $rotation = $prop{ rotate } ? $prop{ rotate } / 180 * pi : 0 ;
-
-    # Calc the the angle between the IM anchor and our desired anchor
-    my $r       = sqrt( $anchorX ** 2  + $anchorY ** 2 );
-    my $theta   = atan2( -$anchorY , $anchorX ); 
-
-    # And from that angle we can translate the coordinates of the text block so that it will be alligned the way we
-    # want it to.
-    $prop{ x } -= $r * cos( $theta + $rotation );
-    $prop{ y } -= $r * sin( $theta + $rotation );
-
-    # Prevent Image::Magick from complaining about unrecognized options.
-    delete @prop{ qw( halign valign wrapWidth ) };
-
-    $self->im->Annotate(
-        #Leave align => 'Left' here as a default or all text will be overcompensated.
-        align       => 'Left',
-        %prop,
-        gravity     => 'Center', #'NorthWest',
-        antialias   => 'true',
-	);
+    croak "Could not open display because $error" if $error;
 
     return;
 }

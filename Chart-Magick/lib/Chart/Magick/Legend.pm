@@ -254,9 +254,9 @@ sub definition {
 
 #--------------------------------------------------------------------
 
-=head2 getAnchr
+=head2 getAnchor
 
-returns the x,y coordinate of the legend anchor.
+Returns the x,y coordinate of the legend anchor.
 
 =cut
 
@@ -325,7 +325,7 @@ sub draw {
     foreach my $item ( @{ $self->items } ) {
         $self->drawSymbol( $x1, $y1, $item->{ symbol } );
 
-        $self->axis->text( 
+        $self->im->text( 
             text        => $item->{ label },
             x           => $x1 + $self->get('symbolWidth') + $self->get('labelSpacing'),
             y           => $y1,
@@ -396,7 +396,7 @@ sub drawSymbol {
     }
 
     if ( exists $symbol->{ marker } && $symbol->{ marker } ) {
-        $symbol->{ marker }->draw( ($x2 + $x1) / 2, $y );
+        $symbol->{ marker }->draw( ($x2 + $x1) / 2, $y, $self->im );
     }
     
 }

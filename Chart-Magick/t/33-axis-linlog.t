@@ -7,7 +7,8 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 9;
+use Test::More tests => 9 + 1;
+use Test::NoWarnings;
 BEGIN {
     use_ok( 'Chart::Magick::Axis::LinLog', 'Chart::Magick::Axis::Lin can be used' );
 }
@@ -38,7 +39,7 @@ BEGIN {
     );
 
     cmp_deeply(
-        [ $axis->adjustYRangeToOrigin( 1, 2 ) ],
+        [ $axis->adjustYRange( 1, 2 ) ],
         [ 0, 2 ],
         'adjustYRangeToOrigin is not disabled',
     );

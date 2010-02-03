@@ -8,7 +8,8 @@ use List::MoreUtils     qw{ uniq    };
 use List::Util          qw{ min max };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 21;
+use Test::More tests => 21 + 1;
+use Test::NoWarnings;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart::Bar', 'Chart::Magick::Chart::Bar can be used' );
@@ -60,27 +61,49 @@ BEGIN {
 # preprocessData
 #
 #####################################################################
+#{
+#    my $chart = setupDummyData();
+#
+#    $chart->preprocessData;
+#    cmp_deeply(
+#        [ map { $chart->axis->get($_) } qw{ xTickOffset xTickCount } ],
+#        [ 1, 6 ],
+#        'preprocessData makes the correct adjustments on an axis with default properties',
+#    );
+#
+#    $chart->axis->set(
+#        xTickOffset => 10,
+#        xTickCount  => 100,
+#    );
+#    $chart->preprocessData;
+#    cmp_deeply(
+#        [ map { $chart->axis->get($_) } qw{ xTickOffset xTickCount } ],
+#        [ 10, 6 ],
+#        'preprocessData makes the correct adjustments on an axis with manually set properties',
+#    );
+#
+#}
+
+#####################################################################
+#
+# layoutHints
+#
+#####################################################################
 {
     my $chart = setupDummyData();
 
-    $chart->preprocessData;
     cmp_deeply(
-        [ map { $chart->axis->get($_) } qw{ xTickOffset xTickCount } ],
-        [ 1, 6 ],
-        'preprocessData makes the correct adjustments on an axis with default properties',
+        $chart->layoutHints,
+        {
+            coordPadding    => [ 0.5 ],
+            valuePadding    => [ 0   ],
+            tickWidth       => 1,
+        },
+        'layoutHints returns the correct hints',
     );
 
-    $chart->axis->set(
-        xTickOffset => 10,
-        xTickCount  => 100,
-    );
-    $chart->preprocessData;
-    cmp_deeply(
-        [ map { $chart->axis->get($_) } qw{ xTickOffset xTickCount } ],
-        [ 10, 6 ],
-        'preprocessData makes the correct adjustments on an axis with manually set properties',
-    );
-
+    $chart->dataset->addDataPoint( [ 1.5 ], [ 1 ] );
+    cmp_ok( $chart->layoutHints->{ tickWidth }, '==', 0.5, 'layoutHints->{tickWidth} scales correctly with datapoints' );
 }
 
 #####################################################################
@@ -145,7 +168,7 @@ BEGIN {
 
     # col w h x x_off y
     my $color = $chart->getPalette->getNextColor;
-    $chart->drawBar( $color, 2, 6, 4 );
+    $chart->drawBar( $chart->axis->im, $color, 2, 6, 4 );
     is( $im, $chart->axis->im, 'drawBar draws on the correct image magick object' );
 
     my $coord = qr{\s*(\d+),(\d+)\s*};

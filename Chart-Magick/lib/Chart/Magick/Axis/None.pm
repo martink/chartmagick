@@ -35,8 +35,8 @@ sub project {
     my $x       = shift;
     my $y       = shift;
 
-    my $offsetX = $self->get('marginLeft');
-    my $offsetY = $self->get('marginTop');
+    my $offsetX = $self->get('marginLeft') + $self->getChartWidth / 2;
+    my $offsetY = $self->get('marginTop')  + $self->getChartHeight / 2;
 
     return ( int( $x->[0] + $offsetX ), int( $y->[0] + $offsetY ) );
 }

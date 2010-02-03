@@ -1,8 +1,9 @@
-#!perl -T
+#!perl
 
 use Test::Deep;
 
-use Test::More tests => 29;
+use Test::More tests => 29 + 1;
+use Test::NoWarnings;
 
 
 BEGIN {

@@ -15,10 +15,10 @@ eval "use Pod::Coverage $min_pc";
 plan skip_all => "Pod::Coverage $min_pc required for testing POD coverage"
     if $@;
 
-plan skip_all => 'Still need to finish pod of a number of modules';
+#plan 1;#skip_all => 'Still need to finish pod of a number of modules';
 TODO: {
     local $TODO = 'Still need to finish pod of a number of modules';
 
-    #all_pod_coverage_ok();
+    all_pod_coverage_ok();
 }
 

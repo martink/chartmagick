@@ -1,74 +1,75 @@
 package Chart::Magick::Chart::Gauge;
 
 use strict;
+use warnings;
 
-use constant pi => 3.14159265358979;
-use List::Util qw{ max min };
-use POSIX qw{ floor ceil };
+use Math::Trig qw{ :pi deg2rad };
+use List::Util qw{ min };
 
 use base qw{ Chart::Magick::Chart };
 
-#--------------------------------------------------------------------
-sub getDefaultAxisClass {
-    return 'Chart::Magick::Axis::None';
-}
+#---------------------------------------------------------------------
 
-#--------------------------------------------------------------------
+=head2 getNeedlePath ( name, size )
 
-=head2 getSymbolDef ( )
+Returns the svg path for one of the predefined needle shapes scaled to size.
 
-See Chart::Magick::Chart::getSymbolDef.
+=head3 name
+
+The name of the predefined path. You can choose from 'simple', 'compass' and 'fancy'.
+
+=head3 size
+
+The length of the needle in pixels.
 
 =cut
 
-sub getSymbolDef {
-    my $self    = shift;
-    my $ds      = shift;
-
-    return {
-        block   => $self->markers->[ $ds ],
-    };
-}
-
-sub projectValue {
-    my $self    = shift;
-    my $value   = shift;
-    my $radius  = shift;
-
-
-    my $rad = $self->transformValue( $value ) / 180 * pi;
-    return $self->project(
-         $radius * cos( $rad ),
-        -$radius * sin( $rad ),
-    );
-}
-
-sub project {
+sub getNeedlePath {
     my $self = shift;
-    my $x    = shift;
-    my $y    = shift;
+    my $name = shift;
+    my $size = shift|| 1;
 
-    return $self->axis->project(
-        [ $x + $self->getWidth  / 2 ],
-        [ $y + $self->getHeight / 2 ],
+    my %needles = (
+        simple  => {
+            length  => 1,
+            shape   => 'l %f,%f',
+            points  => [ 1, 0 ],
+        },
+        compass => {
+            length  => 25,
+            shape   =>   'm%f%f  l%f,%f  l%f,%f  l%f,%f Z',
+            points  => [ 25, 0,  -25, 1,  -1,-1,   1,-1 ],
+        },
+        fancy => {
+            length  => 100,
+            shape   => 'm%f,%f l%f,%f l%f,%f a%f,%f 0 1,0 %f,%f l%f,%f Z',
+            points  => [ 100, 0, -8, -2, -80, 0, 12, 12, 0, 4, 80, 0 ],
+        }, 
     );
+
+    my $needle  = $needles{$name};
+    my $scale   = $size / $needle->{ length };
+    my $path    = 'M0,0 ' . sprintf $needle->{ shape }, map { $scale * $_ } @{ $needle->{ points } };
+
+    return $path;
 }
 
-sub transformValue {
-    my $self    = shift;
-    my $value   = shift;
+#---------------------------------------------------------------------
 
-    my $startValue  = $self->get('ticks')->[0];
+=head2 definition ( )
 
-    my $cw      = 1;
-    my $angle   = $self->get('startAngle') + ( $value - $startValue ) * $self->axis->plotOption('anglePerUnit');
-    $angle      *= -1 if $cw;
-    $angle      -= 90;
+Defines the properties for this class. See also Chart::Magick::Chart::definition.
 
-    return $angle;
-}
+The following properties can be set:
 
-#-------------------------------------------------------------------
+=over 4
+
+####TODO: Add these items.
+
+=back
+
+=cut
+
 sub definition {
     my $self = shift;
 
@@ -77,307 +78,431 @@ sub definition {
 
         paneColor           => '#888888',
         rimColor            => 'orange',
-        drawAxis            => 1,
+        scaleColor          => '#333333',
+        drawScale            => 1,
+
+        #TODO: remove later!
+        scaleStart          => 0,
+        scaleStop           => 10,
+        
         numberOfTicks       => 5,
         numberOfSubTicks    => 5,
+
         startAngle          => 45,
         stopAngle           => 315,
+        clockwise           => 1,
+
         scaleRadius         => 80,
         labelSpacing        => 10,
         tickOutset          => 10,
         tickInset           => 5,
-        axisColor           => '#333333',
-        radius              => 0,
+        subtickOutset       => 2,
+        subtickInset        => 2,
+        radius              => 100,
         rimMargin           => 10,
+        rimWidth            => 10,
         minTickWidth        => 40,
         ticks               => [],
+        needleType          => 'fancy',
     };
 
     return $definition;
 }
 
-#-------------------------------------------------------------------
-sub plot {
-    my $self = shift;
-    my $axis = $self->axis;
+#--------------------------------------------------------------------
 
-    $self->drawBackground;
-    $self->drawAxes;
+=head2 drawBackPane ( canvas )
 
-    my $palette = $self->getPalette;
+Draws the the backpane of the gauge on the passed canvas.
 
-    foreach my $coord ( @{ $self->dataset->getCoords( 0 ) } ) {
-        $self->drawNeedle( $self->dataset->getDataPoint( $coord, 0 )->[0] , $palette->getNextColor ); 
-    }
+=cut
 
-    # Center dot.
-    $axis->im->Draw(
-        primitive   => 'circle',
-        points      => join( ',', $self->project(0,0) ) . ' ' . join( ',', $self->project(0,2) ),
-        fill        => '#dddddd',
-        stroke      => '#bbbbbb',
-    );
-}
+sub drawBackPane {
+    my $self    = shift;
+    my $canvas  = shift;
 
-#-------------------------------------------------------------------
-sub drawAxes {
-    my $self        = shift;
+    my $radius = $self->get('radius');
 
-    my $minAngle    = $self->get('startAngle');
-    my $maxAngle    = $self->get('stopAngle');
-    my $scaleRadius = $self->get('scaleRadius');
-
-    # Draw scale rim
-    if ( $self->get('drawAxis') ) {
-        my $cw  = '1';
-        my $big = ( $maxAngle - $minAngle ) > 180 ? '1' : '0';
-
-        my ( $fromX, $fromY ) = $self->projectValue( $self->get('ticks')->[0],  $scaleRadius  );
-        my ( $toX,   $toY   ) = $self->projectValue( $self->get('ticks')->[-1], $scaleRadius );
-
-        $self->im->Draw(
-            primitive   => 'Path',
-            stroke      => $self->get('axisColor'),
-            strokewidth => 2,
-            fill        => 'none',
-            points      => 
-                 " M $fromX,$fromY "
-                ." A $scaleRadius,$scaleRadius 0 $big,$cw $toX,$toY ",
-        );
-    }
-
-    # Draw ticks
-    my $tickAngle   = ($maxAngle - $minAngle) / ( @{ $self->get('ticks') } - 1 );
-    my $inset       = $self->get('tickInset');
-    my $outset      = $self->get('tickOutset');
-    my $subTicks    = $self->get('numberOfSubTicks');
-
-    my $previousTick;
-    for my $tick ( @{ $self->get('ticks') } ) {
-        if ( defined $previousTick ) {
-            # Draw sub ticks
-            my $subTickValue = ( $tick - $previousTick ) / $subTicks;
-            for my $subTick ( 1 .. $subTicks - 1 ) {
-                $self->drawTick( $scaleRadius, $previousTick + $subTick * $subTickValue, $inset / 5, $outset / 5 );
-            } 
-        }
-
-        # Draw tick
-        $self->drawTick( $scaleRadius, $tick, $inset, $outset );
-        $self->drawLabel( $tick );
-
-        $previousTick = $tick;
-    }
-}
-
-#-------------------------------------------------------------------
-sub drawBackground {
-    my $self = shift;
-    my $im   = $self->axis->im;
-
-
-    $im->Draw(
+    $canvas->Draw(
         primitive   => 'Circle',
-        stroke      => 'none',
-        strokewidth => 5,
-        points      =>
-              join( ',', $self->project( 0, 0 ) )
-            . ' ' 
-            . join( ',', $self->project( 0, $self->get('radius') ) ),
+        points      => $self->toPx( 0, 0 ) . ' ' . $self->toPx( 0, $radius ),
         fill        => $self->get('paneColor'),
-    );
-
-    $im->Draw(
-        primitive   => 'Circle',
-        stroke      => 'orange',# $self->get('rimColor'),
-        strokewidth => 7,
-        gravity     => 'Center',
-        points      =>              
-                   join( ',', $self->project(0,0) )
-           . ' ' . join( ',', $self->project(0, $self->get('radius') ) ),
-        fill        => 'none', #'#666666',
     );
 
     return;
 }
 
-#-------------------------------------------------------------------
-sub drawLabel {
-    my $self        = shift;
-    my $tick        = shift;
-    my $angle       = shift;
+#--------------------------------------------------------------------
+
+=head2 drawLabels ( canvas )
+
+Draws the tick labels on the provided canvas.
+
+=cut
+
+sub drawLabels {
+    my $self    = shift;
+    my $canvas  = shift;
 
     my $labelRadius = $self->get('scaleRadius') - $self->get('tickInset') - $self->get('labelSpacing');
-    my ( $x, $y )   = $self->projectValue( $tick, $labelRadius );
 
-    my $angle   = $self->transformValue( $tick );
-    $angle      = abs( ( 360 + $angle -90 ) % 360 );
+    foreach my $tick ( $self->getTicks ) {
+        my ($x, $y) = $self->project( $tick, $labelRadius );
+        my ($xCenter, $yCenter) = $self->project( 0, 0 );
 
-    $self->axis->text(
-        text            => $tick,
-#        undercolor      => 'black',
-        font            => $self->axis->get('labelFont'),
-        fill            => $self->axis->get('labelColor'),
-        style           => 'normal',
-        pointsize       => $self->axis->get('labelFontSize'),
-        x               => $x,
-        y               => $y,
-        halign          => 
-              $angle >   0 && $angle < 180      ? 'left'
-            : $angle > 180 && $angle < 360      ? 'right'
-            :                                     'center'
-            ,
-        valign =>  
-              $angle >  45  && $angle <= 135    ? 'center'
-            : $angle >  135 && $angle <  225    ? 'center' #'top'
-            : $angle >= 225 && $angle <  315    ? 'center'
-            :                                     'center' #'bottom'
-            ,
-    );
+        my $halign
+            = $x - $xCenter < -10   ? 'left'
+            : $x - $xCenter >  10   ? 'right'
+            :                         'center'
+            ;
+
+        my $valign
+            = $halign eq 'center' && $y < $yCenter      ? 'top'
+            : $halign eq 'center' && $y > $yCenter      ? 'bottom'
+            :                                             'center'
+            ;
+
+        $canvas->text(
+            text            => $tick,
+    #        undercolor      => 'black',
+            font            => $self->axis->get('labelFont'),
+            fill            => $self->axis->get('labelColor'),
+            style           => 'normal',
+            pointsize       => $self->axis->get('labelFontSize'),
+            x               => $x,
+            y               => $y,
+            halign          => $halign, 
+            valign          => $valign, 
+        );
+    }
 }
 
+#--------------------------------------------------------------------
 
+=head2 drawNeedles ( canvas )
 
+Draws the needles on the canvas.
 
-#-------------------------------------------------------------------
-sub drawNeedle {
-    my $self        = shift;
-    my $value       = shift;
-    my $color       = shift;
+=cut
 
-    my $angle       = $self->transformValue( $value ); 
-
-    my $tail    = 0.1 * $self->get('scaleRadius');
-    my $body    =   1 * $self->get('scaleRadius');
-
-    #$self->im->Set(Gravity => 'Center' );
-
-    my $needleLength   = $self->get('scaleRadius');
-    my $halfWidth      = 2;
-    my $tipLength      = 2 * 2 * $halfWidth;
-    my $flangeRadius   = 6 * $halfWidth;
-    my $connectY       = sqrt( $flangeRadius ** 2 - $halfWidth ** 2 );
-
-    $self->im->Draw(
-        primitive   => 'path',
-        points      => 
-             " M  0,$needleLength"
-            ." L " . (-$halfWidth) . "," . ($needleLength - $tipLength)
-            ." L " . (-$halfWidth) . "," . $connectY
-            ." A $flangeRadius,$flangeRadius 0 1,1 $halfWidth,$connectY"
-            ." L " . ( $halfWidth) . "," . ($needleLength - $tipLength)
-            ." Z ",
-        fill        => $color->getFillColor, #'#777777',
-        stroke      => $color->getStrokeColor, #'#555555',
-        rotate      => -$angle -90,
-        affine      => [ 1, 0, 0, 1, $self->project(0,0)],
-    );
-}
-
-#-------------------------------------------------------------------
-sub drawTick {
+sub drawNeedles {
     my $self    = shift;
-    my $radius  = shift;
-    my $tick    = shift;
-    my $inset   = shift;
-    my $outset  = shift;
-    my $image   = shift || $self->axis->im;
+    my $canvas  = shift;
 
-    my ( $fromX, $fromY ) = $self->projectValue( $tick, $radius - $inset  );
-    my ( $toX,   $toY   ) = $self->projectValue( $tick, $radius + $outset );
+    my $palette = $self->getPalette;
 
-    $image->Draw(
-        primitive   => 'Line',
-        stroke      => $self->get('axisColor'),
-        strokewidth => 2,
-        points      => "$fromX,$fromY $toX,$toY",
-    );
+    my $needlePath = $self->getNeedlePath( $self->get('needleType'), $self->get('scaleRadius') );
+    my ($x, $y) = $self->project( 0,0 );
+
+    foreach my $coord ( @{ $self->dataset->getCoords( 0 ) } ) {
+        my $color = $palette->getNextColor;
+
+        # Calc (co)sine from angle for the affine rotation.
+        my $angle   = deg2rad( $self->transform( $coord->[0] ) * ( $self->get('clockwise') ? 1 : -1 ) );
+        my $sin     = sin $angle;
+        my $cos     = cos $angle;
+
+        $canvas->Draw(
+            primitive   => 'Path',
+            points      => $needlePath,
+            fill        => $color->getFillColor,
+            stroke      => $color->getStrokeColor,
+            strokewidth => 1,
+            gravity     => 'Center',
+            affine      => [ $cos, $sin, -$sin, $cos, $x, $y ], 
+        );
+    }
 }
 
-#-------------------------------------------------------------------
+#--------------------------------------------------------------------
+
+=head2 drawRim ( canvas ) 
+
+Draws the gauge rim onto the canvas.
+
+=cut
+
+sub drawRim {
+    my $self    = shift;
+    my $canvas  = shift;
+
+    my $radius  = $self->get('radius');
+
+    $canvas->Draw(
+        primitive   => 'Circle',
+        points      => $self->toPx( 0, 0 ) . ' ' . $self->toPx( 0, $radius ),
+        strokewidth => $self->get('rimWidth'),
+        stroke      => $self->get('rimColor'),
+        fill        => 'none',
+    );
+    $canvas->Draw(
+        primitive   => 'Circle',
+        points      => $self->toPx( 0, 0 ) . ' ' . $self->toPx( 0, $radius ),
+        strokewidth => 1,
+        stroke      => 'black',
+        fill        => 'none',
+    );
+
+    return;
+
+}
+
+#--------------------------------------------------------------------
+
+=head2 drawScale ( canvas ) 
+
+Draws the scale (or the axis if you like) onto the canvas.
+
+=cut
+
+sub drawScale {
+    my $self    = shift;
+    my $canvas  = shift;
+
+    my $radius  = $self->get('scaleRadius');
+
+    #### PlotOption
+    my $start   = $self->get('scaleStart');
+    my $stop    = $self->get('scaleStop');
+
+    # Draw the baseline of the scale.
+    my $startCoord  = $self->toPx( $start, $radius );
+    my $middleCoord = $self->toPx( ($stop - $start)/ 2, $radius );
+    my $stopCoord   = $self->toPx( $stop, $radius );
+    my $direction   = $self->get('clockwise') ? '1' : '0';
+
+    $canvas->Draw(
+        primitive   => 'Path',
+        points      => 
+              "M$startCoord "
+            . "A$radius,$radius 0 0,$direction $middleCoord "
+            . "A$radius,$radius 0 0,$direction $stopCoord ",
+        stroke      => $self->get('scaleColor'),
+        fill        => 'none',
+    );
+
+    $self->drawTicks( $canvas );
+}
+
+#--------------------------------------------------------------------
+
+=head2 drawTicks ( canvas )
+
+Draws the ticks onto the canvas.
+
+=cut
+
+sub drawTicks {
+    my $self    = shift;
+    my $canvas  = shift;
+
+    my $radius  = $self->get('scaleRadius');
+
+    # Ticks
+    my $from    = $radius - $self->get('tickInset');
+    my $to      = $radius + $self->get('tickOutset' );
+    my @ticks;
+
+    foreach my $tick ( $self->getTicks ) {
+        push @ticks, [ 
+            $self->toPx( $tick, $from ), 
+            $self->toPx( $tick, $to   ),
+        ];
+    }
+
+    # Subticks
+    $from   = $radius - $self->get('subtickInset');
+    $to     = $radius + $self->get('subtickOutset');
+
+    foreach my $subtick ( $self->getSubticks ) {
+        push @ticks, [
+            $self->toPx( $subtick, $from ),
+            $self->toPx( $subtick, $to   ),
+        ];
+    }
+        
+    $canvas->Draw(
+        primitive   => 'Path',
+        points      => join( ' ', map { "M $_->[0] L $_->[1]" } @ticks ),
+        stroke      => $self->get('scaleColor'),
+        fill        => 'none',
+    );
+
+    return;
+}
+
+#--------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+See Chart::Magick::Chart::getDefaultAxisClass.
+
+Bar's default axis class is Chart::Magick::Axis::Lin.
+
+=cut
+
+sub getDefaultAxisClass {
+    return 'Chart::Magick::Axis::None';
+}
+
+#--------------------------------------------------------------------
+
+=head2 getTicks
+
+Returns an array containing the ticks for this gauge.
+
+=cut
+
+sub getTicks {
+    my $self = shift;
+
+    my $tickCount = $self->get('numberOfTicks');
+    my $start     = $self->get('scaleStart');
+    my $stop      = $self->get('scaleStop');
+    my $tickWidth = ( $stop - $start ) / ( $tickCount - 1 );
+
+    return map { $start + $_ * $tickWidth } ( 0 .. $tickCount - 1 );
+
+}
+
+#--------------------------------------------------------------------
+
+=head2 getSubticks ( )
+
+Returns an arrayref containing the subticks for this gauge.
+
+=cut
+
+sub getSubticks {
+    return ();
+}
+
+#--------------------------------------------------------------------
+
+=head2 getSymbolDef ( dataset )
+
+See Chart::Magick::Chart::getSymBolDef.
+
+=cut
+
+sub getSymbolDef {
+    my $self    = shift;
+    my $ds      = shift;
+
+    return  {
+        block   => $self->colors->[ $ds ],
+    }
+}
+
+#--------------------------------------------------------------------
+
+=head2 plot ( canvas )
+
+See Chart::Magick::Chart::plot.
+
+=cut
+
+sub plot {
+    my $self    = shift;
+    my $canvas  = shift; 
+
+    $self->drawBackPane( $canvas );
+    $self->drawScale( $canvas );
+    $self->drawLabels( $canvas );
+    $self->drawNeedles( $canvas );
+    $self->drawRim( $canvas ); 
+
+    return;
+}
+
+#--------------------------------------------------------------------
+
+=head2 autoRange ( )
+
+See Chart::Magick::Chart::autoRange.
+
+Calcs and sets radius and scaleRadius etc. so that the Gauge fits in the canvas supplied by the axis.
+
+=cut
+
 sub autoRange {
     my $self = shift;
 
     # figure out available radii
-    my $radius      = min( $self->getWidth, $self->getHeight ) / 2;
+    my $radius      = int( min( $self->getWidth, $self->getHeight ) / 2 - $self->get('rimWidth') / 2 - 2 );
     my $scaleRadius = $radius - $self->get('tickOutset') - $self->get('rimMargin');
 
     # autoset number of ticks
-    my $scaleLength     = 2 * pi * $scaleRadius * ( $self->get('stopAngle') - $self->get('startAngle') ) / 360;
-    my $minTickWidth    = $self->get('minTickWidth') || 1;
-    my $maxTickCount    = $scaleLength / $minTickWidth;
-
-    my ($min, $max) = map { $_->[0] } ( $self->getDataRange )[2,3];
-    my $tickWidth   = $self->calcTickWidth( $min, $max, $scaleLength );
-    my @ticks       = @{ $self->generateTicks( $min, $max, $tickWidth ) };
+#    my $scaleLength     = 2 * pi * $scaleRadius * ( $self->get('stopAngle') - $self->get('startAngle') ) / 360;
+#    my $minTickWidth    = $self->get('minTickWidth') || 1;
+#    my $maxTickCount    = $scaleLength / $minTickWidth;
+#
+#    my ($min, $max) = map { $_->[0] } ( $self->getDataRange )[2,3];
+#    my $tickWidth   = $self->calcTickWidth( $min, $max, $scaleLength );
+#    my @ticks       = @{ $self->generateTicks( $min, $max, $tickWidth ) };
 
     $self->set( 
         radius      => $radius,
         scaleRadius => $scaleRadius,
-        ticks       => \@ticks,
+#        ticks       => \@ticks,
     );
 
-    $self->axis->plotOption(
-        anglePerUnit    => ( $self->get('stopAngle') - $self->get('startAngle') ) / ( $ticks[-1] - $ticks[0] ),
-    );
+#    $self->axis->plotOption(
+#        anglePerUnit    => ( $self->get('stopAngle') - $self->get('startAngle') ) / ( $ticks[-1] - $ticks[0] ),
+#    );
 
     return;
+
+
+
+
 }
 
-sub generateTicks {
+#--------------------------------------------------------------------
+
+=head2 project ( value, radius )
+
+See Chart::Magick::Chart::project.
+
+=cut
+
+sub project {
     my $self    = shift;
-    my $from    = shift;
-    my $to      = shift;
-    my $width   = shift;
+    my $value   = shift;
+    my $radius  = shift;
 
-    # Figure out the first tick so that the ticks will align with zero.
-    my $firstTick = floor( $from / $width ) * $width;
+    my $direction   = $self->get('clockwise') ? -1 : 1;
+    my $angle       = deg2rad( $self->transform( $value ) );
 
-    # This is actually actual (number_of_ticks - 1), but below we count from 0 (.. $tickCount), so for our purposes it is
-    # the correct amount.
-    my $tickCount = ceil( ( $to - $firstTick ) / $width );
+    return $self->SUPER::project(
+        [  $radius * cos( $direction * $angle ) ],
+        [ -$radius * sin( $direction * $angle ) ],
+    );
 
-    # generate the ticks
-    my $ticks   = [ map { $_ * $width + $firstTick } ( 0 .. $tickCount ) ];
-
-    return $ticks;
 }
 
-sub calcTickWidth {
+#--------------------------------------------------------------------
+
+=head2 transform ( value )
+
+Transforms a value to an angle.
+
+=cut
+
+sub transform {
     my $self    = shift;
-    my $from    = shift;
-    my $to      = shift;
-    my $pxRange = shift;
-    my $count   = shift;
-    my $unit    = shift || 1;
+    my $value   = shift;
 
-    $from   /= $unit;
-    $to     /= $unit;
-
-    if (defined $count) {
-        return ($to - $from) if $count <= 1;
-        return ($to - $from) / ($count - 1);
-    }
-
-    # Make sure we always have a range to draw a graph on.
-    my $range       = $to - $from || $to || 1;
-
-    # The tick width is initially calculated to a power of 10. The order of the power is chosen to be one less than
-    # the order of the range.
-    # The 0.6 is a factor used to influence rounding. Use 0.5 for arithmetic rounding.
-    my $order       = int( log( $range ) / log( 10 ) + 0.6 );
-    my $tickWidth   = 10 ** ( $order - 1 );
-
-    # To prevent ticks from being to close to each other, we first calc the approximate tick width in pixels...
-    my $approxPxPerTick = $pxRange / $range * $tickWidth;
-
-    # ... and then check that width against the minTickWidth treshold. Continue to expand the tick width with
-    # base10-aligned factors until we have something suitable.
-    for my $expand ( 1, 1.25, 2, 2.5, 5, 10, 20, 50, 100, 1000 ) {
-        return $tickWidth * $expand * $unit if ($approxPxPerTick * $expand) > $self->get('minTickWidth');
-    }
-
-    return $tickWidth * $unit;
+    my $direction   = $self->get('clockwise') ? -1 : 1;
+    my $valueRange  = $self->get('scaleStop') - $self->get('scaleStart');
+    my $scaleAngle  = $self->get('stopAngle') - $self->get('startAngle');
+    my $angle       = 
+          $value / $valueRange * $scaleAngle        # angle of the value wrt. to the scale
+        + $self->get('startAngle')                  # offset with angle between scale start and 0 deg
+        - $direction * 90                           # and make sure that 0 deg is pointing down, not right.
+    ;
+    
+    return $angle;
 }
 
 1;

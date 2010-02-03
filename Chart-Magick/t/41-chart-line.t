@@ -8,7 +8,8 @@ use List::MoreUtils     qw{ all     };
 use List::Util          qw{ sum     };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 14;
+use Test::More tests => 14 + 1;
+use Test::NoWarnings;
 
 BEGIN {
     use_ok( 'Chart::Magick::Chart::Line', 'Chart::Magick::Chart::Line can be used' );
@@ -73,7 +74,10 @@ BEGIN {
     local *Chart::Magick::Marker::draw = sub { shift; push @markerStack, [ @_, $drawOrder++ ] };
     local *Chart::Magick::Marker::createMarkerFromDefault = sub { };    # prevent this sub from doing draw ops
 
-    $chart->plot;
+    my $canvas = Chart::Magick::ImageMagick->new( size => '1x1' );
+    $canvas->Read( 'xc:white' );
+
+    $chart->plot( $canvas );
 
     # check if the lines are plotted correctly
     cmp_bag(
@@ -97,9 +101,9 @@ BEGIN {
     # check if markers are drawn correctly
     %drawStack = @markerStack = ();
     $drawOrder = 0;
-    $chart->setMarker( 0, 'marker1' );
-    $chart->setMarker( 2, 'marker2' );
-    $chart->plot;
+    $chart->setMarker( 0, 'square' );
+    $chart->setMarker( 2, 'triangle' );
+    $chart->plot( $canvas );
 
     cmp_ok( 
         scalar @markerStack, '==', sum( map { scalar @{ $_->[0] } } testData(0, 2) ),
@@ -161,9 +165,9 @@ sub setupDummyData {
     }
     
     my $palette = Chart::Magick::Palette->new( [
-        { strokeAlpha => 0 },
-        { strokeAlpha => 1 },
-        { strokeAlpha => 2 },
+        { strokeAlpha => '0' },
+        { strokeAlpha => '1' },
+        { strokeAlpha => '2' },
     ] );
     $chart->setPalette( $palette );
 
@@ -175,7 +179,7 @@ sub setupDummyData {
 
 #--------------------------------------------------------------------
 
-=head2 processDraw
+=head2 registerDraw
 
 Used to keep track of all draw operations.
 
@@ -196,7 +200,7 @@ sub registerDraw {
 
     # Create lookup key
     my $key     = exists $args{ stroke } ? $args{ stroke } : -1;
-    $key        =~ s{^#(\d+)$}{$1};
+    $key        =~ s{^#(\d+)$}{$1}i;
     $key        += 0; #convert to number ( 000001 => 1 )
 
     if ( exists $store->{ $key } ) {

@@ -86,6 +86,13 @@ sub addToLegend {
 
 #-------------------------------------------------------------------
 
+=head2 autoRange ( )
+
+This method is a hook which is called after the axis has set its diemensions. You can use this method to precalc
+values that have to scale with the axis. 
+
+=cut
+
 sub autoRange {
     return;
 }
@@ -101,7 +108,7 @@ Defines the properties of your plugin as well as their default values.
 
 sub definition {
     return {
-        markerSize      => 5,
+        markerSize      => 6,
     };
 }
 
@@ -227,6 +234,14 @@ sub getSymbolDef {
     };
 }
 
+#-------------------------------------------------------------------
+
+=head2 getDefaultAxisClass ( )
+
+Returns the default axis class for this chart. Your subclass must override this method.
+
+=cut
+
 sub getDefaultAxisClass {
     my $self = shift;
 
@@ -249,20 +264,6 @@ sub getWidth {
 
 #-------------------------------------------------------------------
 
-=head2 im ( )
-
-Returns the Image::Magick object of the axis tied to chart.
-
-=cut
-
-sub im {
-    my $self = shift;
-
-    return $self->axis->im;
-}
-
-#-------------------------------------------------------------------
-
 =head2 hasBlockSymbols ( )
 
 Returns a boolean telling whether the symbols in the legend should be drawn as colored blocks instead of line/marker
@@ -278,13 +279,18 @@ sub hasBlockSymbols {
 
 #-------------------------------------------------------------------
 
+=head2 layoutHints ( )
+
+Returns a hashref containing the layout hints for this plugin. 
+
+=cut
+
 sub layoutHints {
     return {
         coordPadding    => [ 0 ],
         valuePadding    => [ 0 ],
     };
 }
-
 
 #-------------------------------------------------------------------
 
@@ -330,17 +336,31 @@ sub preprocessData {
 
         push @{ $colors{ id $self } }, $color;
 
-        if ( exists $self->markers->[ $ds ] ) {
-            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
-            $size ||= $markerSize;
-
-            $self->markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, $self->axis, {
-                strokeColor => $color->getStrokeColor,
-            } );
-        }
+#        if ( exists $self->markers->[ $ds ] ) {
+#            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
+#            $size ||= $markerSize;
+#
+#            $self->markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, {
+#                strokeColor => $color->getStrokeColor,
+#            } );
+#        }
     }
 
     return;
+}
+
+#-------------------------------------------------------------------
+
+=head2 project ( coords, values )
+
+See Chat::Magick::Axis::project.
+
+=cut
+
+sub project {
+    my ($self, @params) = @_;
+
+    return $self->axis->project( @params );
 }
 
 #-------------------------------------------------------------------
@@ -365,6 +385,21 @@ sub setAxis {
     $axis{ id $self } = $axis;
 
     return;
+}
+
+#-------------------------------------------------------------------
+
+=head2 toPx ( coords, values )
+
+Convenience method. Calls C<project> and returns its results joined by a comma as a sting which directly usable as
+a point in Image::Magick Draw oprations.
+
+=cut
+
+sub toPx {
+    my ( $self, @params ) = @_;
+
+    return join ',', $self->project( @params );
 }
 
 #-------------------------------------------------------------------
@@ -431,14 +466,15 @@ sub setMarker {
     my $self    = shift;
     my $index   = shift;
     my $marker  = shift || croak "Need a marker";
-    my $size    = shift;
+    my $size    = shift || $self->get('markerSize');
 
-    my $def = { 
-        name    => $marker,
-        size    => $size 
-    };
-
-    $markers{ id $self }->[ $index ] = $def;
+#    my $def = { 
+#        name    => $marker,
+#        size    => $size 
+#    };
+#
+#    $markers{ id $self }->[ $index ] = $def;
+    $markers{ id $self }->[ $index ] = Chart::Magick::Marker->new( $marker, $size );
 
     return;
 }

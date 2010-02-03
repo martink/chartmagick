@@ -6,6 +6,7 @@ use warnings;
 use List::Util qw{ min max reduce };
 use Text::Wrap;
 use POSIX qw{ floor ceil };
+use Carp;
 
 use base qw{ Chart::Magick::Axis };
 
@@ -25,6 +26,27 @@ The following methods are available from this class:
 =cut
 
 #---------------------------------------------
+
+=head2 applyLayoutHints ( hints )
+
+Applies the provided layout hints if applicable. See L<Chart::Magick::Axis::applyLayoutHints> for more information.
+
+=head3 hints
+
+Hash ref containing the hints. Chart::Magick::Axis::Lin processes the following hints:
+
+=over 4
+
+=item coordPadding
+
+=item valuePadding
+
+=item tickWidth
+
+=back
+
+=cut
+
 sub applyLayoutHints {
     my $self    = shift;
     my $hints   = shift;
@@ -37,6 +59,10 @@ sub applyLayoutHints {
         $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
     };
 
+    if ( exists $hints->{ tickWidth    } ) {
+        $self->set( 'xTickWidth', $hints->{ tickWidth } ) ;
+    };
+
     return;
 }
 
@@ -44,7 +70,183 @@ sub applyLayoutHints {
 
 =head2 definition ( )
 
-Defines additional properties for this class:
+Defines additional properties for this class in addition to those defined in Chart::Magick::Axis::definition:
+
+=over 4
+
+=item plotBox
+
+If set to a true value a box will be drawn around the charting area. Defaults to 1.
+
+=item boxColor
+
+The color of the box around the charting area. Defaults to 'black'.
+
+=item plotAxes
+
+If set to a true value the axis ( x = 0 and y = 0 ) will be drawn. This property can be overriden on a per axis
+base by the x- and yPlotAxis properties. Defaults to 1.
+
+=item axisColor
+
+The color in which the axes should be drawn. Overridable on a per axis base by the x- and yAxisColor properties.
+Defaults to grey50.
+
+=item ticksOutside
+
+If set to a true value the ticks will be drawn on the border of the charting area, otherwise the ticks will be
+drawn directly on the x and y axes, even when they are inside the drawing area. If an axis lies outside the range
+of the chart, the ticks are always drawn on the border of the charting area.
+
+=item tickColor
+
+The color of the ticks. Overridable per axis with x- and yTickColor. Defaults to the color set by the boxColor
+property.
+        
+=item subtickColor
+
+The color of the subticks. Overridable per axis with the x- and ySubtickColor properties. Defaults to the color set
+by the tickColor property.
+
+=item plotRulers
+
+If set to a true value rulers wil bee drawn at tick positions. Overridable per axis via the x- and yPlotRulers
+properties. Defaults to 1.
+
+=item rulerColor
+
+The color of the rulers. Overridable with the x- and yRulerColor properties. Defaults to 'lightgrey',
+
+=item expandRange
+
+If set to a true value the x and y ranges will be adjusted such that both start and end on tick positions. This
+option is overridable on a per axis basis through the x- and yExpandRange options.
+
+=item minTickWidth
+
+Defines the minimum number of pixels that ticks should be apart. Used for autoranging ticks. Defaults to 25.
+        
+=back
+
+Additionally there are properties you can set on a per axis basis. Listed below are the properties that work on the
+x axis. The y axis properties are named the same except that they start with a y instead of an x.
+
+=over 4
+
+=item xTickCount
+
+Sets the number of ticks on the x axis. If set to undef this value will be autoranged, which is what you want in
+general. Note that this property will be ignored if xTickWidth is given. Defaults to undef.
+
+=item xTickWidth
+
+The width between two x axis ticks in terms of x axis values, not pixels. If set to 0 or undef, this value will be
+autoranged, which is what you want in most cases. If you want tick to be a multiple of some value, don't use this
+option to do that but xLabelUnits instead. Defaults to 0.
+
+=item xTickInset / xSubtickInset
+
+The number of pixels a (sub)tick should extend into the chart. Defaults to 4 and 2 respectively.
+
+=item xTickOutset / ySubtickInset
+
+The number of pixels a (sub)tick should extend out of the chart. Defaults to 8 and 2 repectively.
+
+=item xSubtickCount
+        
+TODO
+
+=item xTicks
+
+Array ref containtaing the values of the ticks on the x axis. If an empty array ref is passed these locations will
+be auto generated. Defaults to an empty array ref. In virtually any case you'll want tick to be auto generated, and
+change the way the auto generation works by adjusting xTickWidth or xLabelUnits.
+
+=item xTickColor / xSubtickColor   => sub { $_[0]->get('subtickColor') },
+
+The color in which (sub)ticks should be drawn. Defaults to the value given for tickColor and subtickColor
+respectively.
+
+=item xLabelFormat
+
+A printf compatible string that formats the numerical value of the labels on the x axis. Defaults to '%s',
+yLabelFormat defaults to '%.1f'.
+
+=item xLabelUnits
+
+The values of the ticks will be normalized (divided) by this value. Defaults to 1.
+
+=item xTitleBorderOffset
+
+The distance in pixels between the title of the x axis and the margin of the axis. Defaults to 0.
+
+=item xTitleLabelOffset
+
+The distance in pixels between the title of the x axis and its tick labels. Defaults to 10.
+
+=item xLabelTickOffset
+
+The distance in pixels between the the ticks of the x axis and their labels. Defaults to 3.
+
+=item xPlotRulers
+
+If set to a true value rulers will be drawn for x axis ticks. Defaults to the value of the plotRulers property.
+
+=item xRulerColor
+
+The color in which the x axis rulers should be drawn. Defaults to the color set by the rulerColor property.
+
+=item xTitle
+
+The title of the x axis. Defaults to '', ie. no title.
+
+=item xTitleFont
+
+The font in which the x axis title should be rendered. Defaults to the font set by the font property.
+
+=item xTitleFontSize
+
+The pointsize of the x axis title. Defaults to 1.5 time the default pointsize set by the fontSize property.
+
+=item xTitleColor
+
+The color of the x axis title. Defaults to the color set by the fontColor property.
+
+#        xTitleAngle
+#        xLabelAngle
+
+=item xStart
+
+The value of the start of the range covered by the x axis. If set to undef this value will be autoranged. Defaults
+to undef.
+
+=item xStop
+
+The value of the end of the range covered by the x axis. If set to undef this value will be autoranged. Defaults
+to undef.
+
+=item xIncludeOrigin
+
+If set to a true value the origin will always be included in the tha x axis range, otherwise automatic inclusion of
+the origin into the x axis range depends on a number of conditions, see the extendRangeToOrigin method. Defaults to 0.
+
+=item xNoAdjustRange
+
+If set to a true value the range of the x axis will not be adjusted at all. Overrides xIncludeOrigin. Defaults to
+0.
+
+=item xExpandRange
+
+If set to a true value the range of the x axis will be expanded such, that its boundaries conincide with a tick.
+Defaults to the value of the expandRange property.
+
+=item xTickOffset
+
+Sets the number of units (in terms of x values, not pixels) that the actual chart should be indented wrt. the
+bounding box of the chart. Note that the chart is indented on both sides and the indent per side is half the value
+you give here. Defaults to 0.
+
+=back
 
 =cut
 
@@ -53,7 +255,6 @@ sub definition {
     my %options = (
         minTickWidth    => 25,
 
-        xAxisLocation   => undef,
         xTickOffset     => 0,
 
         xTickCount      => undef,
@@ -69,6 +270,12 @@ sub definition {
         xSubtickColor   => sub { $_[0]->get('subtickColor') },
 
         xLabelFormat    => '%s',
+        xLabelFormatter => sub { 
+            sub { 
+                my $format = $_[0]->get('xLabelFormat') || '%s';
+                return sprintf $format, $_[1] / $_[2];
+            } 
+        },
         xLabelUnits     => 1,
 
         xTitleBorderOffset  => 0,
@@ -80,6 +287,7 @@ sub definition {
         
         xPlotRulers     => sub { $_[0]->get('plotRulers') },
         xRulerColor     => sub { $_[0]->get('rulerColor') },
+        xSubrulerColor  => sub { $_[0]->get('xRulerColor') },
 
         xTitle          => '',
         xTitleFont      => sub { $_[0]->get('font') },
@@ -92,8 +300,6 @@ sub definition {
 
         xIncludeOrigin  => 0,
         xNoAdjustRange  => 1,
-
-        centerChart     => 0,
 
         yTickOffset     => 0,
 
@@ -110,7 +316,7 @@ sub definition {
         
         yPlotRulers     => sub { $_[0]->get('plotRulers') },
         yRulerColor     => sub { $_[0]->get('rulerColor') },
-
+        ySubrulerColor  => sub { $_[0]->get('yRulerColor') },
         yTitle          => '',
         yTitleFont      => sub { $_[0]->get('font') },
         yTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
@@ -124,6 +330,12 @@ sub definition {
         yNoAdjustRange  => 0,
 
         yLabelFormat    => '%.1f',
+        yLabelFormatter => sub { 
+            sub { 
+                my $format = $_[0]->get('yLabelFormat') || '%s';
+                return sprintf $format, $_[1] / $_[2] ;
+            } 
+        },
         yLabelUnits     => 1,
 
         yTitleBorderOffset  => 0,
@@ -191,6 +403,15 @@ sub getCoordDimension {
 
 #---------------------------------------------
 
+=head2 getDataRange ( )
+
+See L<Chart::Magick::Axis::getDataRange>.
+
+This method overrides the data range given by the superclass with the xStart, xStop, yStart and yStop properties is
+those are set.
+
+=cut
+
 sub getDataRange {
     my $self = shift;
 
@@ -240,12 +461,12 @@ sub getTickLabel {
     my $value   = shift;
     my $index   = shift || 0;
 
-    my $format  = $self->get( $index ? 'yLabelFormat' : 'xLabelFormat' ) || '%s';
-    my $units   = $self->get( $index ? 'yLabelUnits'  : 'xLabelUnits'  ) || 1;
+    my $units       = $self->get( $index ? 'yLabelUnits'     : 'xLabelUnits'     ) || 1;
+    my $formatter   = $self->get( $index ? 'yLabelFormatter' : 'xLabelFormatter' ) || croak "No label formatter";
 
     my $label   =     
-        $self->getLabels( $index, $value )
-        || sprintf( $format, $value / $units );
+           $self->getLabels( $index, $value )
+        || $formatter->( $self, $value, $units );
 
     return $label;
 }
@@ -289,12 +510,10 @@ sub optimizeMargins {
             );
 
         # Adjust the chart ranges so that they align with the 0 axes if desired.
-#        if ( $self->get('yAlignAxesWithTicks') ) {
         if ( $self->get('yExpandRange') ) {
             $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
             $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
         }
-#        if ( $self->get('xAlignAxesWithTicks') ) {
         if ( $self->get('xExpandRange') ) {
             $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
             $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
@@ -305,11 +524,11 @@ sub optimizeMargins {
         my @yLabels = map { $self->getTickLabel( $_, 1 ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
 
         my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-        my $xAddUnit    = $self->get('xTickOffset');
+        my $xAddUnit    = $self->get('xTickOffset') * $xTickWidth;
         my $xPxPerUnit  = $chartWidth / ( $xUnits + $xAddUnit );
 
         my $yUnits      = ( $self->transformY( $maxY ) - $self->transformY( $minY ) ) || 1;
-        my $yAddUnit    = $self->get('yTickOffset');
+        my $yAddUnit    = $self->get('yTickOffset') * $yTickWidth;
         my $yPxPerUnit  = $chartHeight / ( $yUnits + $yAddUnit );
 
         # Calc max label lengths
@@ -341,9 +560,9 @@ sub optimizeMargins {
                 chartWidth      => $chartWidth,
                 chartHeight     => $chartHeight,
                 xPxPerUnit      => $xPxPerUnit,
-                xTickOffset     => $xAddUnit / 2 * $xPxPerUnit,
+                xTickOffset     => $xAddUnit / 2,
                 yPxPerUnit      => $yPxPerUnit,
-                yTickOffset     => $yAddUnit / 2 * $yPxPerUnit,
+                yTickOffset     => $yAddUnit / 2,
                 chartAnchorX    => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
                 chartAnchorY    => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
             );
@@ -661,10 +880,10 @@ sub preprocessData {
     );
 
     $self->plotOption( 
-        yChartStop  => $maxY + $self->get('yTickOffset') / 2,
-        yChartStart => $minY - $self->get('yTickOffset') / 2,
-        xChartStop  => $maxX + $self->get('xTickOffset') / 2,
-        xChartStart => $minX - $self->get('xTickOffset') / 2,
+        yChartStop  => $maxY + $self->plotOption('yTickOffset'),
+        yChartStart => $minY - $self->plotOption('yTickOffset'),
+        xChartStop  => $maxX + $self->plotOption('xTickOffset'),
+        xChartStart => $minX - $self->plotOption('xTickOffset'),
 
 #        chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
 #        chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
@@ -673,13 +892,13 @@ sub preprocessData {
     # Precalc toPx offsets.
     $self->plotOption( 'xPxOffset'  => 
           $self->plotOption('chartAnchorX') 
-        + $self->plotOption('xTickOffset') 
+        + $self->plotOption('xTickOffset') * $self->getPxPerXUnit
         - $self->transformX( $self->get('xStart') ) * $self->getPxPerXUnit
     );
     $self->plotOption( 'yPxOffset'  => 
         $self->plotOption('chartAnchorY') 
         + $self->getChartHeight 
-        - $self->plotOption('yTickOffset')
+        - $self->plotOption('yTickOffset') * $self->getPxPerYUnit
         + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
     );
 
@@ -832,7 +1051,7 @@ sub plotAxisTitles {
     my $self = shift;
 
     # X label
-    $self->text(
+    $self->im->text(
         text        => $self->get('xTitle'),
         font        => $self->get('xTitleFont'),
         pointsize   => $self->get('xTitleFontSize'),
@@ -845,7 +1064,7 @@ sub plotAxisTitles {
     );
 
     # Y label
-    $self->text(
+    $self->im->text(
         text        => $self->get('yTitle'),
         font        => $self->get('yTitleFont'),
         pointsize   => $self->get('yTitleFontSize'),
@@ -886,6 +1105,51 @@ sub plotBox {
     return;
 }
 
+#---------------------------------------------
+
+=head2 drawRuler ( position, isX, color )
+
+Draws a ruler.
+
+=head3 position
+
+The location of the ruler (ie. x coordinate for vertical and y coordinate for horizontal rulers.
+
+=head3 isX
+
+Boolean indicating whether the ruler belongs to the x-axis ( ie. if the ruler is vertical )
+
+=head3 color
+
+Color of the ruler. Pass in a format that Image::Magick understands.
+
+=cut
+
+sub drawRuler {
+    my $self    = shift;
+    my $tick    = shift;
+    my $isX     = shift;
+    my $color   = shift;
+
+    my ($from, $to);
+    if ($isX) {
+        $from   = $self->toPx( [ $tick ], [ $self->plotOption('yChartStart') ] );
+        $to     = $self->toPx( [ $tick ], [ $self->plotOption('yChartStop')  ] );
+    }
+    else {
+        $from   = $self->toPx( [ $self->plotOption('xChartStart') ], [ $tick ] );
+        $to     = $self->toPx( [ $self->plotOption('xChartStop')  ], [ $tick ] );
+    }
+
+    $self->im->Draw(
+        primitive   => 'Path',
+        stroke      => $color || $self->get('rulerColor'),
+        points      => "M $from L $to",
+        fill        => 'none',
+    );
+
+    return;
+}
 
 #---------------------------------------------
 
@@ -904,18 +1168,15 @@ sub plotRulers {
     my $maxY = $self->get('yStop');
 
     if ( $self->get('yPlotRulers') ) {
-        for my $tick ( @{ $self->getYTicks }, @{ $self->getYSubticks } ) {
+        for my $tick ( @{ $self->getYSubticks } ) {
             next if $tick < $minY || $tick > $maxY;
-        
-            $self->im->Draw(
-                primitive   => 'Path',
-                stroke      => $self->get('yRulerColor'),
-                points      => 
-                      " M " . $self->toPx( [ $self->plotOption('xChartStart') ], [ $tick ] ) 
-                    . " L " . $self->toPx( [ $self->plotOption('xChartStop')  ], [ $tick ] ),
-                fill        => 'none',
-            );
-            
+
+            $self->drawRuler( $tick, 0, $self->get('ySubrulerColor') );
+        }
+        for my $tick ( @{ $self->getYTicks } ) {
+            next if $tick < $minY || $tick > $maxY;
+
+            $self->drawRuler( $tick, 0, $self->get('yRulerColor') );
         }
     }
 
@@ -923,17 +1184,15 @@ sub plotRulers {
     my $maxX = $self->get('xStop');
 
     if ( $self->get('xPlotRulers') ) {
-        for my $tick ( @{ $self->getXTicks }, @{ $self->getXSubticks } ) {
+        for my $tick ( @{ $self->getXSubticks } ) {
             next if $tick < $minX || $tick > $maxX;
 
-            $self->im->Draw(
-                primitive   => 'Path',
-                stroke      => $self->get('xRulerColor'),
-                points      =>
-                      " M " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStart') ] ) 
-                    . " L " . $self->toPx( [ $tick ], [ $self->plotOption('yChartStop')  ] ),
-                fill        => 'none',
-            );
+            $self->drawRuler( $tick, 1, $self->get('xSubrulerColor') );
+        }
+        for my $tick ( @{ $self->getXTicks } ) {
+            next if $tick < $minX || $tick > $maxX;
+
+            $self->drawRuler( $tick, 1, $self->get('xRulerColor') );
         }
     }
 
@@ -1003,7 +1262,7 @@ sub drawTick {
 
     return if $args->{ subtick };
 
-    $self->text(
+    $self->im->text(
         text        => $self->getTickLabel( $tick, $isX ? 0 : 1 ),
         halign      => $args->{ halign } || $isX ? 'center' : 'right',
         valign      => $args->{ valign } || $isX ? 'top'    : 'center',

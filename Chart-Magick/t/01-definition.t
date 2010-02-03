@@ -5,7 +5,8 @@ use strict;
 use Test::Deep;
 use Scalar::Util qw{ refaddr };
 
-use Test::More tests => 24;
+use Test::More tests => 24 + 1;
+use Test::NoWarnings;
 BEGIN {
     use_ok( 'Chart::Magick::Definition', 'Chart::Magick::Definition can be used' );
 }

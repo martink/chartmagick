@@ -81,6 +81,6 @@ $time = [ gettimeofday ];
 
 
 # Write graph
-$axis->im->Write('out.png');
+$axis->im->Write('bar.png');
 print "write  : ", tv_interval( $time ), "s\n";
 

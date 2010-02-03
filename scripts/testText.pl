@@ -2,16 +2,17 @@ use strict;
 
 use Chart::Magick::Axis;
 
-my $axis = Chart::Magick::Axis->new( {
-    width   => 750, 
-    height  => 750, 
-});
+my $im = Chart::Magick::ImageMagick->new( 
+    size => "750x750",
+);
+$im->Read('xc:white');
 
 my %properties = (
     text    => "TEXT\nTE\nTEXT",
     fill    => 'black',
     x       => 100,
     y       => 100,
+    pointsize => 10,
     valign  => 'center',
     halign  => 'center',
     align   => 'Center',
@@ -29,14 +30,14 @@ for my $ha (0..2) {
             my $y = ( $ha * 3 + $va + 1) * 75;
             my $y1 = $y-25;
             my $y2 = $y+25;
-            $axis->im->Draw(
+            $im->Draw(
                 primitive   => 'Path',
                 points      => "M $x,$y1 L $x,$y2 M $x1,$y L $x2,$y",
                 stroke      => 'red',
             );
 
 print "[$ha][$va][$_]\n";
-            $axis->text(
+            $im->text(
                 %properties,
                 x       => $x,
                 y       => $y,
@@ -48,4 +49,6 @@ print "[$ha][$va][$_]\n";
     }
 }
 
-$axis->im->write('text.png');
+print "KLABZAM!!!!\n";
+$im->Write('text.png');
+

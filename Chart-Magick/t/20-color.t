@@ -1,8 +1,10 @@
-#!perl -T
+#!perl
 
 use Test::Deep;
 
-use Test::More tests => 24;
+use Test::More tests => 24 + 1;
+use Test::NoWarnings;
+
 BEGIN {
     use_ok( 'Chart::Magick::Color', 'Chart::Magick::Color can be used' );
 }
@@ -18,9 +20,9 @@ my $col = Chart::Magick::Color->new();
 isa_ok( $col, 'Chart::Magick::Color', 'new returns object of correct class' );
 
 is( $col->fillTriplet,      '000000',   'fillTriplet defaults to 000000'    );
-is( $col->fillAlpha,        '00',       'fillAlpha defaults to 00'          );
+is( $col->fillAlpha,        'ff',       'fillAlpha defaults to ff'          );
 is( $col->strokeTriplet,    '000000',   'strokeTriplet defaults to 000000'  );
-is( $col->strokeAlpha,      '00',       'strokeAlpha defaults to 00'        );
+is( $col->strokeAlpha,      'ff',       'strokeAlpha defaults to ff'        );
 
 my $col2 = Chart::Magick::Color->new( {
     strokeTriplet   => '456123',
