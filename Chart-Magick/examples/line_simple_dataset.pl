@@ -27,8 +27,11 @@ my $chart = Chart::Magick->line(
         [ \@coords, \@values ]
     ],
     axis    => {
-        xLabelUnits     => 3600,
-        xSubtickCount   => 4,
+        title           => 'Today\'s Server Load',
+        xTitle          => 'time (hrs)',
+        yTitle          => 'load (%)',
+        xLabelUnits     => 3600,        # Units are seconds, but we want them to be shown as hours.
+        xSubtickCount   => 4,           # Divide an hour in quarters
         rulerColor      => 'grey70',
         xSubrulerColor  => 'grey90',
     }
