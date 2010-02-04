@@ -116,7 +116,7 @@ sub addLabels {
 
 #----------------------------------------------
 
-=head2 checkFont ( font )
+=head2 resolveFont ( font )
 
 Check whether the given font can actually be found by ImageMagick. Testing this is important because passin IM
 invalid fontnames or locations will slow the program down to the extreme.
@@ -127,15 +127,19 @@ Either the full path to the font or the font name as ImageMagick knows it.
 
 =cut
 
-sub checkFont {
+sub resolveFont {
     my $self = shift;
     my $font = shift;
    
     # We don't know wheter the font is a direct path or a font name, so first let's see if it is an existing file.
-    return 1 if -e $font;
+    return $font if -e $font;
 
     # It's not a file so maybe it's a font name, let's ask IM and see if it resolves the font to an existing file.
-    return -e $self->im->QueryFont( $font );
+    my $file = $self->im->QueryFont( $font );
+    return $file if -e $file;
+
+    # Otherwise return false.
+    return
 }
 
 #--------------------------------------------------------------------
@@ -189,11 +193,11 @@ sub getLabelDimensions {
     my $label       = shift;
     my $wrapWidth   = shift || 0;
 
+    return [ 0, 0 ] unless $label;
+
     if ( exists $self->{ _labeldims }{ $label }{ $wrapWidth } ) {
         return $self->{ _labeldims }{ $label }{ $wrapWidth };
     }
-
-    return [ 0, 0 ] unless $label;
 
     my %properties = (
         text        => $label,
@@ -639,9 +643,13 @@ sub preprocessData {
     # Check if the fonts are actually findable. If not IM slows down incredibly and will not draw labels so bail
     # out in that case.
     for ( qw{ titleFont labelFont } ) { 
-        my $font = $self->get( $_ );
+        my $font = $self->resolveFont( $self->get( $_ ) );
+
         croak "Font $font (property $_) does not exist or is defined incorrect in the ImageMagick configuration file." 
-            unless $self->checkFont( $font );
+            unless $font;
+
+        # Replace the possible font name with its full path. This speeds up annotating significantly!
+        $self->set( $_, $font );
     }
    
     # Calc title height

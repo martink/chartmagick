@@ -205,23 +205,23 @@ BEGIN {
 
 #####################################################################
 #
-# checkFont
+# resolveFont
 #
 #####################################################################
 {
     my $axis = Chart::Magick::Axis->new;
 
     SKIP: {
-        skip( "The checkFonts tests require that '.' is an existing file when using -e'", 3 ) unless -e '.';
+        skip( "The resolveFonts tests require that '.' is an existing file when using -e'", 3 ) unless -e '.';
 
         local *Image::Magick::QueryFont = sub { 
             my ( $self, $fontname ) = @_;
             return $fontname eq 'valid_font' ? '.' : 'FileThatDoesntExist';
         };
         
-        ok( $axis->checkFont('.'),             'checkFont returns true when an existing font file is passed' );
-        ok( $axis->checkFont('valid_font'),    'checkFont return true when a correctly resolvable font name is passed' );
-        ok( !$axis->checkFont('invalid_font'), 'checkFont returns false for fontname that resolves to an existing font file' );
+        is( $axis->resolveFont('.'),            '.', 'checkFont returns true when an existing font file is passed' );
+        is( $axis->resolveFont('valid_font'),   '.', 'checkFont return true when a correctly resolvable font name is passed' );
+        ok( !$axis->resolveFont('invalid_font'),     'checkFont returns false for fontname that resolves to an existing font file' );
     }
 }
 
