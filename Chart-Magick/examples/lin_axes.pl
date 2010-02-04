@@ -7,7 +7,6 @@ use Math::Trig;
 my @coords = ( 1 .. 100 );
 my @values = map { 1.5 + sin( pi * $_ / 10 ) } @coords;
 
-
 my %config = ( 
     data    => [
         [ \@coords, \@values ]

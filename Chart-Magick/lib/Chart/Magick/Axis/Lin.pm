@@ -265,7 +265,7 @@ sub definition {
         xSubtickCount   => 0,
         xSubtickInset   => 2,
         xSubtickOutset  => 2,
-        xTicks          => [ ],
+        xTicks          => undef,
         xTickColor      => sub { $_[0]->get('tickColor') },
         xSubtickColor   => sub { $_[0]->get('subtickColor') },
 
@@ -310,7 +310,7 @@ sub definition {
         ySubtickCount   => 0,
         ySubtickInset   => 2,
         ySubtickOutset  => 2,
-        yTicks          => [ ],
+        yTicks          => undef,
         yTickColor      => sub { $_[0]->get('tickColor') },
         ySubtickColor   => sub { $_[0]->get('subtickColor') },
         
@@ -894,11 +894,15 @@ sub preprocessData {
     $self->set( 
         yStop       => $maxY,
         yStart      => $minY,
-        yTicks      => $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ),
         xStop       => $maxX,
         xStart      => $minX,
-        xTicks      => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ),
     );
+    unless ( defined $self->get('yTicks') ) {
+        $self->set( yTicks => $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ) );
+    }
+    unless ( defined $self->get('xTicks') ) {
+        $self->set( xTicks => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ) );
+    }
 
     $self->plotOption( 
         yChartStop  => $maxY + $self->plotOption('yTickOffset'),

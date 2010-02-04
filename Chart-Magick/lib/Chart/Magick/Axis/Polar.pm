@@ -27,18 +27,19 @@ See L<Chart::Magick::Axis::Lin::optimizeMargins>.
 sub optimizeMargins { 
     my ( $self, $minX, $maxX, $minY, $maxY ) = @_;
 
-#    $self->SUPER::optimizeMargins( $minX, $maxX, $minY, $maxY );
+    $minX = 0;  # alway start at 0.
+    
     my $baseWidth   = $self->getChartWidth; 
     my $baseHeight  = $self->getChartHeight;
     my $baseRadius  = 0.5 * min( $baseWidth, $baseHeight );
 
-    my $xTickWidth = $self->get('xTickWidth') 
-        || $self->calcTickWidth( $minX, $maxX, 2*pi*$baseRadius, $self->get('xTickCount'), $self->get('xLabelUnits') );
+    my $xTickWidth = $self->get('xTickWidth') || ( $maxX - $minX ) / ( $self->get('xTickCount') || 8 );
+    my $xTickCount = ( $maxX - $minX ) / $xTickWidth;
+    $self->set( xTicks => [ map { $minX + $_ * $xTickWidth } ( 0 .. $xTickCount - 1 ) ] );
 
     my $yTickWidth = $self->get('yTickWidth')
         || $self->calcTickWidth( $minY, $maxY, $baseRadius, $self->get('yTickCount'), $self->get('yLabelUnits') );
 
-    #my $xTickWidth = $self->get('xTickWidth') || ( $minX - $maxX ) / 8;
     my @xLabels = map { $self->getTickLabel( $_, 0 ) } @{ $self->generateTicks( $minX, $maxX, $xTickWidth ) };
     
     my $xLabelHeight    = ceil max map { int $self->getLabelDimensions( $_ )->[1] } @xLabels; 
@@ -80,7 +81,7 @@ sub definition {
 
     my %def = (
         xExpandRange    => 0,
-        xTickCount      => 9,
+        xTickCount      => 8,
         xRange          => undef,
     );
 
