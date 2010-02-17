@@ -941,7 +941,7 @@ Returns the locations of the ticks on the x axis in chart x coordinates.
 sub getXTicks {
     my $self = shift;
    
-    return [ @{ $self->get('xTicks') } ];
+    return [ @{ $self->get('xTicks') || [] } ];
 }
 
 #---------------------------------------------
@@ -1008,7 +1008,7 @@ Returns an array ref containing the locations of the ticks on the y axis in char
 sub getYTicks {
     my $self = shift;
    
-    return [ @{ $self->get('yTicks') } ];
+    return [ @{ $self->get('yTicks') || []  } ];
 }
 
 #---------------------------------------------
