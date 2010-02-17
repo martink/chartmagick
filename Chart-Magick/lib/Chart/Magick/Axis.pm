@@ -256,14 +256,24 @@ sub getLabels {
 
 #----------------------------------------------
 
-=head2 handlesOutOfRange ( )
-
-Returns an array ref telling whether axes can draw datapoint outside the range of their scales.
+=head2 inRange ( ) 
 
 =cut
 
-sub handlesOutOfRange {
-    croak "Your axis plugin must override handlesOutOfRange";
+sub inRange {
+    my $self = shift;
+    my $coord = shift;
+    my $value = shift;
+
+    return $self->coordInRange( $coord ) && $self->valueInRange( $value );
+}
+
+sub coordInRange {
+    return 1;
+}
+
+sub valueInRange {
+    return 1;
 }
 
 #----------------------------------------------
@@ -476,8 +486,8 @@ sub draw {
     my $charts  = $charts{ id $self };
 
     # Save state.
-    my $config          = $self->getRaw;
-    my $legendConfig    = $self->legend->getRaw;
+#    my $config          = $self->getRaw;
+#    my $legendConfig    = $self->legend->getRaw;
 
     # Delete tmp 1x1 pixel image ( see _buildObj )
     @{ $self->im } = ();
@@ -534,8 +544,8 @@ sub draw {
     $isDrawn{ id $self } = 1;
 
     # Restore state
-    $self->set( $config );
-    $self->legend->set( $legendConfig );
+#    $self->set( $config );
+#    $self->legend->set( $legendConfig );
 
     return $self->im;
 }

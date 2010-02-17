@@ -90,14 +90,14 @@ sub definition {
 
 #--------------------------------------------------------------------
 
-=head2 handlesOutOfRange ( )
+=head2 coordInRange
 
-See Chart::Magick::Axis::handlesOutOfRange.
+See Chart::Magick::Axis::coordInRange. Always returns 1.
 
 =cut
 
-sub handlesOutOfRange {
-    return [ 1, 0 ];
+sub coordInRange {
+    return 1;
 }
 
 #--------------------------------------------------------------------

@@ -119,10 +119,9 @@ sub plot {
 
     my $xStart  = $self->axis->get('xStart');
     my $xStop   = $self->axis->get('xStop');
-    my $ignoreRange  = $self->axis->handlesOutOfRange->[ 0 ];
 
     # Draw the graphs
-    foreach my $x ( grep { $ignoreRange || $self->inRange( $_ ) }  @{ $self->dataset->getCoords } ) {
+    foreach my $x ( grep { $axis->coordInRange( $_ ) }  @{ $self->dataset->getCoords } ) {
         for my $ds ( 0 .. $datasetCount - 1) {
             my $y = $self->dataset->getDataPoint( $x, $ds );
 
@@ -132,8 +131,9 @@ sub plot {
         }
     }
 
-
     foreach my $ds (0..$datasetCount - 1) {
+        next unless defined $coords[$ds];
+
         my $color = $colors[$ds];
 
         $canvas->Draw(

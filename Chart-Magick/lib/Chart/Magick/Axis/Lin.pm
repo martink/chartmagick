@@ -473,18 +473,6 @@ sub getTickLabel {
 
 #---------------------------------------------
 
-=head2 handlesOutOfRange ( )
-
-See Chart::Magick::Axis::handlesOutOfRange.
-
-=cut
-
-sub handlesOutOfRange {
-    return [ 0, 0 ];
-}
-
-#---------------------------------------------
-
 =head2 optimizeMargins ( )
 
 Iteratively tries to get the optimal sizes for margin and graph widths and heights.
@@ -1023,6 +1011,25 @@ sub getYSubticks {
     my $self = shift;
 
     return $self->generateSubticks( $self->getYTicks, $self->get('ySubtickCount') );
+}
+
+sub coordInRange {
+    my $self    = shift;
+    my $coord  = shift;
+
+    return 
+           $coord->[ 0 ] >= $self->get('xStart') 
+        && $coord->[ 0 ] <= $self->get('xStop');
+}
+
+sub valueInRange {
+    my $self = shift;
+    my $value = shift;
+
+    return 
+        && $value->[ 0 ] >= $self->get('yStart')
+        && $value->[ 0 ] <= $self->get('yStop');
+
 }
 
 #---------------------------------------------
