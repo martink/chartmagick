@@ -214,12 +214,7 @@ sub AUTOLOAD {
     croak "Cannot load axis class." unless $axis;
 
     foreach my $data ( @{ $params{data} } ) {
-        if ( ref $data eq 'HASH' ) {
-            $chart->addDataset( [ keys %$data ], [ values %$data ] );
-        }
-        else {
-            $chart->addDataset( @{ $data } );
-        }
+        $chart->addDataset( @{ $data } );
     }
 
     if ( $params{ palette } ) {

@@ -49,11 +49,23 @@ Optional. The size of the markers for this dataset. See setMarker() method.
 
 sub addDataset {
     my $self        = shift;
-    my $coords      = shift || croak "Need coordinates";
-    my $values      = shift || croak "Need values";
-    my $label       = shift;
-    my $marker      = shift;
-    my $markerSize  = shift;
+    my @params      = @_;
+
+    my ( $coords, $values );
+    if ( ref $params[ 0 ] eq 'HASH' ) {
+        my $data    = shift @params;
+        $coords     = [ keys    %{ $data } ],
+        $values     = [ values  %{ $data } ],
+    }
+    else {
+        $coords     = shift @params; 
+        $values     = shift @params;
+    }
+
+    croak 'Need coordinates' unless $coords;
+    croak 'Need values'      unless $values;
+
+    my ( $label, $marker, $markerSize ) = @params;
 
     $self->dataset->addDataset( $coords, $values, $label );
     $self->setMarker( $self->dataset->datasetCount - 1, $marker, $markerSize ) if $marker;
