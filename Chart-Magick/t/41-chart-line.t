@@ -79,6 +79,12 @@ BEGIN {
 
     $chart->plot( $canvas );
 
+use Data::Dump;
+for ( 0 .. 2 ) {
+    ddx $drawStack{$_};
+    ddx testData( $_ )->[0];
+}
+
     # check if the lines are plotted correctly
     cmp_bag(
         [ keys %drawStack ],

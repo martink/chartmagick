@@ -402,5 +402,19 @@ sub DESTROY {
     undef $self->{ _axis    };
 }
 
+=head1 AUTHOR
+
+Martin Kamerbeek.
+
+=head1 ACKNOWLEDGEMENTS
+
+Many thanks to Doug Bell (Preaction) for reviewing Chart::Magick and coming with useful suggestions!
+
+=head1 LICENSE
+
+This module is can be used under the same term as Perl itself.
+
+=cut
+
 1;
 
