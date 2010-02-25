@@ -5,10 +5,10 @@ use strict;
 use Test::Deep          qw{ !all    };  # Prevent import of Test::Deep::all, since we'll import List::MoreUtils::all
 use Scalar::Util        qw{ refaddr };
 use List::MoreUtils     qw{ all     };
-use List::Util          qw{ sum     };
+use List::Util          qw{ sum min };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 14 + 1;
+use Test::More tests => 12 + 1;
 use Test::NoWarnings;
 
 BEGIN {
@@ -70,8 +70,8 @@ BEGIN {
     my %drawStack;
     local *Image::Magick::Draw =  sub { registerDraw( \%drawStack, @_, drawOrder => $drawOrder++ ) };
 
-    my @markerStack;
-    local *Chart::Magick::Marker::draw = sub { shift; push @markerStack, [ @_, $drawOrder++ ] };
+    my %markers;
+    local *Chart::Magick::Marker::draw = sub { shift; $markers{ "$_[0],$_[1]" } = $drawOrder++ };
     local *Chart::Magick::Marker::createMarkerFromDefault = sub { };    # prevent this sub from doing draw ops
 
     my $canvas = Chart::Magick::ImageMagick->new( size => '1x1' );
@@ -79,69 +79,45 @@ BEGIN {
 
     $chart->plot( $canvas );
 
-use Data::Dump;
-for ( 0 .. 2 ) {
-    ddx $drawStack{$_};
-    ddx testData( $_ )->[0];
-}
-
     # check if the lines are plotted correctly
     cmp_bag(
         [ keys %drawStack ],
         [ 0, 1, 2 ],
         'plot draws the correct number of datasets',
     );
+
     cmp_deeply(
-        { map { $_ => scalar @{ $drawStack{$_} }            } ( 0 .. 2 ) },
-        { map { $_ => scalar @{ testData( $_ )->[0] }  - 1  } ( 0 .. 2 ) },
+        { map { $_ => scalar @{ $drawStack{$_}->{ points }  } } ( 0 .. 2 ) },
+        { map { $_ => scalar @{ testData( $_ )->[0]         } } ( 0 .. 2 ) },
         'plot draws the correct number of datapoints in the correct color for each dataset',
     );
-    ok( 
-           isConnected( $drawStack{ 0 } )
-        && isConnected( $drawStack{ 1 } )
-        && isConnected( $drawStack{ 2 } ),
-        'plot draws all the datapoints within a dataset without gaps',
-    );
-    cmp_ok( scalar @markerStack, '==', 0, 'plot draws no  markers when none are set' );
 
     # check if markers are drawn correctly
-    %drawStack = @markerStack = ();
+    %drawStack = %markers = ();
     $drawOrder = 0;
     $chart->setMarker( 0, 'square' );
     $chart->setMarker( 2, 'triangle' );
     $chart->plot( $canvas );
 
     cmp_ok( 
-        scalar @markerStack, '==', sum( map { scalar @{ $_->[0] } } testData(0, 2) ),
+        scalar keys %markers, '==', sum( map { scalar @{ $_->[0] } } testData(0, 2) ),
         'plot draws the correct number of  markers',
     );
 
     cmp_bag(
-        [ map { [ @{ $_ }[ 0, 1 ] ] } @markerStack ],
-        [   
-            map {
-                [ @{ $drawStack{ $_ }->[ -1 ] }{ 'x2', 'y2' } ],            # Add end coords of last line segment
-                map { [ @{ $_ }{ 'x1', 'y1' } ] } @{ $drawStack{ $_ } }     # Get start coords of each line segment
-            } ( 0, 2 )
-        ],
+        [ keys %markers ],
+        [ map { ( @{$drawStack{ $_ }->{ points }} ) } (0,2)  ],
         'plot draws markers at the right coords'
     );
 
     # check if markers are drawn on top of lines
     my $onTopOk;
-    foreach ( @markerStack ) {
-        my ($x, $y, $order) = @{ $_ }[ 0, 1, -1 ];
+    foreach ( values %drawStack ) {
+        my @points = @{ $_->{ points } };
+        
+        next unless scalar @markers{ @points };
 
-        $onTopOk = 
-            all     { $_->{ args }{ drawOrder } < $order } 
-            grep    { 
-                           ( $_->{ x1 } == $x && $_->{ y1 } == $y )
-                        || ( $_->{ x2 } == $x && $_->{ y2 } == $y )
-                    }
-            map     { @{ $_ } }
-            values  %drawStack
-        ;
-
+        $onTopOk = $_->{ drawOrder } < min @markers{ @points };
         last unless $onTopOk;
     }
     ok( $onTopOk, 'plot draws markers on top of line segments' );
@@ -202,19 +178,22 @@ sub registerDraw {
     };
     
     # Decode path 
-    @{ $props }{ qw{ x1 y1 x2 y2 } } = $args{ points } =~ m/^\s*M\s*(\d+),(\d+)\s*L\s*(\d+),(\d+)\s*$/i;
+#    @{ $props }{ qw{ x1 y1 x2 y2 } } = $args{ points } =~ m/^\s*M\s*(\d+),(\d+)\s*L\s*(\d+),(\d+)\s*$/i;
+    $props->{ points } = [ split / /, $args{points} ];
 
     # Create lookup key
     my $key     = exists $args{ stroke } ? $args{ stroke } : -1;
     $key        =~ s{^#(\d+)$}{$1}i;
     $key        += 0; #convert to number ( 000001 => 1 )
 
-    if ( exists $store->{ $key } ) {
-        push @{ $store->{ $key } }, $props;
-    }
-    else {
-        $store->{ $key } = [ $props ];
-    }
+    $store->{ $key } = $props;
+
+#    if ( exists $store->{ $key } ) {
+#        push @{ $store->{ $key } }, $props;
+#    }
+#    else {
+#        $store->{ $key } = [ $props ];
+#    }
 }
 
 #--------------------------------------------------------------------
