@@ -18,26 +18,37 @@ A fully pluggable charting system using Image::Magick as backend.
 
 =head1 SYNOPSIS
 
-use Chart::Magick;
+NOTE: Also refer to the example scripts in the example directory in the distribution.
 
-my $chart = Chart::Magick->line(
-    width   => 600,
-    height  => 300,
-    data    => [ 
-        [ \@x1, \@y1 ],
-        [ \@x2, \@y2 ],
-    ],
-);
-$chart->write( 'line.png' );
+    use Chart::Magick;
 
-my $bar  = Chart::Magick->bar(
-    data    => [
-        [ \@x1, \@y3 ],
-    ],
-);
+    # Create three datasets
+    my @x1 = ( 1,    2,  3   );
+    my @y1 = ( 6,   -1,  0.3 );
+    my @x2 = ( 1.5,  3 );
+    my @y2 = ( 2,    9 );
+    my %xy = ( 2 => 4, 0.5 => -2, 7 => 0 );
 
-$chart->add( $bar );
-$chart->write( 'line_bar.png' );
+    # Draw a line chart from the data above.
+    my $chart = Chart::Magick->line(
+        width   => 600,
+        height  => 300,
+        data    => [ 
+            [ \@x1, \@y1, 'Dataset 1', 'circle' ],
+            [ \@x2, \@y2, 'Dataset 2'           ],
+            [ \%xy,       'Dataset 3'           ],
+        ],
+    );
+    $chart->write( 'line.png' );
+
+    # Create a bar chart from some data, and add it onto the line chart.
+    my $bar  = Chart::Magick->bar(
+        data    => [
+            [ \@x1, \@y3 ],
+        ],
+    );
+    $chart->add( $bar );
+    $chart->write( 'line_bar.png' );
 
 =cut
 
@@ -95,26 +106,38 @@ or another chart (see L<"add">).
 
 =item data
 
-The data points to be plotted. Pass as an array ref of array refs. Each inner array ref has two elements which are
-array refs containing coordinates and values respectively (eg. x and y values), and must have the same number of
-elements.
-
-For example:
-
-    # Create some dummy data sets
-    @x1     = ( 1, 2, 3     );
-    @y1     = ( 2, 7, 19    );
-    @x2     = ( 1, 4, 5, 7  );
-    @y2     = ( 4, 8, 2, -1 );
+The datasets to be plotted, and optionally their labels and markers. Should be passed as an array ref of array
+refs, like this:
 
     %config = (
-        ...
-        data => [
-            [ \@x1, \@y1 ],
-            [ \@x2, \@y2 ],
-        ],
-        ...
+       data => [
+           [ dataset definition 1 ],
+           [ dataset definition 2 ],
+           ...
+        ,
     );
+
+A dataset defintion consists of the actual data followed (optionally) by a text label a marker and a marker size.
+There are two ways to pass the data: either as two array ref containing the coordinates and values respectively, or
+as a hash ref with coord => value pairs. So
+
+    %config = (
+        data => [
+            [  [ 1, 2, 3 ], [ 5, 7, 9 ], 'FooBar', 'square', 8  ],
+        ]
+    );
+
+is equivalent to:
+
+    %config = (
+        data => [
+            [  { 1 => 5, 2 => 7, 3 => 9 }, 'FooBar', 'square', 8 ],
+        ]
+    ]
+
+In both cases a dataset is defined with three points, a label 'FooBar' and square markers with a size of 8 pixels.
+'Square' is a predifined marker type, of which there are more. You can also use arbitrary images as markers. Please
+refer to the L<Chart::Magick::Marker> docs for more info.
 
 =item chart
 
