@@ -24,15 +24,15 @@ use Carp;
 # TODO: handle coercion etc.
 has palette => (
     is      => 'rw',
-    default => { sub { (shift)->defaultPalette } },
+    default => sub { (shift)->defaultPalette },
 );
 has dataset => (
     is      => 'rw',
-    default => { sub { Chart::Magick::Data->new } },
+    default => sub { Chart::Magick::Data->new },
 );
 has markers => (
     is      => 'rw',
-    default => [],
+    default => sub { [] },
 );
 has axis    => (
     is      => 'rw',
@@ -40,7 +40,7 @@ has axis    => (
 );
 has colors  => (
     is      => 'rw',
-    default => [],
+    default => sub { [] },
 );
 
 # Definition.
