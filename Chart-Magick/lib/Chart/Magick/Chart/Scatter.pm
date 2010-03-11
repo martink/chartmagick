@@ -1,10 +1,13 @@
 package Chart::Magick::Chart::Scatter;
 
 use strict;
+use warnings;
+use Moose;
+
 use List::Util qw{ min max };
 use Chart::Magick::Marker;
 
-use base qw{ Chart::Magick::Chart }; 
+extends 'Chart::Magick::Chart';
 
 =head1 NAME
 
@@ -14,40 +17,15 @@ Chart::Magick::Chart::Scatter
 
 A scatter plot Chart plugin for Chart::Magick.
 
+=head1 PROPERTIES
+
+Chart::Magick::Chart::Scatter has no properties of its own.
+
 =head1 METHODS
 
 The following methods are available from this class:
 
 =cut
-
-#-------------------------------------------------------------------
-
-=head2 definition ( )
-
-See Chart::Magick::Chart::definition for details.
-
-The following properties can be set:
-
-=over 4
-
-=item markerSize
-
-Default marker size (in pixels) to be used when none was set with the marker itself. Defaults to 5.
-
-=back
-
-=cut
-
-sub definition {
-    my $class = shift;
-
-    my $definition = $class->SUPER::definition(@_);
-
-    my $properties = {
-    };
-
-    return { %$definition, %$properties };
-}
 
 #--------------------------------------------------------------------
 
