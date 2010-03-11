@@ -535,34 +535,34 @@ sub setMarker {
 #    };
 #
 #    $markers{ id $self }->[ $index ] = $def;
-    $markers{ id $self }->[ $index ] = Chart::Magick::Marker->new( $marker, $size );
+    $self->markers->[ $index ] = Chart::Magick::Marker->new( $marker, $size );
 
     return;
 }
 
-#-------------------------------------------------------------------
-
-=head2 setPalette ( palette )
-
-Set the palette to use for drawing the chart.
-
-=head3 palette
-
-An instanciated Chart::Magick::Palette object.
-
-=cut
-
-sub setPalette {
-    my $self    = shift;
-    my $palette = shift;
-
-    croak "setPalette requires a palette to be passed" unless $palette;
-    croak "Palette must be a Chart::Magick::Palette" unless $palette->isa( 'Chart::Magick::Palette' );
-
-    $palette{ id $self } = $palette;
-
-    return;
-}
+#####-------------------------------------------------------------------
+####
+####=head2 setPalette ( palette )
+####
+####Set the palette to use for drawing the chart.
+####
+####=head3 palette
+####
+####An instanciated Chart::Magick::Palette object.
+####
+####=cut
+####
+####sub setPalette {
+####    my $self    = shift;
+####    my $palette = shift;
+####
+####    croak "setPalette requires a palette to be passed" unless $palette;
+####    croak "Palette must be a Chart::Magick::Palette" unless $palette->isa( 'Chart::Magick::Palette' );
+####
+####    $palette{ id $self } = $palette;
+####
+####    return;
+####}
 
 1;
 
