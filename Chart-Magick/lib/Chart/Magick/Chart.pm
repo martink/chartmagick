@@ -3,7 +3,9 @@ package Chart::Magick::Chart;
 use strict;
 use warnings;
 
-use Class::InsideOut    qw{ :std };
+####use Class::InsideOut    qw{ :std };
+use Moose;
+
 use List::Util          qw{ min max };
 use Chart::Magick::Palette;
 use Chart::Magick::Color;
@@ -11,13 +13,40 @@ use Chart::Magick::Data;
 use Chart::Magick::Marker;
 use Carp;
 
-use base qw{ Chart::Magick::Definition };
+####use base qw{ Chart::Magick::Definition };
 
-readonly palette    => my %palette;
-readonly dataset    => my %dataset;
-readonly markers    => my %markers;
-readonly axis       => my %axis;
-readonly colors     => my %colors;
+####readonly palette    => my %palette;
+####readonly dataset    => my %dataset;
+####readonly markers    => my %markers;
+####readonly axis       => my %axis;
+####readonly colors     => my %colors;
+
+# TODO: handle coercion etc.
+has palette => (
+    is      => 'rw',
+);
+has dataset => (
+    is      => 'rw',
+    default => { sub { Chart::Magick::Data->new } },
+);
+has markers => (
+    is      => 'rw',
+    default => [],
+);
+has axis    => (
+    is      => 'rw',
+);
+has colors  => (
+    is      => 'rw',
+    default => [],
+);
+
+# Definition.
+has markerSize => (
+    is      => 'rw',
+    default => 6,
+);
+
 
 #-------------------------------------------------------------------
 
@@ -109,20 +138,20 @@ sub autoRange {
     return;
 }
 
-#-------------------------------------------------------------------
-
-=head2 definition 
-
-Defines the properties of your plugin as well as their default values.
-
-=cut
-#TODO: More verbose docs overhere.
-
-sub definition {
-    return {
-        markerSize      => 6,
-    };
-}
+#####-------------------------------------------------------------------
+####
+####=head2 definition 
+####
+####Defines the properties of your plugin as well as their default values.
+####
+####=cut
+#####TODO: More verbose docs overhere.
+####
+####sub definition {
+####    return {
+####        markerSize      => 6,
+####    };
+####}
 
 #-------------------------------------------------------------------
 
@@ -141,19 +170,19 @@ sub getAxis {
     return $axis;
 }
 
-#-------------------------------------------------------------------
-
-=head2 getData ( )
-
-Returns the Data object the plugin should chart.
-
-=cut
-
-sub getData {
-    my $self    = shift;
-
-    return $dataset{ id $self };
-}
+#####-------------------------------------------------------------------
+####
+####=head2 getData ( )
+####
+####Returns the Data object the plugin should chart.
+####
+####=cut
+####
+####sub getData {
+####    my $self    = shift;
+####
+####    return $dataset{ id $self };
+####}
 
 #-------------------------------------------------------------------
 
@@ -321,7 +350,8 @@ sub new {
     register    $self;
 
     my $id            = id $self;
-    $dataset{ $id   } = Chart::Magick::Data->new;
+####    $dataset{ $id   } = Chart::Magick::Data->new;
+
     $markers{ $id   } = [];
     $colors{ $id    } = [];
 
