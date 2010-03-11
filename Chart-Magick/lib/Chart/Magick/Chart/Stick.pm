@@ -1,10 +1,13 @@
 package Chart::Magick::Chart::Stick;
 
 use strict;
+use warnings;
+use Moose;
+
 use List::Util qw{ min max };
 use Chart::Magick::Marker;
 
-use base qw{ Chart::Magick::Chart }; 
+extends 'Chart::Magick::Chart';
 
 =head1 NAME
 
@@ -14,41 +17,31 @@ Chart::Magick::Chart::Stick
 
 A stick Chart plugin for Chart::Magick.
 
-=head1 METHODS
-
-The following methods are available from this class:
-
-=cut
-
-#-------------------------------------------------------------------
-
-=head2 definition ( )
-
-See Chart::Magick::Chart::definition for details.
+=head2 PROPERTIES
 
 The following properties can be set:
 
 =over 4
 
-=item markerSize
+=item plotMarkers
 
-Default marker size (in pixels) to be used when none was set with the marker itself. Defaults to 5.
+If true, markers will be plotted at the end of sticks.
 
 =back
 
 =cut
 
-sub definition {
-    my $class = shift;
+has plotMarkers => (
+    is      => 'rw',
+    default => 1,
+);
 
-    my $definition = $class->SUPER::definition(@_);
 
-    my $properties = {
-        plotMarkers => 1,
-    };
+=head1 METHODS
 
-    return { %$definition, %$properties };
-}
+The following methods are available from this class:
+
+=cut
 
 #--------------------------------------------------------------------
 
@@ -97,7 +90,7 @@ sub plot {
 
     my $datasetCount =  $self->dataset->datasetCount;
 
-    my $drawMarkers = $self->get('plotMarkers');
+    my $drawMarkers = $self->plotMarkers;
 
     # Draw the graphs
     foreach my $x ( @{ $self->dataset->getCoords } ) {
