@@ -63,7 +63,7 @@ has barSpacing => (
 has groupSpacing => (
     is      => 'rw',
     lazy    => 1,
-    default => sub { abs (shift)->barSpacing * 3 },
+    default => sub { abs( (shift)->barSpacing ) * 3 },
 );
 
 # TODO: See if this prop can be forced to only qw{ sideBySide cumulative }.
