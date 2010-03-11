@@ -8,7 +8,7 @@ use List::MoreUtils     qw{ uniq    };
 use List::Util          qw{ min max };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 21 + 1;
+use Test::More tests => 18 + 1;
 use Test::NoWarnings;
 
 BEGIN {
@@ -27,34 +27,35 @@ BEGIN {
     isa_ok( $chart, 'Chart::Magick::Chart', 'new returns an object that inherits from Chart::Magick::Chart' );
 }
 
-#####################################################################
+#### TODO: trasform this in something that tests that all properties have an attribute.
+######################################################################
+##
+## definition
+##
+######################################################################
+#{
+#    my $chart = Chart::Magick::Chart::Bar->new();
+#   
+#    my $superDef    = Chart::Magick::Chart->new->definition;
+#    my $def         = $chart->definition;
+#    is( ref $def, 'HASH', 'definition returns a hash ref' );
 #
-# definition
+#    cmp_deeply(
+#        [ keys %{ $def } ],
+#        superbagof( keys %{ $superDef }  ),
+#        'definition includes all properties from super class' 
+#    );
 #
-#####################################################################
-{
-    my $chart = Chart::Magick::Chart::Bar->new();
-   
-    my $superDef    = Chart::Magick::Chart->new->definition;
-    my $def         = $chart->definition;
-    is( ref $def, 'HASH', 'definition returns a hash ref' );
-
-    cmp_deeply(
-        [ keys %{ $def } ],
-        superbagof( keys %{ $superDef }  ),
-        'definition includes all properties from super class' 
-    );
-
-    cmp_deeply(
-        $def,
-        superhashof( {
-            barWidth    => ignore(),
-            barSpacing  => ignore(),
-            drawMode    => ignore(),
-        } ),
-        'definition adds the correct properties',
-    );
-}
+#    cmp_deeply(
+#        $def,
+#        superhashof( {
+#            barWidth    => ignore(),
+#            barSpacing  => ignore(),
+#            drawMode    => ignore(),
+#        } ),
+#        'definition adds the correct properties',
+#    );
+#}
 
 #####################################################################
 #
@@ -114,7 +115,7 @@ BEGIN {
 {
     my $chart = setupDummyData();
 
-    $chart->set( 'drawMode', 'sideBySide' );
+    $chart->drawMode( 'sideBySide' );
 
     my @range = $chart->getDataRange;
     cmp_ok( scalar( @range ),                            '==', 4, 'getDataRange returns an array with four elements' );
@@ -130,7 +131,7 @@ BEGIN {
         'getDataRange returns correct value',
     );
 
-    $chart->set( 'drawMode', 'cumulative' );
+    $chart->drawMode( 'cumulative' );
 
     @range = $chart->getDataRange;
     cmp_ok( scalar( @range ),                            '==', 4, 'getDataRange(cumulative) returns an array with four elements' );
@@ -167,7 +168,7 @@ BEGIN {
     local *Image::Magick::Draw = sub { $im = shift; %args = @_ };
 
     # col w h x x_off y
-    my $color = $chart->getPalette->getNextColor;
+    my $color = $chart->palette->getNextColor;
     $chart->drawBar( $chart->axis->im, $color, 2, 6, 4 );
     is( $im, $chart->axis->im, 'drawBar draws on the correct image magick object' );
 
@@ -231,11 +232,11 @@ sub setupDummyData {
         { strokeAlpha => 1 },
         { strokeAlpha => 2 },
     ] );
-    $chart->setPalette( $palette );
+    $chart->palette( $palette );
 
     my $axis = Chart::Magick::Axis::Lin->new;
     $axis->addChart( $chart );
-    $chart->setAxis( $axis );
+    $chart->axis( $axis );
     $axis->draw;
 
     return $chart;

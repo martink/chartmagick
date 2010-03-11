@@ -7,7 +7,7 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis;
 
-use Test::More tests => 42 + 1;
+use Test::More tests => 26 + 1;
 use Test::NoWarnings;
 
 BEGIN {
@@ -43,56 +43,56 @@ BEGIN {
 #    ok( $@, 'new dies when an invalid property is passed' );
 #}
     
-#####################################################################
-#
-# definition
-#
-#####################################################################
-{
-    my $chart = Chart::Magick::Chart->new;
+#########################################################################
+#####
+##### definition
+#####
+#########################################################################
+####{
+####    my $chart = Chart::Magick::Chart->new;
+####
+####    cmp_deeply( 
+####        $chart->definition, 
+####        { 
+####            markerSize => re('^\d+$'),              # default marker size must be a non-negative integer
+####        }, 
+####        'definition defines correct properties' );
+####}
 
-    cmp_deeply( 
-        $chart->definition, 
-        { 
-            markerSize => re('^\d+$'),              # default marker size must be a non-negative integer
-        }, 
-        'definition defines correct properties' );
-}
+######################################################################
+##
+## getAxis / setAxis
+##
+######################################################################
+#{
+#    my $chart = Chart::Magick::Chart->new;
+#
+#    eval { $chart->getAxis };
+#    ok( $@, 'getAxis dies when no axis has been set' );
+#
+#    # Add 4 tests for testGetSet
+#    $chart = testGetSet( 'Axis', $chart, 1 );
+#}
 
-#####################################################################
+######################################################################
+##
+## getPalette / setPalette
+##
+######################################################################
+#{
+#    # Add 5 tests for testGetSet
+#    my $chart = testGetSet( 'Palette' );
+#}
 #
-# getAxis / setAxis
-#
-#####################################################################
-{
-    my $chart = Chart::Magick::Chart->new;
-
-    eval { $chart->getAxis };
-    ok( $@, 'getAxis dies when no axis has been set' );
-
-    # Add 4 tests for testGetSet
-    $chart = testGetSet( 'Axis', $chart, 1 );
-}
-
-#####################################################################
-#
-# getPalette / setPalette
-#
-#####################################################################
-{
-    # Add 5 tests for testGetSet
-    my $chart = testGetSet( 'Palette' );
-}
-
-#####################################################################
-#
-# getData / setData
-#
-#####################################################################
-{
-    # Add 5 tests for testGetSet
-    my $chart = testGetSet( 'Data' );
-}
+######################################################################
+##
+## getData / setData
+##
+######################################################################
+#{
+#    # Add 5 tests for testGetSet
+#    my $chart = testGetSet( 'Data' );
+#}
 
 #####################################################################
 #
@@ -144,7 +144,7 @@ BEGIN {
 #####################################################################
 {
     my $chart = Chart::Magick::Chart->new;
-    my $data  = $chart->getData;
+    my $data  = $chart->dataset;
 
     cmp_ok( $data->datasetCount, '==', 0, 'Initially no datasets are present' );
 
@@ -210,7 +210,7 @@ BEGIN {
     $chart->addDataset( [ -1, 3, 5 ], [  2, 8, -3 ] );
     $chart->addDataset( [  0, 7, 5 ], [ -8, 8,  3 ] );
 
-    my $expect = $chart->getData->globalData;
+    my $expect = $chart->dataset->globalData;
     my @range  = $chart->getDataRange;
     cmp_ok( scalar @range, '==', 4, 'getDataRange returns array of length 4' );
 
@@ -220,18 +220,18 @@ BEGIN {
     cmp_ok( $range[ 3 ], '==', $expect->{ maxValue }, 'getDataRange returns correct max value' );
 }
 
-#####################################################################
-#
-# setAxis / axis
-#
-#####################################################################
-{
-    my $axis    = Chart::Magick::Axis->new;
-    my $chart   = Chart::Magick::Chart->new;
-    $chart->setAxis( $axis );
-     
-    is( $chart->axis, $axis,     'axis returns correct axis object' );
-}
+######################################################################
+##
+## setAxis / axis
+##
+######################################################################
+#{
+#    my $axis    = Chart::Magick::Axis->new;
+#    my $chart   = Chart::Magick::Chart->new;
+#    $chart->setAxis( $axis );
+#     
+#    is( $chart->axis, $axis,     'axis returns correct axis object' );
+#}
 
 #####################################################################
 #

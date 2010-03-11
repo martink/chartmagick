@@ -8,7 +8,7 @@ use List::MoreUtils     qw{ all     };
 use List::Util          qw{ sum min };
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 12 + 1;
+use Test::More tests => 9 + 1;
 use Test::NoWarnings;
 
 BEGIN {
@@ -25,34 +25,6 @@ BEGIN {
     ok( !$@, 'new can be called' );
     is( ref $chart, 'Chart::Magick::Chart::Line', 'new returns an object of correct class' );
     isa_ok( $chart, 'Chart::Magick::Chart', 'new returns an object that inherits from Chart::Magick::Chart' );
-}
-
-#####################################################################
-#
-# definition
-#
-#####################################################################
-{
-    my $chart = Chart::Magick::Chart::Line->new();
-   
-    my $superDef    = Chart::Magick::Chart->new->definition;
-    my $def         = $chart->definition;
-    is( ref $def, 'HASH', 'definition returns a hash ref' );
-
-    cmp_deeply(
-        [ keys %{ $def } ],
-        superbagof( keys %{ $superDef }  ),
-        'definition includes all properties from super class' 
-    );
-
-    cmp_deeply(
-        $def,
-        superhashof( {
-            plotMarkers => ignore(),
-            markerSize  => ignore(),
-        } ),
-        'definition adds the correct properties',
-    );
 }
 
 #####################################################################
@@ -151,11 +123,11 @@ sub setupDummyData {
         { strokeAlpha => '1' },
         { strokeAlpha => '2' },
     ] );
-    $chart->setPalette( $palette );
+    $chart->palette( $palette );
 
     my $axis = Chart::Magick::Axis::Lin->new;
     $axis->addChart( $chart );
-    $chart->setAxis( $axis );
+    $chart->axis( $axis );
     $axis->draw;
 }
 
