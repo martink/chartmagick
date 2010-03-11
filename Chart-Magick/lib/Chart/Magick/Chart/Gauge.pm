@@ -3,6 +3,8 @@ package Chart::Magick::Chart::Gauge;
 use strict;
 use warnings;
 use Moose;
+use Moose::Util::TypeConstraints;
+use Chart::Magick::Types;
 
 use Math::Trig qw{ :pi deg2rad };
 use List::Util qw{ min };
@@ -26,14 +28,17 @@ The following properties can be set:
 has paneColor => (
     is      => 'rw',
     default => '#888888',
+    isa     => 'MagickColor',
 );
 has rimColor => (
     is      => 'rw',
     default => 'orange',
+    isa     => 'MagickColor',
 );
 has scaleColor => (
     is      => 'rw',
     default => '#333333',
+    isa     => 'MagickColor',
 );
 # conflicts with the drawScale method that draws the scale. We're currently not using this attribute anyway, so
 # maybe delete it?
@@ -46,81 +51,100 @@ has scaleColor => (
 has scaleStart => (
     is      => 'rw',
     default => 0,
+    isa     => 'Num',
 );
 has scaleStop => (
     is      =>'rw',
     default => 10,
+    isa     => 'Num',
 );
         
 has numberOfTicks => (
     is      =>'rw',
     default => 5,
+    isa     => 'PositiveOrZeroInt',
 );
 has numberOfSubTicks => (
     is      =>'rw',
     default => 5,
+    isa     => 'PositiveOrZeroInt',
 );
 
 has startAngle => (
     is      =>'rw',
     default => 45,
+    isa     => 'Num',
 );
 has stopAngle => (
     is      =>'rw',
     default => 315,
+    isa     => 'Num',
 );
 has clockwise => (
     is      =>'rw',
     default => 1,
+    isa     => 'Bool',
 );
 
 has scaleRadius => (
     is      =>'rw',
     default => 80,
+    isa     => 'PositiveOrZeroInt',
 );
 has labelSpacing => (
     is      =>'rw',
     default => 10,
+    isa     => 'PositiveOrZeroInt',
 );
 has tickOutset => (
     is      =>'rw',
     default => 10,
+    isa     => 'PositiveOrZeroInt',
 );
 has tickInset => (
     is      =>'rw',
     default => 5,
+    isa     => 'PositiveOrZeroInt',
 );
 has subtickOutset => (
     is      =>'rw',
     default => 2,
+    isa     => 'PositiveOrZeroInt',
 );
 has subtickInset => (
     is      =>'rw',
     default => 2,
+    isa     => 'PositiveOrZeroInt',
 );
 has radius => (
     is      =>'rw',
     default => 100,
+    isa     => 'PositiveOrZeroInt',
 );
 has rimMargin => (
     is      =>'rw',
     default => 10,
+    isa     => 'PositiveOrZeroInt',
 );
 has rimWidth => (
     is      =>'rw',
     default => 10,
+    isa     => 'PositiveOrZeroInt',
 );
 has minTickWidth => (
     is      =>'rw',
     default => 40,
+    isa     => 'PositiveOrZeroInt',
 );
 has ticks => (
     is      =>'rw',
     default => sub { [] },
+    isa     => 'ArrayRef',
 );
 has needleType => (
     is      =>'rw',
     default => 'fancy',
+    isa     => enum([ qw{ simple fancy compass } ]), 
 );
 
 

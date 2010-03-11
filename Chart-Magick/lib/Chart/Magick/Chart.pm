@@ -25,22 +25,27 @@ use Carp;
 has palette => (
     is      => 'rw',
     default => sub { (shift)->defaultPalette },
+    isa     => 'Chart::Magick::Palette',
 );
 has dataset => (
     is      => 'rw',
     default => sub { Chart::Magick::Data->new },
+    isa     => 'Chart::Magick::Data',
 );
 has markers => (
     is      => 'rw',
     default => sub { [] },
+    isa     => 'ArrayRef',
 );
 has axis    => (
     is      => 'rw',
+    isa     => 'Chart::Magick::Axis',
     # TODO: croak if unset.
 );
 has colors  => (
     is      => 'rw',
     default => sub { [] },
+    isa     => 'ArrayRef',
 );
 
 # Definition.

@@ -3,6 +3,8 @@ package Chart::Magick::Chart::Bar;
 use strict;
 use warnings;
 use Moose;
+use Moose::Util::TypeConstraints;
+use Chart::Magick::Types;
 
 use List::Util qw{ sum min };
 
@@ -53,23 +55,26 @@ Draws bars on top of each other.
 has barWidth => (
     is      => 'rw',
     default => 20,
+    isa     => 'PositiveOrZeroInt',
 );
 
 has barSpacing => (
     is      => 'rw',
     default => 0.05,
+    isa     => 'Num',
 );
 
 has groupSpacing => (
     is      => 'rw',
     lazy    => 1,
     default => sub { abs( (shift)->barSpacing ) * 3 },
+    isa     => 'Num',
 );
 
-# TODO: See if this prop can be forced to only qw{ sideBySide cumulative }.
 has drawMode => (
     is      => 'rw',
     default => 'sideBySide',
+    isa     => enum([ qw{ sideBySide cumulative } ]),
 );
 
 #sub definition {

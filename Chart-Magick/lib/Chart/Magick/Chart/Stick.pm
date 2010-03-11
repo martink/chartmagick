@@ -34,6 +34,7 @@ If true, markers will be plotted at the end of sticks.
 has plotMarkers => (
     is      => 'rw',
     default => 1,
+    isa     => 'Bool',
 );
 
 

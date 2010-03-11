@@ -35,10 +35,6 @@ The following properties can be set:
 
 Determines whether or not markers are draw at data points. Defaults to 1.
 
-=item markerSize
-
-Default marker size (in pixels) to be used when none was set with the marker itself. Defaults to 5.
-
 =back
 
 =cut
@@ -46,6 +42,7 @@ Default marker size (in pixels) to be used when none was set with the marker its
 has plotMarkers => (
 	is		=>'rw',
 	default => 1,
+    isa     => 'Bool',
 );
 
 #--------------------------------------------------------------------

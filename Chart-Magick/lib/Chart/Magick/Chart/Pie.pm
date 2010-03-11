@@ -3,6 +3,8 @@ package Chart::Magick::Chart::Pie;
 use strict;
 use warnings;
 use Moose;
+use Moose::Util::TypeConstraints;
+use Chart::Magick::Types;
 
 use Math::Trig;         # exports pi
 use List::Util          qw{ min };
@@ -111,62 +113,77 @@ Defaults to 20.
 has bottomHeight => (
 	is		=> 'rw',
 	default => 0,
+    isa     => 'PositiveOrZeroInt',
 );
 has explosionLength => (
 	is		=> 'rw',
 	default => 0,
+    isa     => 'PositiveOrZeroInt',
 );
 has explosionWidth => (
 	is		=> 'rw',
 	default => 0,
+    isa     => 'PositiveOrZeroInt',
 );
 has labelPosition => (
 	is		=> 'rw',
 	default => 'top',
+    isa     => enum([ qw{ top middle bottom } ]),
 );
 has labelOffset => (
 	is		=> 'rw',
 	default => 10,
+    isa     => 'PositiveOrZeroInt',
 );
 has pieMode => (
 	is		=> 'rw',
 	default => 'normal',
+    isa     => enum([ qw{ normal stepped } ]),
 );
 has radius => (
 	is		=> 'rw',
 	default => 100,
+    isa     => 'PositiveOrZeroInt',
 );
 has scaleFactor => (
 	is		=> 'rw',
 	default => 1,
+    isa     => 'Num',
 );
 has startAngle => (
 	is		=> 'rw',
 	default => 0,
+    isa     => 'Num',
 );
 has shadedSides => (
 	is		=> 'rw',
 	default => 1,
+    isa     => 'Bool',
 );
 has stickColor => (
 	is		=> 'rw',
 	default => '#333333',
+    isa     => 'MagickColor',
 );
 has stickLength => (
 	is		=> 'rw',
 	default => 0,
+    isa     => 'Int',
 );
 has stickOffset => (
 	is		=> 'rw',
 	default => 0,
+    isa     => 'Int',
 );
 has tiltAngle => (
 	is		=> 'rw',
 	default => 55,
+    isa     => 'Int',
 );
 has topHeight => (
 	is		=> 'rw',
 	default => 20,
+    isa     => 'Int',
 );
 
 =head1 METHODS
