@@ -1,10 +1,13 @@
 package Chart::Magick::Chart::Line;
 
 use strict;
+use warnings;
+use Moose;
+
 use List::Util qw{ min max };
 use Chart::Magick::Marker;
 
-use base qw{ Chart::Magick::Chart }; 
+extends 'Chart::Magick::Chart';
 
 =head1 NAME
 
@@ -22,9 +25,7 @@ The following methods are available from this class:
 
 #-------------------------------------------------------------------
 
-=head2 definition ( )
-
-See Chart::Magick::Chart::definition for details.
+=head2 properties
 
 The following properties can be set:
 
@@ -42,17 +43,10 @@ Default marker size (in pixels) to be used when none was set with the marker its
 
 =cut
 
-sub definition {
-    my $class = shift;
-
-    my $definition = $class->SUPER::definition(@_);
-
-    my $properties = {
-        plotMarkers     => 1,
-    };
-
-    return { %$definition, %$properties };
-}
+has plotMarkers => (
+	is		=>'rw',
+	default => 1,
+);
 
 #--------------------------------------------------------------------
 
@@ -144,7 +138,7 @@ sub plot {
             fill		=> 'none',
         );
        
-        next unless $self->get('plotMarkers') && $markers[ $ds ];
+        next unless $self->plotMarkers && $markers[ $ds ];
         
         my $marker = $markers[ $ds ];
         

@@ -25,7 +25,7 @@ $ds->addDataset(
 
 # Chart
 my $chart   = Chart::Magick::Chart::Line->new( );
-$chart->setData( $ds );
+$chart->dataset( $ds );
 
 # Axis
 my $axis    = Chart::Magick::Axis::LinLog->new( {
