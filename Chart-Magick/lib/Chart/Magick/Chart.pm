@@ -463,29 +463,29 @@ sub toPx {
     return join ',', $self->project( @params );
 }
 
-#-------------------------------------------------------------------
-
-=head2 setData ( dataset )
-
-Set the dataset object the plugin should chart.
-
-=head3 dataset
-
-An instanciated Chart::Magick::Data object.
-
-=cut
-
-sub setData {
-    my $self = shift;
-    my $data = shift;
-
-    croak "setData requires a Chart::Magick::Data object to be passed" 
-        unless $data && $data->isa( 'Chart::Magick::Data' );
-
-    $dataset{ id $self } = $data;
-
-    return;
-}
+#####-------------------------------------------------------------------
+####
+####=head2 setData ( dataset )
+####
+####Set the dataset object the plugin should chart.
+####
+####=head3 dataset
+####
+####An instanciated Chart::Magick::Data object.
+####
+####=cut
+####
+####sub setData {
+####    my $self = shift;
+####    my $data = shift;
+####
+####    croak "setData requires a Chart::Magick::Data object to be passed" 
+####        unless $data && $data->isa( 'Chart::Magick::Data' );
+####
+####    $dataset{ id $self } = $data;
+####
+####    return;
+####}
 
 #-------------------------------------------------------------------
 
