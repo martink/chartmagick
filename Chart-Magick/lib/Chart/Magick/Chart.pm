@@ -395,7 +395,7 @@ sub preprocessData {
     for my $ds ( 0 .. $self->dataset->datasetCount - 1 ) {
         my $color = $self->palette->getNextColor;
 
-        push @{ $colors{ id $self } }, $color;
+        push @{ $self->colors }, $color;
 
 #        if ( exists $self->markers->[ $ds ] ) {
 #            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
