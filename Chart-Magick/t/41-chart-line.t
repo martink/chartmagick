@@ -117,7 +117,7 @@ BEGIN {
         
         next unless scalar @markers{ @points };
 
-        $onTopOk = $_->{ drawOrder } < min @markers{ @points };
+        $onTopOk = ( $_->{ drawOrder } || 0 ) < min @markers{ @points };
         last unless $onTopOk;
     }
     ok( $onTopOk, 'plot draws markers on top of line segments' );
