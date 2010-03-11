@@ -226,7 +226,7 @@ sub AUTOLOAD {
 
     my $chartClass = "Chart::Magick::Chart::$name";
     
-    my $chart   = _loadAndInstanciate( "Chart::Magick::Chart::$name" );
+    my $chart   = _loadAndInstanciate( "Chart::Magick::Chart::$name", $params{ chart  } || {} );
     croak "Cannot load class $chartClass" unless $chart;
 
     my $axis =
@@ -248,7 +248,7 @@ sub AUTOLOAD {
     $axis->set( width => $params{ width }, height => $params{ height } );
 
     # Apply settings to chart, axis and legend.
-    $chart->set(        $params{ chart  } || {} );
+####    $chart->set(        $params{ chart  } || {} );
     $axis->set(         $params{ axis   } || {} );
     $axis->legend->set( $params{ legend } || {} ); 
 
