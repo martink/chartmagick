@@ -2,15 +2,21 @@ package Chart::Magick::Chart::Pie;
 
 use strict;
 use warnings;
+use Moose;
 
 use Math::Trig;         # exports pi
 use List::Util          qw{ min };
-use Class::InsideOut    qw{ :std };
 
-readonly canvas => my %canvas;
-readonly slices => my %slices;
+has canvas => (
+    is      => 'rw',
+);
 
-use base qw{ Chart::Magick::Chart };
+has slices => (
+    is      => 'rw',
+    default => sub { [] },
+);
+
+extends 'Chart::Magick::Chart';
 
 =head1 NAME
 
@@ -32,134 +38,7 @@ connected via sticks and aligned to top, bottom and center of the pie.
 The package automatically desides whether to draw in 2d or 3d mode based on the
 angle by which the pie is tilted.
 
-=head1 METHODS
-
-These methods are available from this class:
-
-=cut
-
-#-------------------------------------------------------------------
-
-=head2 _mod2pi ( angle )
-
-Returns the angle modulo 2*pi.
-
-=head3 angle
-
-The angle you want the modulo of.
-
-=cut
-
-sub _mod2pi {
-    my $angle = shift;
-
-    if ($angle < 0) {
-        return 2*pi + $angle - 2*pi*int($angle/(2*pi));
-    } else {
-        return $angle - 2*pi*int($angle/(2*pi));
-    }
-}
-
-#-------------------------------------------------------------------
-
-=head2 addSlice ( properties ) 
-
-Adds a slice definition to the pie.
-
-=head3 properties
-
-Hashref containing the slice definition. The following properties can be passed:
-
-=over 4
-
-=item percentage
-
-The percentage of the slice. May be a value between 0 and 1.
-
-=item color
-
-A Chart::Magick::Color object.
-
-=item label
-
-The text label that is drawn along with the slice.
-
-=back
-
-=cut
-
-sub addSlice {
-    my $self        = shift;
-    my $properties  = shift;
-    my $slices      = $self->slices;
-
-    my $percentage  = $properties->{percentage};
-    # Work around a bug in imagemagick where an A path with the same start and end point will segfault.
-    if ($percentage == 1) {
-        $percentage = 0.999999999;
-    }
-
-    my $sliceStart  =
-          scalar @{ $slices }           ? $slices->[ -1 ]->{ stopAngle }
-        : $self->get('startAngle')      ? 2 * pi * $self->get('startAngle') / 360
-        : 0
-        ;
-
-    my $angle       = _mod2pi( 2 * pi * $percentage         );
-    my $startAngle  = _mod2pi( $sliceStart                  );
-    my $stopAngle   = _mod2pi( $startAngle + $angle         );
-    my $avgAngle    = _mod2pi( $startAngle + $angle  / 2    );
-
-    my $color       = $properties->{color};
-    my $fillColor   = $color->getFillColor;
-    my $strokeColor = $color->getStrokeColor;
-    my $sideColor   = $self->get('shadedSides')
-                    ? $color->darken->getFillColor
-                    : $fillColor
-                    ;
-
-    my $explosionRadius =
-          $self->get('explosionLength')                     ? $self->get('explosionLength')
-        : $self->get('explosionWidth') && sin( $angle / 2 ) ? $self->get('explosionWidth') / sin( $angle  / 2 )
-        : 0;
-
-    push @{ $slices }, {
-        # color properties
-        fillColor       => $fillColor,
-        strokeColor     => $strokeColor,
-        bottomColor     => $fillColor,
-        topColor        => $fillColor,
-        startPlaneColor => $sideColor,
-        stopPlaneColor  => $sideColor,
-        rimColor        => $sideColor,
-
-        # geometric properties
-        topHeight       => $self->get('topHeight')    * sin( 2 * pi * $self->get('tiltAngle') / 360 ),
-        bottomHeight    => $self->get('bottomHeight') * sin( 2 * pi * $self->get('tiltAngle') / 360 ),
-        explosionRadius => $explosionRadius,
-        widthReduction  => $explosionRadius * sin( $angle / 2 ),
-        scaleFactor     => ($self->get('scaleFactor') - 1) * $percentage + 1,
-
-        # keep the slice number for debugging properties
-        sliceNr         => scalar @{ $slices },
-        label           => $properties->{ label },
-        percentage      => $percentage,
-
-        # angles
-        startAngle      => $startAngle,
-        angle           => $angle,
-        avgAngle        => $avgAngle,
-        stopAngle       => $stopAngle,
-    };
-
-    return;
-}
-
-#--------------------------------------------------------------------
-
-=head2 definition
-
-See Chart::Magick::Chart::definition.
+=head1 PROPERTIES
 
 Pie defines the following properties:
 
@@ -229,29 +108,188 @@ Defaults to 20.
 
 =cut
 
-sub definition {
-    my $self    = shift;
-    my %options = %{ $self->SUPER::definition };
+has bottomHeight => (
+	is		=> 'rw',
+	default => 0,
+);
+has explosionLength => (
+	is		=> 'rw',
+	default => 0,
+);
+has explosionWidth => (
+	is		=> 'rw',
+	default => 0,
+);
+has labelPosition => (
+	is		=> 'rw',
+	default => 'top',
+);
+has labelOffset => (
+	is		=> 'rw',
+	default => 10,
+);
+has pieMode => (
+	is		=> 'rw',
+	default => 'normal',
+);
+has radius => (
+	is		=> 'rw',
+	default => 100,
+);
+has scaleFactor => (
+	is		=> 'rw',
+	default => 1,
+);
+has startAngle => (
+	is		=> 'rw',
+	default => 0,
+);
+has shadedSides => (
+	is		=> 'rw',
+	default => 1,
+);
+has stickColor => (
+	is		=> 'rw',
+	default => '#333333',
+);
+has stickLength => (
+	is		=> 'rw',
+	default => 0,
+);
+has stickOffset => (
+	is		=> 'rw',
+	default => 0,
+);
+has tiltAngle => (
+	is		=> 'rw',
+	default => 55,
+);
+has topHeight => (
+	is		=> 'rw',
+	default => 20,
+);
 
-    my %overrides = (
-        bottomHeight        => 0,
-        explosionLength     => 0,
-        explosionWidth      => 0,
-        labelPosition       => 'top',
-        labelOffset         => 10,
-        pieMode             => 'normal',
-        radius              => 100,
-        scaleFactor         => 1,
-        startAngle          => 0,
-        shadedSides         => 1,
-        stickColor          => '#333333',
-        stickLength         => 0,
-        stickOffset         => 0,
-        tiltAngle           => 55,
-        topHeight           => 20,
-    );
+=head1 METHODS
 
-    return { %options, %overrides };
+These methods are available from this class:
+
+=cut
+
+#-------------------------------------------------------------------
+
+=head2 _mod2pi ( angle )
+
+Returns the angle modulo 2*pi.
+
+=head3 angle
+
+The angle you want the modulo of.
+
+=cut
+
+sub _mod2pi {
+    my $angle = shift;
+
+    if ($angle < 0) {
+        return 2*pi + $angle - 2*pi*int($angle/(2*pi));
+    } else {
+        return $angle - 2*pi*int($angle/(2*pi));
+    }
+}
+
+#-------------------------------------------------------------------
+
+=head2 addSlice ( properties ) 
+
+Adds a slice definition to the pie.
+
+=head3 properties
+
+Hashref containing the slice definition. The following properties can be passed:
+
+=over 4
+
+=item percentage
+
+The percentage of the slice. May be a value between 0 and 1.
+
+=item color
+
+A Chart::Magick::Color object.
+
+=item label
+
+The text label that is drawn along with the slice.
+
+=back
+
+=cut
+
+sub addSlice {
+    my $self        = shift;
+    my $properties  = shift;
+    my $slices      = $self->slices;
+
+    my $percentage  = $properties->{percentage};
+    # Work around a bug in imagemagick where an A path with the same start and end point will segfault.
+    if ($percentage == 1) {
+        $percentage = 0.999999999;
+    }
+
+    my $sliceStart  =
+          scalar @{ $slices }       ? $slices->[ -1 ]->{ stopAngle }
+        : $self->startAngle         ? 2 * pi * $self->startAngle / 360
+        : 0
+        ;
+
+    my $angle       = _mod2pi( 2 * pi * $percentage         );
+    my $startAngle  = _mod2pi( $sliceStart                  );
+    my $stopAngle   = _mod2pi( $startAngle + $angle         );
+    my $avgAngle    = _mod2pi( $startAngle + $angle  / 2    );
+
+    my $color       = $properties->{color};
+    my $fillColor   = $color->getFillColor;
+    my $strokeColor = $color->getStrokeColor;
+    my $sideColor   = $self->shadedSides
+                    ? $color->darken->getFillColor
+                    : $fillColor
+                    ;
+
+    my $explosionRadius =
+          $self->explosionLength                     ? $self->explosionLength
+        : $self->explosionWidth && sin( $angle / 2 ) ? $self->explosionWidth / sin( $angle  / 2 )
+        : 0;
+
+    push @{ $slices }, {
+        # color properties
+        fillColor       => $fillColor,
+        strokeColor     => $strokeColor,
+        bottomColor     => $fillColor,
+        topColor        => $fillColor,
+        startPlaneColor => $sideColor,
+        stopPlaneColor  => $sideColor,
+        rimColor        => $sideColor,
+
+        # geometric properties
+        topHeight       => $self->topHeight    * sin( 2 * pi * $self->tiltAngle / 360 ),
+        bottomHeight    => $self->bottomHeight * sin( 2 * pi * $self->tiltAngle / 360 ),
+        explosionRadius => $explosionRadius,
+        widthReduction  => $explosionRadius * sin( $angle / 2 ),
+        scaleFactor     => ($self->scaleFactor - 1) * $percentage + 1,
+
+        # keep the slice number for debugging properties
+        sliceNr         => scalar @{ $slices },
+        label           => $properties->{ label },
+        percentage      => $percentage,
+
+        # angles
+        startAngle      => $startAngle,
+        angle           => $angle,
+        avgAngle        => $avgAngle,
+        stopAngle       => $stopAngle,
+    };
+
+    return;
 }
 
 #--------------------------------------------------------------------
@@ -286,7 +324,7 @@ sub getIntersect {
     my $m   = -sin( $angle ) / cos( $angle );
 
     my $m2  = $m * $m;
-    my $h   = sprintf( '%.6f', ( cos(2 * pi * $self->get('tiltAngle') / 360) ) ** 2 );
+    my $h   = sprintf( '%.6f', ( cos(2 * pi * $self->tiltAngle / 360) ) ** 2 );
     $h = 0.00001 if $h == 0.0;
     my $x02 = $x0 * $x0;
     my $y02 = $y0 * $y0;
@@ -350,10 +388,10 @@ sub calcCoordinates {
     );
 
     my ( $startX, $startY ) = $self->project(
-        map { [$_] } $self->getIntersect( $self->get('radius'), $slice->{ startAngle }, $tipX, $tipY ) 
+        map { [$_] } $self->getIntersect( $self->radius, $slice->{ startAngle }, $tipX, $tipY ) 
     );
     my ( $endX, $endY )     = $self->project(
-        map { [$_] } $self->getIntersect( $self->get('radius'), $slice->{ stopAngle }, $tipX, $tipY )
+        map { [$_] } $self->getIntersect( $self->radius, $slice->{ stopAngle }, $tipX, $tipY )
     );
     ( $tipX, $tipY )        = $self->project( [ $tipX ], [ $tipY ] );
 
@@ -456,10 +494,10 @@ See Chart::Magick::Chart::plot.
 
 sub plot {
     my $self    = shift;
-    my $axis    = $self->axis;
     my $canvas  = shift;
+    my $axis    = $self->axis;
 
-    $canvas{ id $self } = $canvas;
+    $self->canvas( $canvas );
 
     $self->processDataset;
 
@@ -477,7 +515,7 @@ sub plot {
     }
 
     # Secondly draw the sides, which only 3d pies have
-    if ($self->get('tiltAngle') != 0) {
+    if ($self->tiltAngle != 0) {
         my @parts =
             sort    sortSlices                          # sort slice parts in drawing order
             map     { $self->splitSlice( $_ ) }         # split slices crossing the horizontal axis
@@ -502,7 +540,7 @@ sub plot {
 
     # Finally draw the top planes of each slice and the labels that are in front of the chart.
     foreach my $slice (@slices) {
-        $self->drawTop( $slice ) if $self->get('tiltAngle') != 0;
+        $self->drawTop( $slice ) if $self->tiltAngle != 0;
 
         if ( $slice->{avgAngle} > pi ) {
             $self->drawLabel( $slice );
@@ -549,12 +587,12 @@ sub drawLabel {
     my $self    = shift;
     my $slice   = shift;
 
-    my $tiltScale   = cos( 2 * pi * $self->get('tiltAngle') / 360 );
+    my $tiltScale   = cos( 2 * pi * $self->tiltAngle / 360 );
     my $angle       = $slice->{avgAngle};
-    my $radius      = $self->get('radius');
+    my $radius      = $self->radius;
 
-    my $startRadius = $radius * $slice->{ scaleFactor } + $self->get('stickOffset');
-    my $stopRadius  = $startRadius + $self->get('stickLength');
+    my $startRadius = $radius * $slice->{ scaleFactor } + $self->stickOffset;
+    my $stopRadius  = $startRadius + $self->stickLength;
 
     my ( $startPointX, $startPointY ) = $self->project( 
         [  $startRadius * cos $angle                ], 
@@ -565,8 +603,8 @@ sub drawLabel {
         [ -$stopRadius  * $tiltScale * sin $angle   ],
     );
 
-    if ($self->get('tiltAngle')) {
-        my $position     = $self->get('labelPosition');
+    if ($self->tiltAngle) {
+        my $position     = $self->labelPosition;
         my $labelOffsetY =
               $position eq 'top'        ? $slice->{topHeight}
             : $position eq 'bottom'     ? $slice->{bottomHeight}
@@ -577,10 +615,10 @@ sub drawLabel {
     }
 
     # Draw the stick
-    if ($self->get('stickLength')){
+    if ($self->stickLength){
         $self->canvas->Draw(
             primitive   => 'Path',
-            stroke      => $self->get('stickColor'),
+            stroke      => $self->stickColor,
             strokewidth => 3,
             points      =>
                 " M $startPointX,$startPointY ".
@@ -604,8 +642,8 @@ sub drawLabel {
 
     my $anchorX
         = $horizontalAlign eq 'right'
-        ? $endPointX - $self->get('labelOffset')
-        : $endPointX + $self->get('labelOffset')
+        ? $endPointX - $self->labelOffset
+        : $endPointX + $self->labelOffset
         ;
 
     my $text = $slice->{label} || sprintf('%.1f', $slice->{percentage}*100).' %';
@@ -880,30 +918,11 @@ sub getPieDimensions {
     my $self    = shift;
     my $scale   = shift || 1;
 
-    my $radius      = $self->get('radius') * $scale;
+    my $radius      = $self->radius * $scale;
     my $pieWidth    = $radius;
-    my $pieHeight   = $radius * cos(2 * pi * $self->get('tiltAngle') / 360);
+    my $pieHeight   = $radius * cos(2 * pi * $self->tiltAngle / 360);
 
     return ( $pieWidth, $pieHeight );
-}
-
-#-------------------------------------------------------------------
-
-=head2 new ( )
-
-Contstructor. See SUPER classes for additional parameters.
-
-=cut
-
-sub new {
-    my $class = shift;
-
-    my $self = $class->SUPER::new(@_);
-    register $self;
-
-    $slices{ id $self } = [];
-
-    return $self;
 }
 
 #-------------------------------------------------------------------
@@ -917,22 +936,22 @@ Takes the dataset and takes the necesarry steps for the pie to be drawn.
 sub processDataset {
     my $self    = shift;
 
-    my $tiltScale = cos( 2 * pi * $self->get('tiltAngle') / 360 );
-    my $stickSize = $self->get('stickLength') + $self->get('stickOffset') + $self->get('labelOffset') + 10;
+    my $tiltScale = cos( 2 * pi * $self->tiltAngle / 360 );
+    my $stickSize = $self->stickLength + $self->stickOffset + $self->labelOffset + 10;
 
     my $diameter  = min ( 
         $self->getWidth  - 2 * $stickSize,
         ($self->getHeight - $tiltScale * 2 * $stickSize) / $tiltScale,
     );
 
-    $self->set( radius => int( $diameter / 2 ));
+    $self->radius( int( $diameter / 2 ) );
 
     my $total       = $self->dataset->datasetData->[0]->{ total }->[ 0 ] || 1;
 
     my $divisor     = $self->dataset->datasetData->[0]->{ coordCount }; # avoid division by zero
-    my $stepsize    = ( $self->get('topHeight') + $self->get('bottomHeight') ) / $divisor;
+    my $stepsize    = ( $self->topHeight + $self->bottomHeight ) / $divisor;
 
-    $slices{ id $self } = [ ];
+    $self->slices( [] );
 
     for my $coord ( @{ $self->dataset->getCoords } ) {
         my $x = $coord->[0];
@@ -947,7 +966,7 @@ sub processDataset {
             color       => $self->palette->getNextColor,
         } );
 
-        $self->set('topHeight', $self->get('topHeight') - $stepsize) if ($self->get('pieMode') eq 'stepped');
+        $self->topHeight( $self->topHeight - $stepsize ) if $self->pieMode eq 'stepped';
     }
 
     return;
