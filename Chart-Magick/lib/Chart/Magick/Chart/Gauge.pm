@@ -189,7 +189,7 @@ sub drawNeedles {
     my $self    = shift;
     my $canvas  = shift;
 
-    my $palette = $self->getPalette;
+    my $palette = $self->palette;
 
     my $needlePath = $self->getNeedlePath( $self->get('needleType'), $self->get('scaleRadius') );
     my ($x, $y) = $self->project( 0,0 );

@@ -24,6 +24,7 @@ use Carp;
 # TODO: handle coercion etc.
 has palette => (
     is      => 'rw',
+    default => { sub { (shift)->defaultPalette } },
 );
 has dataset => (
     is      => 'rw',
@@ -219,24 +220,10 @@ sub getHeight {
     return $self->axis->getChartHeight;
 }
 
-#-------------------------------------------------------------------
 
-=head2 getPalette ( )
-
-Returns the Chart::Magick::Palette object associated with this plugin. If none is set, will create a default
-palette and return that.
-
-=cut
-
-sub getPalette {
+sub defaultPalette {
     my $self    = shift;
-    my $id      = id $self;
-
-    # If a palette has been set, return it
-    return $palette{ $id } if $palette{ $id };
-
-    # Otherwise generate a default palette
-    my @colors = (
+    my @colors  = (
         { fillTriplet => '7ebfe5', fillAlpha => '77', strokeTriplet => '7ebfe5', strokeAlpha => 'ff' },
         { fillTriplet => '43EC43', fillAlpha => '77', strokeTriplet => '43EC43', strokeAlpha => 'ff' },
         { fillTriplet => 'EC9843', fillAlpha => '77', strokeTriplet => 'EC9843', strokeAlpha => 'ff' },
@@ -246,11 +233,43 @@ sub getPalette {
 
     my $palette = Chart::Magick::Palette->new;
     $palette->addColor( Chart::Magick::Color->new( $_ ) ) for @colors;
-    
-    $palette{ $id } = $palette;
 
     return $palette;
 }
+
+
+#####-------------------------------------------------------------------
+####
+####=head2 getPalette ( )
+####
+####Returns the Chart::Magick::Palette object associated with this plugin. If none is set, will create a default
+####palette and return that.
+####
+####=cut
+####
+####sub getPalette {
+####    my $self    = shift;
+####    my $id      = id $self;
+####
+####    # If a palette has been set, return it
+####    return $palette{ $id } if $palette{ $id };
+####
+####    # Otherwise generate a default palette
+####    my @colors = (
+####        { fillTriplet => '7ebfe5', fillAlpha => '77', strokeTriplet => '7ebfe5', strokeAlpha => 'ff' },
+####        { fillTriplet => '43EC43', fillAlpha => '77', strokeTriplet => '43EC43', strokeAlpha => 'ff' },
+####        { fillTriplet => 'EC9843', fillAlpha => '77', strokeTriplet => 'EC9843', strokeAlpha => 'ff' },
+####        { fillTriplet => 'E036E6', fillAlpha => '77', strokeTriplet => 'E036E6', strokeAlpha => 'ff' },
+####        { fillTriplet => 'F3EB27', fillAlpha => '77', strokeTriplet => 'F3EB27', strokeAlpha => 'ff' },
+####    );
+####
+####    my $palette = Chart::Magick::Palette->new;
+####    $palette->addColor( Chart::Magick::Color->new( $_ ) ) for @colors;
+####    
+####    $palette{ $id } = $palette;
+####
+####    return $palette;
+####}
 
 #-------------------------------------------------------------------
 
@@ -370,11 +389,11 @@ Override this method to do any preprocessing before the drawing phase begins.
 
 sub preprocessData {
     my $self = shift;
-    my $markerSize = $self->get('markerSize');
+    my $markerSize = $self->markerSize;
 
-    $self->getPalette->paletteIndex( undef );
+    $self->palette->paletteIndex( undef );
     for my $ds ( 0 .. $self->dataset->datasetCount - 1 ) {
-        my $color = $self->getPalette->getNextColor;
+        my $color = $self->palette->getNextColor;
 
         push @{ $colors{ id $self } }, $color;
 
@@ -508,7 +527,7 @@ sub setMarker {
     my $self    = shift;
     my $index   = shift;
     my $marker  = shift || croak "Need a marker";
-    my $size    = shift || $self->get('markerSize');
+    my $size    = shift || $self->markerSize;
 
 #    my $def = { 
 #        name    => $marker,

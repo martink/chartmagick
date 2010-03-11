@@ -241,7 +241,7 @@ sub plot {
         my $positiveVerticalOffset = 0;
         my $negativeVerticalOffset = 0;
         for my $dataset ( 0 .. $barCount - 1 ) {
-            my $color   = $self->colors->[ $dataset ]; #$self->getPalette->getNextColor;
+            my $color   = $self->colors->[ $dataset ];
             my $value   = $self->dataset->getDataPoint( $coord, $dataset );
             
             next unless $value;

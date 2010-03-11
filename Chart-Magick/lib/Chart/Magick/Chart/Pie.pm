@@ -944,7 +944,7 @@ sub processDataset {
         $self->addSlice( {
             percentage  => $y / $total,
             label       => $self->axis->getLabels( 0, $x ) || $x,
-            color       => $self->getPalette->getNextColor,
+            color       => $self->palette->getNextColor,
         } );
 
         $self->set('topHeight', $self->get('topHeight') - $stepsize) if ($self->get('pieMode') eq 'stepped');
