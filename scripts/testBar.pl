@@ -59,10 +59,6 @@ $chart->addDataset( @ds3, 'Data3' );
 #$chart->setData( $ds );
 #$chart->addDataset( [ 0 .. 100 ], [ map { rand( 100) - 50 } 1 .. 101 ] );
 
-$chart->set(
-#    'drawMode',     'cumulative',
-#    'barSpacing' => 0,
-);
 
 # Add the bar graph to the axis
 $axis->addChart( $chart );
