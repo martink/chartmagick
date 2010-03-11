@@ -36,6 +36,7 @@ has markers => (
 );
 has axis    => (
     is      => 'rw',
+    # TODO: croak if unset.
 );
 has colors  => (
     is      => 'rw',
@@ -154,22 +155,22 @@ sub autoRange {
 ####    };
 ####}
 
-#-------------------------------------------------------------------
-
-=head2 getAxis ( )
-
-Returns the Axis object this Chart is set to draw on.
-
-=cut
-
-sub getAxis {
-    my $self    = shift;
-
-    my $axis    = $axis{ id $self };
-
-    croak "Cannot call getAxis when no Axis has been set" unless $axis;
-    return $axis;
-}
+#####-------------------------------------------------------------------
+####
+####=head2 getAxis ( )
+####
+####Returns the Axis object this Chart is set to draw on.
+####
+####=cut
+####
+####sub getAxis {
+####    my $self    = shift;
+####
+####    my $axis    = $axis{ id $self };
+####
+####    croak "Cannot call getAxis when no Axis has been set" unless $axis;
+####    return $axis;
+####}
 
 #####-------------------------------------------------------------------
 ####
