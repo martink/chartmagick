@@ -354,30 +354,29 @@ sub layoutHints {
 
 #-------------------------------------------------------------------
 
-=head2 new ( )
-
-Constructor.
-
-=cut
-
-sub new {
-    my $class       = shift;
-    my $properties  = shift || {};
-    my $self        = {};
-
-    bless       $self, $class;
-    register    $self;
-
-    my $id            = id $self;
+####=head2 new ( )
+####
+####Constructor.
+####
+####=cut
+####
+####sub new {
+####    my $class       = shift;
+####    my $properties  = shift || {};
+####    my $self        = {};
+####
+####    bless       $self, $class;
+####    register    $self;
+####
+####    my $id            = id $self;
 ####    $dataset{ $id   } = Chart::Magick::Data->new;
-
-    $markers{ $id   } = [];
-    $colors{ $id    } = [];
-
-    $self->initializeProperties( $properties );
-
-    return $self;
-}
+####    $markers{ $id   } = [];
+####    $colors{ $id    } = [];
+####
+####    $self->initializeProperties( $properties );
+####
+####    return $self;
+####}
 
 #-------------------------------------------------------------------
 
