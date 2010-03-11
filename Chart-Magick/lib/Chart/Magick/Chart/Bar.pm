@@ -1,9 +1,12 @@
 package Chart::Magick::Chart::Bar;
 
 use strict;
+use warnings;
+use Moose;
+
 use List::Util qw{ sum min };
 
-use base qw{ Chart::Magick::Chart };
+extends 'Chart::Magick::Chart';
 
 =head1 NAME
 
@@ -21,9 +24,7 @@ The following methods are available from this class:
 
 #--------------------------------------------------------------------------
 
-=head2 definition ( )
-
-See Chart::Magick::Chart::definition for details.
+=head2 properties ( )
 
 The following properties can be set:
 
@@ -49,19 +50,41 @@ Draws bars on top of each other.
 
 =cut
 
-sub definition {
-    my $self    = shift;
-    my %options = %{ $self->SUPER::definition };
+has barWidth => (
+    is      => 'rw',
+    default => 20,
+);
 
-    my %overrides = (
-        barWidth    => 20,
-        barSpacing  => 0.05,
-        groupSpacing=> sub { abs $_[0]->get('barSpacing') * 3 },
-        drawMode    => 'sideBySide',
-    );  
+has barSpacing => (
+    is      => 'rw',
+    default => 0.05,
+);
 
-    return { %options, %overrides };
-}
+has groupSpacing => (
+    is      => 'rw',
+    lazy    => 1,
+    default => sub { abs (shift)->barSpacing * 3 },
+);
+
+# TODO: See if this prop can be forced to only qw{ sideBySide cumulative }.
+has drawMode => (
+    is      => 'rw',
+    default => 'sideBySide',
+);
+
+#sub definition {
+#    my $self    = shift;
+#    my %options = %{ $self->SUPER::definition };
+#
+#    my %overrides = (
+#        barWidth    => 20,
+#        barSpacing  => 0.05,
+#        groupSpacing=> sub { abs $_[0]->get('barSpacing') * 3 },
+#        drawMode    => 'sideBySide',
+#    );  
+#
+#    return { %options, %overrides };
+#}
 
 #--------------------------------------------------------------------------
 
@@ -137,7 +160,7 @@ See Chart::Magick::Chart::getDataRange.
 sub getDataRange {
     my $self = shift;
 
-    return $self->SUPER::getDataRange( @_ ) unless $self->get('drawMode') eq 'cumulative';
+    return $self->SUPER::getDataRange( @_ ) unless $self->drawMode eq 'cumulative';
 
     my $global = $self->dataset->globalData;
     my $maxNeg = 0;
@@ -206,7 +229,7 @@ sub plot {
     my $canvas  = shift;
 
     my $barCount    = $self->dataset->datasetCount;
-    my $groupCount  = $self->get('drawMode') eq 'cumulative' 
+    my $groupCount  = $self->drawMode eq 'cumulative' 
                     ? 1
                     : $barCount
                     ;
@@ -231,8 +254,8 @@ sub plot {
 #    }
 
     my $groupWidth      = $minSpacing;
-    my $groupSpacing    = $groupWidth * $self->get('groupSpacing');
-    my $barSpacing      = $groupWidth * $self->get('barSpacing');
+    my $groupSpacing    = $groupWidth * $self->groupSpacing;
+    my $barSpacing      = $groupWidth * $self->barSpacing;
 
     my $barWidth        = ( $groupWidth  - $groupSpacing ) / $groupCount - $barSpacing ;
 #    $barWidth *= 0.5;
@@ -248,7 +271,7 @@ sub plot {
 
             my $barLength = $value->[0];
 
-            if ( $self->get('drawMode') eq 'cumulative' ) {
+            if ( $self->drawMode eq 'cumulative' ) {
                 my $verticalOffset;
                 if ( $barLength >= 0 ) {
                     $verticalOffset          = $positiveVerticalOffset;
