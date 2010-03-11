@@ -424,29 +424,29 @@ sub project {
     return $self->axis->project( @params );
 }
 
-#-------------------------------------------------------------------
-
-=head2 setAxis ( axis )
-
-Set the axis objcet the chart should be drawn on.
-
-=head3 axis
-
-An instanciated Chart::Magick::Axis:: object.
-
-=cut
-
-sub setAxis {
-    my $self = shift;
-    my $axis = shift;
-
-    croak "setAxis requires a Chart::Magick::Axis object to be passed" 
-        unless $axis && $axis->isa( 'Chart::Magick::Axis' );
-
-    $axis{ id $self } = $axis;
-
-    return;
-}
+#####-------------------------------------------------------------------
+####
+####=head2 setAxis ( axis )
+####
+####Set the axis objcet the chart should be drawn on.
+####
+####=head3 axis
+####
+####An instanciated Chart::Magick::Axis:: object.
+####
+####=cut
+####
+####sub setAxis {
+####    my $self = shift;
+####    my $axis = shift;
+####
+####    croak "setAxis requires a Chart::Magick::Axis object to be passed" 
+####        unless $axis && $axis->isa( 'Chart::Magick::Axis' );
+####
+####    $axis{ id $self } = $axis;
+####
+####    return;
+####}
 
 #-------------------------------------------------------------------
 

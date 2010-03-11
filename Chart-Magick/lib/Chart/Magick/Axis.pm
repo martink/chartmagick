@@ -498,7 +498,7 @@ sub draw {
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
-        $chart->setAxis( $self );
+        $chart->axis( $self );
         $chart->preprocessData( );
         $chart->addToLegend;
 
