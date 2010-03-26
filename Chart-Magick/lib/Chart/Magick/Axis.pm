@@ -63,6 +63,7 @@ has legend => (
 # TODO: Turn this ro.
 has isDrawn => (
     is      => 'rw',
+    isa     => 'Bool',
     default => 0,
 );
 

@@ -9,6 +9,7 @@ use POSIX qw{ floor ceil };
 use Carp;
 use Moose;
 use MooseX::SlaveAttribute;
+use Chart::Magick::Types;
 
 extends 'Chart::Magick::Axis';
 
@@ -253,12 +254,14 @@ has xTicks => (
 );
 has xTickColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'tickColor',
     #default => sub { $_[0]->tickColor },
 );
 has xSubtickColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'subtickColor',
     #default => sub { $_[0]->subtickColor },
@@ -310,6 +313,7 @@ has showRulers => (
 );
 has rulerColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     default => 'lightgrey',
 );
         
@@ -321,12 +325,14 @@ has xShowRulers => (
 );
 has xRulerColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'rulerColor',
     #default => sub { $_[0]->rulerColor },
 );
 has xSubrulerColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'xRulerColor',
     #default => sub { $_[0]->xRulerColor },
@@ -351,6 +357,7 @@ has xTitleFontSize => (
 );
 has xTitleColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'fontColor',
     #default => sub { $_[0]->fontColor },
@@ -414,12 +421,14 @@ has yTicks => (
 );
 has yTickColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'tickColor',
     #default => sub { $_[0]->tickColor },
 );
 has ySubtickColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'subtickColor',
     #default => sub { $_[0]->subtickColor },
@@ -432,12 +441,14 @@ has yShowRulers => (
 );
 has yRulerColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'rulerColor',
     #default => sub { $_[0]->rulerColor },
 );
 has ySubrulerColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'yRulerColor',
     #default => sub { $_[0]->yRulerColor },
@@ -461,6 +472,7 @@ has yTitleFontSize => (
 );
 has yTitleColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'fontColor',
     #default => sub { $_[0]->fontColor },
@@ -536,12 +548,14 @@ has ticksOutside => (
 );
 has tickColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'boxColor',
     #default => sub { $_[0]->boxColor },
 );
 has subtickColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     traits  => ['Slave'],
     master  => 'tickColor',
     #default => sub { $_[0]->tickColor },
@@ -570,6 +584,7 @@ has showBox => (
 );
 has boxColor => (
     is      => 'rw',
+    isa     => 'MagickColor',
     default => 'black',
 );
 
