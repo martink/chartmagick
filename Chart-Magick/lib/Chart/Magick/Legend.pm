@@ -242,9 +242,9 @@ sub definition {
         padding         => 10,
         spacing         => 10,
         labelSpacing    => 5,
-        legendFont      => sub { $_[0]->axis->get('labelFont') },
-        legendFontSize  => sub { $_[0]->axis->get('labelFontSize') },
-        legendColor     => sub { $_[0]->axis->get('labelColor') },
+        legendFont      => sub { $_[0]->axis->labelFont },
+        legendFontSize  => sub { $_[0]->axis->labelFontSize },
+        legendColor     => sub { $_[0]->axis->labelColor },
         symbolWidth     => 20,
         symbolHeight    => 10,
     );
@@ -268,16 +268,16 @@ sub getAnchor {
 
     my $x =
           $pos =~ m{ left   }ix     ? 0
-        : $pos =~ m{ center }ix     ? ( $axis->get('width') - $self->precalc->{ width } ) / 2
-        : $pos =~ m{ right  }ix     ? $axis->get('width') - $self->precalc->{ width }
-        :                             $axis->get('width') - $self->precalc->{ width }
+        : $pos =~ m{ center }ix     ? ( $axis->width - $self->precalc->{ width } ) / 2
+        : $pos =~ m{ right  }ix     ? ( $axis->width - $self->precalc->{ width } )
+        :                             ( $axis->width - $self->precalc->{ width } )
         ;
 
 
     my $y = 
           $pos =~ m{ top    }ix     ? 0
-        : $pos =~ m{ middle }ix     ? ( $axis->get('height') - $self->precalc->{ height } ) / 2
-        : $pos =~ m{ bottom }ix     ? $axis->get('height') - $self->precalc->{ height }
+        : $pos =~ m{ middle }ix     ? ( $axis->height - $self->precalc->{ height } ) / 2
+        : $pos =~ m{ bottom }ix     ? ( $axis->height - $self->precalc->{ height } )
         :                             0
         ;
 

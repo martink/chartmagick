@@ -8,6 +8,7 @@ use Text::Wrap;
 use POSIX qw{ floor ceil };
 use Carp;
 use Moose;
+use MooseX::SlaveAttribute;
 
 extends 'Chart::Magick::Axis';
 
