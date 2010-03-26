@@ -7,8 +7,9 @@ use List::Util qw{ min max reduce };
 use Text::Wrap;
 use POSIX qw{ floor ceil };
 use Carp;
+use Moose;
 
-use base qw{ Chart::Magick::Axis };
+extends 'Chart::Magick::Axis';
 
 =head1 NAME
 
@@ -25,56 +26,13 @@ The following methods are available from this class:
 
 =cut
 
-#---------------------------------------------
+=head1 PROPERTIES
 
-=head2 applyLayoutHints ( hints )
-
-Applies the provided layout hints if applicable. See L<Chart::Magick::Axis::applyLayoutHints> for more information.
-
-=head3 hints
-
-Hash ref containing the hints. Chart::Magick::Axis::Lin processes the following hints:
+Chart::Magick::Axis::Lin has the following properties in addition to those provided by Chart::Magick::Axis:
 
 =over 4
 
-=item coordPadding
-
-=item valuePadding
-
-=item tickWidth
-
-=back
-
-=cut
-
-sub applyLayoutHints {
-    my $self    = shift;
-    my $hints   = shift;
-
-    if ( exists $hints->{ coordPadding } ) {
-        $self->set( 'xTickOffset', max( $self->get('xTickOffset'), $hints->{ coordPadding }->[0] * 2 ) );
-    };
-
-    if ( exists $hints->{ valuePadding } ) {
-        $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
-    };
-
-    if ( exists $hints->{ tickWidth    } ) {
-        $self->set( 'xTickWidth', $hints->{ tickWidth } ) ;
-    };
-
-    return;
-}
-
-#---------------------------------------------
-
-=head2 definition ( )
-
-Defines additional properties for this class in addition to those defined in Chart::Magick::Axis::definition:
-
-=over 4
-
-=item plotBox
+=item showBox
 
 If set to a true value a box will be drawn around the charting area. Defaults to 1.
 
@@ -82,7 +40,7 @@ If set to a true value a box will be drawn around the charting area. Defaults to
 
 The color of the box around the charting area. Defaults to 'black'.
 
-=item plotAxes
+=item showAxes
 
 If set to a true value the axis ( x = 0 and y = 0 ) will be drawn. This property can be overriden on a per axis
 base by the x- and yPlotAxis properties. Defaults to 1.
@@ -108,9 +66,9 @@ property.
 The color of the subticks. Overridable per axis with the x- and ySubtickColor properties. Defaults to the color set
 by the tickColor property.
 
-=item plotRulers
+=item showRulers
 
-If set to a true value rulers wil bee drawn at tick positions. Overridable per axis via the x- and yPlotRulers
+If set to a true value rulers wil bee drawn at tick positions. Overridable per axis via the x- and yShowRulers
 properties. Defaults to 1.
 
 =item rulerColor
@@ -188,9 +146,9 @@ The distance in pixels between the title of the x axis and its tick labels. Defa
 
 The distance in pixels between the the ticks of the x axis and their labels. Defaults to 3.
 
-=item xPlotRulers
+=item xShowRulers
 
-If set to a true value rulers will be drawn for x axis ticks. Defaults to the value of the plotRulers property.
+If set to a true value rulers will be drawn for x axis ticks. Defaults to the value of the showRulers property.
 
 =item xRulerColor
 
@@ -250,114 +208,414 @@ you give here. Defaults to 0.
 
 =cut
 
-sub definition {
-    my $self = shift;
-    my %options = (
-        minTickWidth    => 25,
+has minTickWidth => (
+    is      => 'rw',
+    default => 25,
+);
 
-        xTickOffset     => 0,
+has xTickOffset => (
+    is      => 'rw',
+    default => 0,
+);
+has xTickCount => (
+    is      => 'rw',
+    default => undef,
+);
+has xTickWidth => (
+    is      => 'rw',
+    default => 0,
+);
+has xTickInset => (
+    is      => 'rw',
+    default => 4,
+);
+has xTickOutset => (
+    is      => 'rw',
+    default => 8,
+);
 
-        xTickCount      => undef,
-        xTickWidth      => 0,
-        xTickInset      => 4,
-        xTickOutset     => 8,
+has xSubtickCount => (
+    is      => 'rw',
+    default => 0,
+);
+has xSubtickInset => (
+    is      => 'rw',
+    default => 2,
+);
+has xSubtickOutset => (
+    is      => 'rw',
+    default => 2,
+);
+has xTicks => (
+    is      => 'rw',
+    default => undef,
+);
+has xTickColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'tickColor',
+    #default => sub { $_[0]->get('tickColor') },
+);
+has xSubtickColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'subtickColor',
+    #default => sub { $_[0]->get('subtickColor') },
+);
 
-        xSubtickCount   => 0,
-        xSubtickInset   => 2,
-        xSubtickOutset  => 2,
-        xTicks          => undef,
-        xTickColor      => sub { $_[0]->get('tickColor') },
-        xSubtickColor   => sub { $_[0]->get('subtickColor') },
+has xLabelFormat => (
+    is      => 'rw',
+    default => '%s',
+);
 
-        xLabelFormat    => '%s',
-        xLabelFormatter => sub { 
-            sub { 
-                my $format = $_[0]->get('xLabelFormat') || '%s';
-                return sprintf $format, $_[1] / $_[2];
-            } 
-        },
-        xLabelUnits     => 1,
+        #xLabelFormatter => sub { 
+        #    sub { 
+        #        my $format = $_[0]->get('xLabelFormat') || '%s';
+        #        return sprintf $format, $_[1] / $_[2];
+        #    } 
+        #},
+#### TODO: Check if this works...
+has xLabelFormatter => (
+    is      => 'rw',
+    default => sub { 
+        sub { 
+            my $format = $_[0]->get('xLabelFormat') || '%s';
+            return sprintf $format, $_[1] / $_[2];
+        } 
+    },
+);
 
-        xTitleBorderOffset  => 0,
-        xTitleLabelOffset   => 10,
-        xLabelTickOffset    => 3,
+has xLabelUnits => (
+    is      => 'rw',
+    default => 1,
+);
 
-        plotRulers      => 1,
-        rulerColor      => 'lightgrey',
+has xTitleBorderOffset => (
+    is      => 'rw',
+    default => 0,
+);
+has xTitleLabelOffset => (
+    is      => 'rw',
+    default => 10,
+);
+has xLabelTickOffset => (
+    is      => 'rw',
+    default => 3,
+);
+
+has showRulers => (
+    is      => 'rw',
+    default => 1,
+);
+has rulerColor => (
+    is      => 'rw',
+    default => 'lightgrey',
+);
         
-        xPlotRulers     => sub { $_[0]->get('plotRulers') },
-        xRulerColor     => sub { $_[0]->get('rulerColor') },
-        xSubrulerColor  => sub { $_[0]->get('xRulerColor') },
+has xShowRulers => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'showRulers',
+    #default => sub { $_[0]->get('showRulers') },
+);
+has xRulerColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'rulerColor',
+    #default => sub { $_[0]->get('rulerColor') },
+);
+has xSubrulerColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'xRulerColor',
+    #default => sub { $_[0]->get('xRulerColor') },
+);
 
-        xTitle          => '',
-        xTitleFont      => sub { $_[0]->get('font') },
-        xTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
-        xTitleColor     => sub { $_[0]->get('fontColor') },
+has xTitle => (
+    is      => 'rw',
+    default => '',
+);
+has xTitleFont => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'font',
+    #default => sub { $_[0]->get('font') },
+);
+# TODO: See how we can put in the 1.5 * factor...
+has xTitleFontSize => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'fontSize',
+    #default => sub { int $_[0]->get('fontSize') * 1.5 },
+);
+has xTitleColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'fontColor',
+    #default => sub { $_[0]->get('fontColor') },
+);
 #        xTitleAngle
 #        xLabelAngle
-        xStart          => undef,
-        xStop           => undef,
+has xStart => (
+    is      => 'rw',
+    default => undef,
+);
+has xStop => (
+    is      => 'rw',
+    default => undef,
+);
 
-        xIncludeOrigin  => 0,
-        xNoAdjustRange  => 1,
+has xIncludeOrigin => (
+    is      => 'rw',
+    default => 0,
+);
+has xNoAdjustRange => (
+    is      => 'rw',
+    default => 1,
+);
 
-        yTickOffset     => 0,
+has yTickOffset => (
+    is      => 'rw',
+    default => 0,
+);
 
-        yTickCount      => undef,
-        yTickWidth      => 0,
-        yTickInset      => 3,
-        yTickOutset     => 6,
-        ySubtickCount   => 0,
-        ySubtickInset   => 2,
-        ySubtickOutset  => 2,
-        yTicks          => undef,
-        yTickColor      => sub { $_[0]->get('tickColor') },
-        ySubtickColor   => sub { $_[0]->get('subtickColor') },
-        
-        yPlotRulers     => sub { $_[0]->get('plotRulers') },
-        yRulerColor     => sub { $_[0]->get('rulerColor') },
-        ySubrulerColor  => sub { $_[0]->get('yRulerColor') },
-        yTitle          => '',
-        yTitleFont      => sub { $_[0]->get('font') },
-        yTitleFontSize  => sub { int $_[0]->get('fontSize') * 1.5 },
-        yTitleColor     => sub { $_[0]->get('fontColor') },
+has yTickCount => (
+    is      => 'rw',
+    default => undef,
+);
+has yTickWidth => (
+    is      => 'rw',
+    default => 0,
+);
+has yTickInset => (
+    is      => 'rw',
+    default => 3,
+);
+has yTickOutset => (
+    is      => 'rw',
+    default => 6,
+);
+has ySubtickCount => (
+    is      => 'rw',
+    default => 0,
+);
+has ySubtickInset => (
+    is      => 'rw',
+    default => 2,
+);
+has ySubtickOutset => (
+    is      => 'rw',
+    default => 2,
+);
+has yTicks => (
+    is      => 'rw',
+    default => undef,
+);
+has yTickColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'tickColor',
+    #default => sub { $_[0]->get('tickColor') },
+);
+has ySubtickColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'subtickColor',
+    #default => sub { $_[0]->get('subtickColor') },
+); 
+has yShowRulers => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'showRulers',
+    #default => sub { $_[0]->get('showRulers') },
+);
+has yRulerColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'rulerColor',
+    #default => sub { $_[0]->get('rulerColor') },
+);
+has ySubrulerColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'yRulerColor',
+    #default => sub { $_[0]->get('yRulerColor') },
+);
+has yTitle => (
+    is      => 'rw',
+    default => '',
+);
+has yTitleFont => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'font',
+    #default => sub { $_[0]->get('font') },
+);
+# TODO: Figure out how to account for the 1.5 factor
+has yTitleFontSize => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'fontSize',
+    #default => sub { int $_[0]->get('fontSize') * 1.5 },
+);
+has yTitleColor => (
+    is      => 'rw',
+    default => sub { $_[0]->get('fontColor') },
+);
 #        yTitleAngle
 #        yLabelAngle
-        yStart          => undef,
-        yStop           => undef,
+has yStart => (
+    is      => 'rw',
+    default => undef,
+);
+has yStop => (
+    is      => 'rw',
+    default => undef,
+);
 
-        yIncludeOrigin  => 0,
-        yNoAdjustRange  => 0,
+has yIncludeOrigin => (
+    is      => 'rw',
+    default => 0,
+);
+has yNoAdjustRange => (
+    is      => 'rw',
+    default => 0,
+);
 
-        yLabelFormat    => '%.1f',
-        yLabelFormatter => sub { 
-            sub { 
-                my $format = $_[0]->get('yLabelFormat') || '%s';
-                return sprintf $format, $_[1] / $_[2] ;
-            } 
-        },
-        yLabelUnits     => 1,
+has yLabelFormat => (
+    is      => 'rw',
+    default => '%.1f',
+);
+        #yLabelFormatter => sub { 
+        #    sub { 
+        #        my $format = $_[0]->get('yLabelFormat') || '%s';
+        #        return sprintf $format, $_[1] / $_[2] ;
+        #    } 
+        #},
+has yLabelFormatter => (
+    is      => 'rw',
+    default => sub {
+        sub { 
+            my $format = $_[0]->get('yLabelFormat') || '%s';
+            return sprintf $format, $_[1] / $_[2] ;
+        } 
+    },
+);
+has yLabelUnits => (
+    is      => 'rw',
+    default => 1,
+);
 
-        yTitleBorderOffset  => 0,
-        yTitleLabelOffset   => 10,
-        yLabelTickOffset    => 3,
+has yTitleBorderOffset => (
+    is      => 'rw',
+    default => 0,
+);
+has yTitleLabelOffset => (
+    is      => 'rw',
+    default => 10,
+);
+has yLabelTickOffset => (
+    is      => 'rw',
+    default => 3,
+);
 
-        plotAxes            => 1,
-        axisColor           => 'grey50',
-        ticksOutside        => 1,
-        tickColor           => sub { $_[0]->get('boxColor') },
-        subtickColor        => sub { $_[0]->get('tickColor') },
+has showAxes => (
+    is      => 'rw',
+    default => 1,
+);
+has axisColor => (
+    is      => 'rw',
+    default => 'grey50',
+);
+has ticksOutside => (
+    is      => 'rw',
+    default => 1,
+);
+has tickColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'boxColor',
+    #default => sub { $_[0]->get('boxColor') },
+);
+has subtickColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'tickColor',
+    #default => sub { $_[0]->get('tickColor') },
+);
 
-        expandRange         => 1,
-        xExpandRange        => sub { $_[0]->get('expandRange') },
-        yExpandRange        => sub { $_[0]->get('expandRange') },
+has expandRange => (
+    is      => 'rw',
+    default => 1,
+);
+has xExpandRange => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'expandRange',
+    #default => sub { $_[0]->get('expandRange') },
+);
+has yExpandRange => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'expandRange',
+    #default => sub { $_[0]->get('expandRange') },
+);
 
-        plotBox             => 1,
-        boxColor            => 'black',
-    );
+has showBox => (
+    is      => 'rw',
+    default => 1,
+);
+has boxColor => (
+    is      => 'rw',
+    default => 'black',
+);
 
-    return { %{ $self->SUPER::definition }, %options };
+
+
+
+
+
+#---------------------------------------------
+
+=head2 applyLayoutHints ( hints )
+
+Applies the provided layout hints if applicable. See L<Chart::Magick::Axis::applyLayoutHints> for more information.
+
+=head3 hints
+
+Hash ref containing the hints. Chart::Magick::Axis::Lin processes the following hints:
+
+=over 4
+
+=item coordPadding
+
+=item valuePadding
+
+=item tickWidth
+
+=back
+
+=cut
+
+sub applyLayoutHints {
+    my $self    = shift;
+    my $hints   = shift;
+
+    if ( exists $hints->{ coordPadding } ) {
+        $self->set( 'xTickOffset', max( $self->get('xTickOffset'), $hints->{ coordPadding }->[0] * 2 ) );
+    };
+
+    if ( exists $hints->{ valuePadding } ) {
+        $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
+    };
+
+    if ( exists $hints->{ tickWidth    } ) {
+        $self->set( 'xTickWidth', $hints->{ tickWidth } ) ;
+    };
+
+    return;
 }
+
 
 #---------------------------------------------
 #TODO: move to superclass?
@@ -1199,7 +1457,7 @@ sub plotRulers {
     my $minY = $self->get('yStart');
     my $maxY = $self->get('yStop');
 
-    if ( $self->get('yPlotRulers') ) {
+    if ( $self->get('yShowRulers') ) {
         for my $tick ( @{ $self->getYSubticks } ) {
             next if $tick < $minY || $tick > $maxY;
 
@@ -1215,7 +1473,7 @@ sub plotRulers {
     my $minX = $self->get('xStart');
     my $maxX = $self->get('xStop');
 
-    if ( $self->get('xPlotRulers') ) {
+    if ( $self->get('xShowRulers') ) {
         for my $tick ( @{ $self->getXSubticks } ) {
             next if $tick < $minX || $tick > $maxX;
 
@@ -1377,9 +1635,9 @@ sub plotFirst {
     $self->SUPER::plotFirst;
 
     $self->plotRulers;
-    $self->plotAxes if $self->get('plotAxes');
+    $self->plotAxes if $self->get('showAxes');
     $self->plotTicks;
-    $self->plotBox if $self->get('plotBox'); 
+    $self->plotBox if $self->get('showBox'); 
 
     return;
 }
