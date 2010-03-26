@@ -10,6 +10,7 @@ use Carp;
 use Data::Dumper;
 use Text::Wrap;
 use Chart::Magick::Legend;
+use Moose;
 
 use constant pi => 3.14159265358979;
 
@@ -33,6 +34,177 @@ my $axis = Chart::Magick::Axis->new();
 =head1 DESCRIPTION
 
 The chart modules within the Chart::Magick system draw onto Axis objects, which derive from this base class.
+
+#---------------------------------------------
+
+=head1 PROPERTIES
+
+Chart::Magick::Axis define their properties:
+
+=over 4
+
+=item width
+
+The width of the coordinate system in pixels.
+
+=item height
+
+The height of the coordinate system in pixels.
+
+=item marginLeft
+=item marginTop
+=item marginRight
+=item marginBottom
+
+The width of the left, top, right and bottom margin in pixels respectively.
+
+=item title
+
+The title of the chart.
+
+=item titleFont
+
+The font in which the chart title should be rendered.
+
+=item titleFontSize
+
+The font size of the chart title.
+
+=item titleColor
+
+The font title color.
+
+=item labelFont
+=item labelFontSize
+=item labelColor
+
+The font, font size and color in which the axis labels should be rendered.
+
+=back
+
+=cut 
+
+# Image dimensions
+has width => (
+    is      => 'rw',
+    default => 400,
+);
+has height => (
+    is      => 'rw',
+    default => 300,
+);
+
+# Image margins
+has margin => (
+    is      => 'rw',
+    default => 10,
+);
+has marginLeft => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'margin',
+    # default => sub { $_[0]->get('margin') },
+);    
+has marginTop  => ( 
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'margin',
+    # default => sub { $_[0]->get('margin') },
+);
+has marginRight => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'margin',
+    # default => sub { $_[0]->get('margin') },
+);
+has marginBottom => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'margin',
+    # default => sub { $_[0]->get('margin') },
+);
+
+# Default font settings
+has font => (
+    is      => 'rw',
+    default => 'Courier',
+);
+has fontSize => (
+    is      => 'rw',
+    default => 10,
+);
+has fontColor => (
+    is      => 'rw',
+    default => 'black',
+);
+
+# Title settings
+has title => (
+    is      => 'rw',
+    default => '',
+);
+has titleFont => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'font',
+    # default => sub { $_[0]->get('font') }, 
+);
+has titleFontSize => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'fontSize',
+    # default => sub { $_[0]->get('fontSize') * 3 },
+);
+has titleColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'fontColor',
+    # default => sub { $_[0]->get('fontColor') },
+);
+has minTitleMargin => (
+    is      => 'rw',
+    default => 5,
+);
+
+# Label settings
+has labelFont => )
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'font',
+    # default => sub { $_[0]->get('font') }, 
+);
+has labelFontSize => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'fontSize',
+    # default => sub { $_[0]->get('fontSize') },
+);
+has labelColor => (
+    is      => 'rw',
+    traits  => ['Slave'],
+    master  => 'fontColor',
+    # default => sub { $_[0]->get('fontColor') },
+);
+
+has background => (
+    is      => 'rw',
+    default => 'xc:white',
+);
+has chartBackground => (
+    is      => 'rw',
+    default => 'xc:none',
+);
+has drawLegend => (
+    is      => 'rw',
+    default => 1,
+);
+
+
+
+
+
+
+
 
 =head1 METHODS
 
@@ -154,7 +326,7 @@ sub getChartHeight {
     my $self = shift;
 
     return $self->plotOption( 'axisHeight' );
-    return $self->plotOption( 'axisHeight' ) - $self->get('marginTop') - $self->get('marginBottom');
+    return $self->plotOption( 'axisHeight' ) - $self->marginTop - $self->marginBottom;
 }
 
 #--------------------------------------------------------------------
@@ -169,7 +341,7 @@ sub getChartWidth {
     my $self = shift;
 
     return $self->plotOption( 'axisWidth' );
-    return $self->plotOption( 'axisWidth' ) - $self->get('marginLeft') - $self->get('marginRight');
+    return $self->plotOption( 'axisWidth' ) - $self->marginLeft - $self->marginRight;
 }
 
 #--------------------------------------------------------------------
@@ -201,8 +373,8 @@ sub getLabelDimensions {
 
     my %properties = (
         text        => $label,
-        font        => $self->get('labelFont'),
-        pointsize   => $self->get('labelFontSize'),
+        font        => $self->labelFont,
+        pointsize   => $self->labelFontSize,
     );
 
     my ($w, $h) = ( $self->im->QueryFontMetrics( %properties ) )[4,5];
@@ -382,96 +554,6 @@ sub getValueDimension {
     return 0;
 }
 
-#---------------------------------------------
-
-=head2 definition ( )
-
-Chart::Magick::Axis define their properties and default values in this this method. Returns a hash ref.
-
-The following properties can be set:
-
-=over 4
-
-=item width
-
-The width of the coordinate system in pixels.
-
-=item height
-
-The height of the coordinate system in pixels.
-
-=item marginLeft
-=item marginTop
-=item marginRight
-=item marginBottom
-
-The width of the left, top, right and bottom margin in pixels respectively.
-
-=item title
-
-The title of the chart.
-
-=item titleFont
-
-The font in which the chart title should be rendered.
-
-=item titleFontSize
-
-The font size of the chart title.
-
-=item titleColor
-
-The font title color.
-
-=item labelFont
-=item labelFontSize
-=item labelColor
-
-The font, font size and color in which the axis labels should be rendered.
-
-=back
-
-=cut 
-
-sub definition {
-    my $self = shift;
-
-    my %options = (
-        # Image dimensions
-        width           => 400,
-        height          => 300,
-
-        # Image margins
-        margin          => 10,
-        marginLeft      => sub { $_[0]->get('margin') },
-        marginTop       => sub { $_[0]->get('margin') }, 
-        marginRight     => sub { $_[0]->get('margin') },
-        marginBottom    => sub { $_[0]->get('margin') },
-
-        # Default font settings
-        font            => 'Courier',
-        fontSize        => 10,
-        fontColor       => 'black',
-
-        # Title settings
-        title           => '',
-        titleFont       => sub { $_[0]->get('font') }, 
-        titleFontSize   => sub { $_[0]->get('fontSize') * 3 },
-        titleColor      => sub { $_[0]->get('fontColor') },
-        minTitleMargin  => 5,
-
-        # Label settings
-        labelFont       => sub { $_[0]->get('font') }, 
-        labelFontSize   => sub { $_[0]->get('fontSize') },
-        labelColor      => sub { $_[0]->get('fontColor') },
-
-        background      => 'xc:white',
-        chartBackground => 'xc:none',
-        drawLegend      => 1,
-    );
-
-    return \%options;
-}
 
 #---------------------------------------------
 
@@ -493,8 +575,8 @@ sub draw {
     @{ $self->im } = ();
 
     # Prepare canvas of correct dimensions.
-    $self->im->Set( size => $self->get('width') . 'x' . $self->get('height') );
-    $self->im->Read( $self->get('background') );
+    $self->im->Set( size => $self->width . 'x' . $self->height );
+    $self->im->Read( $self->background );
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
@@ -517,8 +599,8 @@ sub draw {
     # Plot background stuff
     $self->plotFirst;
 
-    my $chartCanvas = Chart::Magick::ImageMagick->new( size => $self->get('width') . 'x' . $self->get('height') );
-    $chartCanvas->Read( $self->get('chartBackground') );
+    my $chartCanvas = Chart::Magick::ImageMagick->new( size => $self->width . 'x' . $self->height );
+    $chartCanvas->Read( $self->chartBackground );
 
     # Plot the charts;
     foreach my $chart (@{ $charts }) {
@@ -608,7 +690,7 @@ sub plotLast {
     my $self = shift;
 
     $self->plotTitle;
-    $self->legend->draw if $self->get('drawLegend');
+    $self->legend->draw if $self->drawLegend;
 
     return;
 };
@@ -625,11 +707,11 @@ sub plotTitle {
     my $self = shift;
 
     $self->im->text(
-        text        => $self->get('title'),
-        pointsize   => $self->get('titleFontSize'),
-        font        => $self->get('titleFont'),
-        fill        => $self->get('titleColor'),
-        x           => $self->get('width') / 2,
+        text        => $self->title,
+        pointsize   => $self->titleFontSize,
+        font        => $self->titleFont,
+        fill        => $self->titleColor,
+        x           => $self->width / 2,
         y           => $self->plotOption( 'titleOffset' ),
         halign      => 'center',
         valign      => 'top',
@@ -653,51 +735,52 @@ sub preprocessData {
     # Check if the fonts are actually findable. If not IM slows down incredibly and will not draw labels so bail
     # out in that case.
     for ( qw{ titleFont labelFont } ) { 
+# Getter gaat mis hierrrr!! Maar dit moet naar een type!
         my $font = $self->resolveFont( $self->get( $_ ) );
 
         croak "Font $font (property $_) does not exist or is defined incorrect in the ImageMagick configuration file." 
             unless $font;
 
         # Replace the possible font name with its full path. This speeds up annotating significantly!
+# Setter gaat ook mis.
         $self->set( $_, $font );
     }
    
     # Calc title height
-    my $minTitleMargin  = $self->get('minTitleMargin');
-    my $titleHeight = $self->get('title')
+    my $minTitleMargin  = $self->minTitleMargin;
+    my $titleHeight = $self->title
         ? ( $self->im->QueryFontMetrics( 
-                text        => $self->get('title'),
-                font        => $self->get('titleFont'),
-                pointsize   => $self->get('titleFontSize'),
+                text        => $self->title,
+                font        => $self->titleFont,
+                pointsize   => $self->titleFontSize,
           ) )[ 5 ]
         : 0;
 
     # Adjust top margin to fit title
-    my $marginTop   = max $self->get('marginTop'), $titleHeight + 2 * $minTitleMargin;
+    my $marginTop   = max $self->marginTop, $titleHeight + 2 * $minTitleMargin;
     my $titleOffset = max int ( ( $marginTop - $titleHeight ) / 2 ), $minTitleMargin;
 
-    $self->set( 'marginTop', $marginTop );
+    $self->marginTop( $marginTop );
     $self->plotOption( 'titleOffset', $titleOffset);
    
-    if ( $self->get('drawLegend') ) {
+    if ( $self->drawLegend ) {
         my @legendMargins = $self->legend->getRequiredMargins;
-        $self->set( 
-            marginLeft      => $self->get('marginLeft'  ) + $legendMargins[0],
-            marginRight     => $self->get('marginRight' ) + $legendMargins[1],
-            marginTop       => $self->get('marginTop'   ) + $legendMargins[2],
-            marginBottom    => $self->get('marginBottom') + $legendMargins[3],
-        );
+
+        $self->marginLeft(      $self->marginLeft   + $legendMargins[0] );
+        $self->marginRight(     $self->marginRight  + $legendMargins[1] );
+        $self->marginTop(       $self->marginTop    + $legendMargins[2] );
+        $self->marginBottom(    $self->marginBottom + $legendMargins[3] );
     }
 
     # global
-    my $axisWidth  = $self->get('width') - $self->get('marginLeft') - $self->get('marginRight');
-    my $axisHeight = $self->get('height') - $self->get('marginTop') - $self->get('marginBottom');
+    my $axisWidth  = $self->width - $self->marginLeft - $self->marginRight;
+    my $axisHeight = $self->height - $self->marginTop - $self->marginBottom;
 
     $self->plotOption( 
         axisWidth    => $axisWidth,
         axisHeight   => $axisHeight,
-        chartAnchorX  => $self->get('marginLeft'),
-        chartAnchorY  => $self->get('marginTop'),
+        chartAnchorX  => $self->marginLeft,
+        chartAnchorY  => $self->marginTop,
     );
 
 
