@@ -171,6 +171,7 @@ has marginBottom => (
 # Default font settings
 has font => (
     is      => 'rw',
+    isa     => 'MagickFont',
     default => 'Courier',
 );
 has fontSize => (
@@ -189,6 +190,7 @@ has title => (
 );
 has titleFont => (
     is      => 'rw',
+    isa     => 'MagickFont',
     traits  => ['Slave'],
     master  => 'font',
     # default => sub { $_[0]->get('font') }, 
@@ -213,6 +215,7 @@ has minTitleMargin => (
 # Label settings
 has labelFont => (
     is      => 'rw',
+    isa     => 'MagickFont',
     traits  => ['Slave'],
     master  => 'font',
     # default => sub { $_[0]->get('font') }, 

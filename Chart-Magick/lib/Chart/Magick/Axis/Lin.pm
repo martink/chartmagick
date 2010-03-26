@@ -344,6 +344,7 @@ has xTitle => (
 );
 has xTitleFont => (
     is      => 'rw',
+    isa     => 'MagickFont',
     traits  => ['Slave'],
     master  => 'font',
     #default => sub { $_[0]->font },
@@ -459,6 +460,7 @@ has yTitle => (
 );
 has yTitleFont => (
     is      => 'rw',
+    isa     => 'MagickFont',
     traits  => ['Slave'],
     master  => 'font',
     #default => sub { $_[0]->font },

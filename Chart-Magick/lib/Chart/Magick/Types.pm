@@ -12,7 +12,13 @@ subtype 'PositiveOrZeroInt'
 
 subtype 'MagickColor'
     => as       'Str',
-#   => where    { $_ =~ m|^#[0-9a-f]{6}$|i || $_ =~ m{^[\w\d]+$} };
-    => where    { defined Image::Magick->QueryColor( $_ ) };
-
+    => where    { defined Image::Magick->QueryColor( $_ ) }
+    => message  { "Image::Magick does not recognize the value '$_' as a valid color" };
+ 
+type 'MagickFont'
+    => where    { defined $_ && ( -e $_ || -e Image::Magick->QueryFont( $_ ) ) }
+    => message  { 
+          "The font '$_' does not exist on your file system. If you passed only a font name and not a "
+        . "path it is likely that your fonts.xml file is corrupt. "
+    };
 
