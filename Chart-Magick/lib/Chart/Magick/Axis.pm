@@ -3,7 +3,7 @@ package Chart::Magick::Axis;
 use strict;
 use warnings;
 
-use Class::InsideOut qw{ :std };
+####use Class::InsideOut qw{ :std };
 use Chart::Magick::ImageMagick;
 use List::Util qw{ min max };
 use Carp;
@@ -15,14 +15,56 @@ use MooseX::SlaveAttribute;
 
 use constant pi => 3.14159265358979;
 
-use base qw{ Chart::Magick::Definition };
+####use base qw{ Chart::Magick::Definition };
 
-readonly charts         => my %charts;
-private  plotOptions    => my %plotOptions;
-readonly im             => my %magick;
-private  axisLabels     => my %axisLabels;
-readonly legend         => my %legend;
-readonly isDrawn        => my %isDrawn;
+
+sub _setupMagickObject {
+    my $image = Chart::Magick::ImageMagick->new( size => '1x1' );
+    $image->Read( 'xc:white' );
+   
+    return $image;
+}
+
+has charts => (
+    is      => 'ro',
+    default => sub { [] },
+    traits  => [ 'Array' ],
+    isa     => 'ArrayRef[Chart::Magick::Chart]',
+    handles => {
+        addChart    => 'push',
+    },
+);
+
+has plotOptions => (
+    is      => 'rw',
+    default => sub { {} },
+    isa     => 'HashRef',
+);
+
+has im => (
+    is      => 'ro',
+    isa     => 'Image::Magick',
+    builder => '_setupMagickObject',
+);
+
+has axisLabels => (
+    is      => 'ro',
+    isa     => 'ArrayRef[HashRef]',
+    default => sub { [] },
+);
+
+# TODO: Prolly we need a trigger here that passes $self to the legend that is being set. That, or we make this ro.
+has legend => (
+    is      => 'rw',
+    isa     => 'Chart::Magick::Legend',
+    default => sub { Chart::Magick::Legend->new( shift ) },
+);
+
+# TODO: Turn this ro.
+has isDrawn => (
+    is      => 'rw',
+    default => 0,
+);
 
 =head1 NAME
 
@@ -215,29 +257,29 @@ These methods are available from this class:
 
 #----------------------------------------------
 
-sub _buildObject {
-    my $class       = shift;
-    my $self        = {};
-
-    bless       $self, $class;
-    register    $self;
-
-    my $id = id $self;
-
-    # We need to explicitly read an image for QueryFontMetrics and friends to work...
-    # This temp image is deleted and replaced with the right canvas size in draw().
-    my $image = Chart::Magick::ImageMagick->new( size=>'1x1' );
-    $image->Read('xc:white');
-
-    $magick{ $id        } = $image;
-    $charts{ $id        } = [ ];
-    $axisLabels{ $id    } = [ ];
-    $legend{ $id        } = Chart::Magick::Legend->new( $self );
-    $isDrawn{ $id       } = 0;
-
-    $self->{ _plotOptions } = {};
-    return $self;
-}
+####sub _buildObject {
+####    my $class       = shift;
+####    my $self        = {};
+####
+####    bless       $self, $class;
+####    register    $self;
+####
+####    my $id = id $self;
+####
+####    # We need to explicitly read an image for QueryFontMetrics and friends to work...
+####    # This temp image is deleted and replaced with the right canvas size in draw().
+#####    my $image = Chart::Magick::ImageMagick->new( size=>'1x1' );
+#####    $image->Read('xc:white');
+####
+#####    $magick{ $id        } = $image;
+#####    $charts{ $id        } = [ ];
+#####    $axisLabels{ $id    } = [ ];
+#####    $legend{ $id        } = Chart::Magick::Legend->new( $self );
+#####    $isDrawn{ $id       } = 0;
+####
+#####    $self->{ _plotOptions } = {};
+####    return $self;
+####}
 
 #----------------------------------------------
 
@@ -277,9 +319,9 @@ sub addLabels {
     my $newLabels   = shift;
     my $index       = shift || 0;
 
-    my $currentLabels = $axisLabels{ id $self }->[ $index ] || {};
+    my $currentLabels = $self->axisLabels->[ $index ] || {};
 
-    $axisLabels{ id $self }->[ $index ] = {
+    $self->axisLabels->[ $index ] = {
         %{ $currentLabels   },
         %{ $newLabels       },
     };
@@ -420,7 +462,7 @@ sub getLabels {
     my $index   = shift || 0;
     my $coord   = shift;
 
-    my $labels  = $axisLabels{ id $self }->[ $index ];
+    my $labels  = $self->axisLabels->[ $index ];
 
     return { %{ $labels } }     unless defined $coord;
     return $labels->{ $coord }  if exists $labels->{ $coord };
@@ -458,51 +500,51 @@ this object has not been associated with one.
 
 =cut
 
-#----------------------------------------------
+#####----------------------------------------------
+####
+####=head2 new ( [ properties ] )
+####
+####Constructor for this class.
+####
+####=head3 properties
+####
+####Properties to initially configure the object. For available properties, see C<definition()>
+####
+####=cut
+####
+####sub new {
+####    my $class       = shift;
+####    my $properties  = shift || {};
+####   
+####    my $self = $class->_buildObject;
+####    $self->initializeProperties( $properties );
+####
+####    return $self;
+####}
 
-=head2 new ( [ properties ] )
-
-Constructor for this class.
-
-=head3 properties
-
-Properties to initially configure the object. For available properties, see C<definition()>
-
-=cut
-
-sub new {
-    my $class       = shift;
-    my $properties  = shift || {};
-   
-    my $self = $class->_buildObject;
-    $self->initializeProperties( $properties );
-
-    return $self;
-}
-
-#---------------------------------------------
-
-=head2 addChart ( chart, [ chart, [ chart, ... ] ] )
-
-Adds one or more chart(s) to this axis.
-
-=head3 chart
-
-An instantiated Chart::Magick::Chart object.
-
-=cut
-
-sub addChart {
-    my $self    = shift;
-
-    while ( my $chart = shift ) {
-        croak "Cannot add a chart of class $chart to an Axis. All charts mus be isa('Chart::Magick::Chart')." 
-            unless $chart->isa('Chart::Magick::Chart');
-        push @{ $charts{ id $self } }, $chart;
-    }
-
-    return;
-}
+#####---------------------------------------------
+####
+####=head2 addChart ( chart, [ chart, [ chart, ... ] ] )
+####
+####Adds one or more chart(s) to this axis.
+####
+####=head3 chart
+####
+####An instantiated Chart::Magick::Chart object.
+####
+####=cut
+####
+####sub addChart {
+####    my $self    = shift;
+####
+####    while ( my $chart = shift ) {
+####        croak "Cannot add a chart of class $chart to an Axis. All charts mus be isa('Chart::Magick::Chart')." 
+####            unless $chart->isa('Chart::Magick::Chart');
+####        push @{ $charts{ id $self } }, $chart;
+####    }
+####
+####    return;
+####}
 
 #---------------------------------------------
 
@@ -566,7 +608,8 @@ Draws the axis and all charts that are put onto it.
 
 sub draw {
     my $self    = shift;
-    my $charts  = $charts{ id $self };
+####    my $charts  = $charts{ id $self };
+    my $charts  = $self->charts;
 
     # Save state.
 #    my $config          = $self->getRaw;
@@ -624,7 +667,7 @@ sub draw {
 
     $self->plotLast;
 
-    $isDrawn{ id $self } = 1;
+    $self->isDrawn( 1 );
 
     # Restore state
 #    $self->set( $config );
@@ -737,14 +780,14 @@ sub preprocessData {
     # out in that case.
     for ( qw{ titleFont labelFont } ) { 
 # Getter gaat mis hierrrr!! Maar dit moet naar een type!
-        my $font = $self->resolveFont( $self->get( $_ ) );
-
-        croak "Font $font (property $_) does not exist or is defined incorrect in the ImageMagick configuration file." 
-            unless $font;
-
-        # Replace the possible font name with its full path. This speeds up annotating significantly!
+#        my $font = $self->resolveFont( $self->$_ );
+#
+#        croak "Font $font (property $_) does not exist or is defined incorrect in the ImageMagick configuration file." 
+#            unless $font;
+#
+#        # Replace the possible font name with its full path. This speeds up annotating significantly!
 # Setter gaat ook mis.
-        $self->set( $_, $font );
+#        $self->$_($font );
     }
    
     # Calc title height
@@ -837,22 +880,22 @@ sub plotOption {
     my ( $self, @options ) = @_;
 
     # No params? Return a safe copy of all plot options.
-    return { %{ $self->{ _plotOptions } } } unless scalar @options;
+    return { %{ $self->plotOptions } } unless scalar @options;
 
     # More than one param? Apply the passed key/value pairs on the plot options.
     if ( scalar @options > 1 ) {
-        $self->{ _plotOptions } = { %{ $self->{ _plotOptions } }, @options };
+        $self->plotOptions( { %{ $self->plotOptions }, @options } );
         return ;
     }
 
     my $option = $options[0];
 
     # Uncomment line below when debuggingis finished.
-    # return $self->{ _plotOptions }->{ $option };
+    # return $self->plotOptions->{ $option };
 
-    croak "invalid plot option [$option]\n" unless exists $self->{ _plotOptions }->{ $option };
+    croak "invalid plot option [$option]\n" unless exists $self->plotOptions->{ $option };
     
-    return $self->{ _plotOptions }->{ $option };
+    return $self->plotOptions->{ $option };
 }
 
 #-------------------------------------------------------------------

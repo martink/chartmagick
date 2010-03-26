@@ -184,7 +184,8 @@ sub draw {
             my ( $axis, $weight ) = @{ $column };
             my $width   = $weight * $normFactor;
             
-            $axis->set( width => $width, height => $rowHeight );
+            $axis->width( $width );
+            $axis->height( $rowHeight );
            
             $self->im->Composite(
                 image   => $axis->draw,

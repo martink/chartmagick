@@ -666,7 +666,7 @@ sub drawLabel {
     my $text = $slice->{label} || sprintf('%.1f', $slice->{percentage}*100).' %';
 
     my $maxWidth = $anchorX;
-    $maxWidth = $self->axis->get('width') - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
+    $maxWidth = $self->axis->width - $anchorX if ($slice->{avgAngle} > 1.5 * pi || $slice->{avgAngle} < 0.5 * pi);
 
     $self->canvas->text(
         text            => $text,
@@ -675,9 +675,9 @@ sub drawLabel {
         valign          => $verticalAlign,
         x               => $anchorX,
         y               => $endPointY,
-        font            => $self->axis->get('labelFont'),
-        pointsize       => $self->axis->get('labelFontSize'),
-        fill            => $self->axis->get('labelColor'),
+        font            => $self->axis->labelFont,
+        pointsize       => $self->axis->labelFontSize,
+        fill            => $self->axis->labelColor,
         wrapWidth       => $maxWidth,
     );
 

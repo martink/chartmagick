@@ -229,10 +229,15 @@ sub AUTOLOAD {
     my $chart   = _loadAndInstanciate( "Chart::Magick::Chart::$name", $params{ chart  } || {} );
     croak "Cannot load class $chartClass" unless $chart;
 
+    my $axisProperties = {
+        width   => $params{ width },
+        height  => $params{ height },
+        %{ $params{ axis } || {} },
+    };
     my $axis =
           ref     $params{ axisType }   ? $params{ axisType }
-        : defined $params{ axisType }   ? _loadAndInstanciate( "Chart::Magick::Axis::$params{ axisType }" )
-        :                                 _loadAndInstanciate( $chart->getDefaultAxisClass ) 
+        : defined $params{ axisType }   ? _loadAndInstanciate( "Chart::Magick::Axis::$params{ axisType }", $axisProperties )
+        :                                 _loadAndInstanciate( $chart->getDefaultAxisClass, $axisProperties ) 
         ;
     croak "Cannot load axis class." unless $axis;
 
@@ -245,11 +250,12 @@ sub AUTOLOAD {
     }
 
     $axis->addChart( $chart );
-    $axis->set( width => $params{ width }, height => $params{ height } );
+####    $axis->width(  $params{ width } );
+####    $axis->height( $params{ height } );
 
     # Apply settings to chart, axis and legend.
 ####    $chart->set(        $params{ chart  } || {} );
-    $axis->set(         $params{ axis   } || {} );
+####    $axis->set(         $params{ axis   } || {} );
     $axis->legend->set( $params{ legend } || {} ); 
 
     # Add labels to axis.

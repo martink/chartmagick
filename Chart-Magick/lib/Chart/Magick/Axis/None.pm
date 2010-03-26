@@ -1,8 +1,11 @@
 package Chart::Magick::Axis::None;
 
 use strict;
+use warnings;
+use Moose;
 
-use base qw{ Chart::Magick::Axis };
+extends 'Chart::Magick::Axis';
+####use base qw{ Chart::Magick::Axis };
 
 =head2 getCoordDimension ( )
 
@@ -35,8 +38,8 @@ sub project {
     my $x       = shift;
     my $y       = shift;
 
-    my $offsetX = $self->get('marginLeft') + $self->getChartWidth / 2;
-    my $offsetY = $self->get('marginTop')  + $self->getChartHeight / 2;
+    my $offsetX = $self->marginLeft + $self->getChartWidth / 2;
+    my $offsetY = $self->marginTop  + $self->getChartHeight / 2;
 
     return ( int( $x->[0] + $offsetX ), int( $y->[0] + $offsetY ) );
 }
