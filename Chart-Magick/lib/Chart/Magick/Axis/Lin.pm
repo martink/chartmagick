@@ -120,7 +120,7 @@ Array ref containtaing the values of the ticks on the x axis. If an empty array 
 be auto generated. Defaults to an empty array ref. In virtually any case you'll want tick to be auto generated, and
 change the way the auto generation works by adjusting xTickWidth or xLabelUnits.
 
-=item xTickColor / xSubtickColor   => sub { $_[0]->get('subtickColor') },
+=item xTickColor / xSubtickColor   => sub { $_[0]->subtickColor },
 
 The color in which (sub)ticks should be drawn. Defaults to the value given for tickColor and subtickColor
 respectively.
@@ -254,13 +254,13 @@ has xTickColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'tickColor',
-    #default => sub { $_[0]->get('tickColor') },
+    #default => sub { $_[0]->tickColor },
 );
 has xSubtickColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'subtickColor',
-    #default => sub { $_[0]->get('subtickColor') },
+    #default => sub { $_[0]->subtickColor },
 );
 
 has xLabelFormat => (
@@ -270,7 +270,7 @@ has xLabelFormat => (
 
         #xLabelFormatter => sub { 
         #    sub { 
-        #        my $format = $_[0]->get('xLabelFormat') || '%s';
+        #        my $format = $_[0]->xLabelFormat || '%s';
         #        return sprintf $format, $_[1] / $_[2];
         #    } 
         #},
@@ -279,7 +279,7 @@ has xLabelFormatter => (
     is      => 'rw',
     default => sub { 
         sub { 
-            my $format = $_[0]->get('xLabelFormat') || '%s';
+            my $format = $_[0]->xLabelFormat || '%s';
             return sprintf $format, $_[1] / $_[2];
         } 
     },
@@ -316,19 +316,19 @@ has xShowRulers => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'showRulers',
-    #default => sub { $_[0]->get('showRulers') },
+    #default => sub { $_[0]->showRulers },
 );
 has xRulerColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'rulerColor',
-    #default => sub { $_[0]->get('rulerColor') },
+    #default => sub { $_[0]->rulerColor },
 );
 has xSubrulerColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'xRulerColor',
-    #default => sub { $_[0]->get('xRulerColor') },
+    #default => sub { $_[0]->xRulerColor },
 );
 
 has xTitle => (
@@ -339,20 +339,20 @@ has xTitleFont => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'font',
-    #default => sub { $_[0]->get('font') },
+    #default => sub { $_[0]->font },
 );
 # TODO: See how we can put in the 1.5 * factor...
 has xTitleFontSize => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'fontSize',
-    #default => sub { int $_[0]->get('fontSize') * 1.5 },
+    #default => sub { int $_[0]->fontSize * 1.5 },
 );
 has xTitleColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'fontColor',
-    #default => sub { $_[0]->get('fontColor') },
+    #default => sub { $_[0]->fontColor },
 );
 #        xTitleAngle
 #        xLabelAngle
@@ -415,31 +415,31 @@ has yTickColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'tickColor',
-    #default => sub { $_[0]->get('tickColor') },
+    #default => sub { $_[0]->tickColor },
 );
 has ySubtickColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'subtickColor',
-    #default => sub { $_[0]->get('subtickColor') },
+    #default => sub { $_[0]->subtickColor },
 ); 
 has yShowRulers => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'showRulers',
-    #default => sub { $_[0]->get('showRulers') },
+    #default => sub { $_[0]->showRulers },
 );
 has yRulerColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'rulerColor',
-    #default => sub { $_[0]->get('rulerColor') },
+    #default => sub { $_[0]->rulerColor },
 );
 has ySubrulerColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'yRulerColor',
-    #default => sub { $_[0]->get('yRulerColor') },
+    #default => sub { $_[0]->yRulerColor },
 );
 has yTitle => (
     is      => 'rw',
@@ -449,18 +449,20 @@ has yTitleFont => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'font',
-    #default => sub { $_[0]->get('font') },
+    #default => sub { $_[0]->font },
 );
 # TODO: Figure out how to account for the 1.5 factor
 has yTitleFontSize => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'fontSize',
-    #default => sub { int $_[0]->get('fontSize') * 1.5 },
+    #default => sub { int $_[0]->fontSize * 1.5 },
 );
 has yTitleColor => (
     is      => 'rw',
-    default => sub { $_[0]->get('fontColor') },
+    traits  => ['Slave'],
+    master  => 'fontColor',
+    #default => sub { $_[0]->fontColor },
 );
 #        yTitleAngle
 #        yLabelAngle
@@ -488,7 +490,7 @@ has yLabelFormat => (
 );
         #yLabelFormatter => sub { 
         #    sub { 
-        #        my $format = $_[0]->get('yLabelFormat') || '%s';
+        #        my $format = $_[0]->yLabelFormat || '%s';
         #        return sprintf $format, $_[1] / $_[2] ;
         #    } 
         #},
@@ -496,7 +498,7 @@ has yLabelFormatter => (
     is      => 'rw',
     default => sub {
         sub { 
-            my $format = $_[0]->get('yLabelFormat') || '%s';
+            my $format = $_[0]->yLabelFormat || '%s';
             return sprintf $format, $_[1] / $_[2] ;
         } 
     },
@@ -535,13 +537,13 @@ has tickColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'boxColor',
-    #default => sub { $_[0]->get('boxColor') },
+    #default => sub { $_[0]->boxColor },
 );
 has subtickColor => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'tickColor',
-    #default => sub { $_[0]->get('tickColor') },
+    #default => sub { $_[0]->tickColor },
 );
 
 has expandRange => (
@@ -552,13 +554,13 @@ has xExpandRange => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'expandRange',
-    #default => sub { $_[0]->get('expandRange') },
+    #default => sub { $_[0]->expandRange },
 );
 has yExpandRange => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'expandRange',
-    #default => sub { $_[0]->get('expandRange') },
+    #default => sub { $_[0]->expandRange },
 );
 
 has showBox => (
@@ -602,15 +604,15 @@ sub applyLayoutHints {
     my $hints   = shift;
 
     if ( exists $hints->{ coordPadding } ) {
-        $self->set( 'xTickOffset', max( $self->get('xTickOffset'), $hints->{ coordPadding }->[0] * 2 ) );
+        $self->xTickOffset( max( $self->xTickOffset, $hints->{ coordPadding }->[0] * 2 ) );
     };
 
     if ( exists $hints->{ valuePadding } ) {
-        $self->set( 'yTickOffset', max( $self->get('yTickOffset'), $hints->{ valuePadding }->[0] * 2 ) );
+        $self->yTickOffset( max( $self->yTickOffset, $hints->{ valuePadding }->[0] * 2 ) );
     };
 
     if ( exists $hints->{ tickWidth    } ) {
-        $self->set( 'xTickWidth', $hints->{ tickWidth } ) ;
+        $self->xTickWidth( $hints->{ tickWidth } );
     };
 
     return;
@@ -673,7 +675,7 @@ those are set.
 sub getDataRange {
     my $self = shift;
 
-    my @overrides   = map { $self->get( $_ ) } qw{ xStart xStop yStart yStop };
+    my @overrides   = map { $self->$_ } qw{ xStart xStop yStart yStop };
     my @values      = $self->SUPER::getDataRange;
 
     return (
@@ -719,8 +721,14 @@ sub getTickLabel {
     my $value   = shift;
     my $index   = shift || 0;
 
-    my $units       = $self->get( $index ? 'yLabelUnits'     : 'xLabelUnits'     ) || 1;
-    my $formatter   = $self->get( $index ? 'yLabelFormatter' : 'xLabelFormatter' ) || croak "No label formatter";
+    my $units       = $index 
+                    ? $self->yLabelUnits || 1
+                    : $self->xLabelUnits || 1
+                    ;
+    my $formatter   = $index
+                    ? $self->yLabelFormatter || croak "No y label formatter"
+                    : $self->xLabelFormatter || croak "No x label formatter"
+                    ;
 
     my $label   =     
            $self->getLabels( $index, $value )
@@ -759,22 +767,22 @@ sub optimizeMargins {
 
         # Calc tick width
         my $xTickWidth = 
-            $self->get('xTickWidth') || 
+            $self->xTickWidth || 
             $self->calcTickWidth( 
-                $minX, $maxX, $chartWidth, $self->get('xTickCount'), $self->get('xLabelUnits') 
+                $minX, $maxX, $chartWidth, $self->xTickCount, $self->xLabelUnits 
             );
         my $yTickWidth = 
-            $self->get('yTickWidth') ||
+            $self->yTickWidth ||
             $self->calcTickWidth( 
-                $minY, $maxY, $chartHeight, $self->get('yTickCount'), $self->get('yLabelUnits') 
+                $minY, $maxY, $chartHeight, $self->yTickCount, $self->yLabelUnits 
             );
 
         # Adjust the chart ranges so that they align with the 0 axes if desired.
-        if ( $self->get('yExpandRange') ) {
+        if ( $self->yExpandRange ) {
             $minY = floor( $minY / $yTickWidth ) * $yTickWidth;
             $maxY = ceil ( $maxY / $yTickWidth ) * $yTickWidth;
         }
-        if ( $self->get('xExpandRange') ) {
+        if ( $self->xExpandRange ) {
             $minX = floor( $minX / $xTickWidth ) * $xTickWidth;
             $maxX = ceil ( $maxX / $xTickWidth ) * $xTickWidth;
         }   
@@ -784,11 +792,11 @@ sub optimizeMargins {
         my @yLabels = map { $self->getTickLabel( $_, 1 ) } @{ $self->generateTicks( $minY, $maxY, $yTickWidth ) };
 
         my $xUnits      = ( $self->transformX( $maxX ) - $self->transformX( $minX ) ) || 1;
-        my $xAddUnit    = $self->get('xTickOffset') * $xTickWidth;
+        my $xAddUnit    = $self->xTickOffset * $xTickWidth;
         my $xPxPerUnit  = $chartWidth / ( $xUnits + $xAddUnit );
 
         my $yUnits      = ( $self->transformY( $maxY ) - $self->transformY( $minY ) ) || 1;
-        my $yAddUnit    = $self->get('yTickOffset') * $yTickWidth;
+        my $yAddUnit    = $self->yTickOffset * $yTickWidth;
         my $yPxPerUnit  = $chartHeight / ( $yUnits + $yAddUnit );
 
         # Calc max label lengths
@@ -796,7 +804,7 @@ sub optimizeMargins {
         $yLabelWidth    = ceil max map { int $self->getLabelDimensions( $_ )->[0]                            } @yLabels;
     
         # If labels are printed inside the graph then only count the part that lies outside of the chart area.
-        unless ( $self->get('ticksOutside') ) {
+        unless ( $self->ticksOutside ) {
             if ( $minY < 0 ) {
                 $xLabelHeight = ceil max 0, $self->transformY( $minY ) * $yPxPerUnit - $xLabelHeight;
             }
@@ -807,10 +815,10 @@ sub optimizeMargins {
 
         if ( $prevXLabelHeight == $xLabelHeight && $prevYLabelWidth == $yLabelWidth ) {
             $ready = 1;
-            $self->set( 
-                xTickWidth  => $xTickWidth,
-                yTickWidth  => $yTickWidth,
-            );
+            # Setters
+            $self->xTickWidth( $xTickWidth ),
+            $self->yTickWidth( $yTickWidth ),
+            
             # axisMarginLeft and bottom need to be set first.
             $self->plotOption(
                 axisMarginLeft  => $self->plotOption( 'axisMarginLeft' ) + $yLabelWidth,
@@ -823,8 +831,8 @@ sub optimizeMargins {
                 xTickOffset     => $xAddUnit / 2,
                 yPxPerUnit      => $yPxPerUnit,
                 yTickOffset     => $yAddUnit / 2,
-                chartAnchorX    => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
-                chartAnchorY    => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
+                chartAnchorX    => $self->marginLeft + $self->plotOption('axisMarginLeft'),
+                chartAnchorY    => $self->marginTop + $self->plotOption('axisMarginTop' ), 
             );
 
             return ($minX, $maxX, $minY, $maxY);
@@ -851,19 +859,19 @@ sub calcBaseMargins {
     my $self = shift;
 
     # calc axisMarginLeft
-    my $yTitleWidth = length $self->get('yTitle') == 0
+    my $yTitleWidth = length $self->yTitle == 0
                     ? 0
                     : ( $self->im->QueryFontMetrics(
-                            text        => $self->get('yTitle'),
-                            font        => $self->get('yTitleFont'),
-                            pointsize   => $self->get('yTitleFontSize'),
+                            text        => $self->yTitle,
+                            font        => $self->yTitleFont,
+                            pointsize   => $self->yTitleFontSize,
                             rotate      => -90,
                         ))[5]
                     ;
 
     my $axisMarginLeft  = 
-        $self->get('yTitleBorderOffset') + $self->get('yTitleLabelOffset') 
-        + $self->get('yLabelTickOffset') + $self->get('yTickOutset') 
+        $self->yTitleBorderOffset + $self->yTitleLabelOffset 
+        + $self->yLabelTickOffset + $self->yTickOutset 
         + $yTitleWidth;
     
     $self->plotOption( 
@@ -873,18 +881,18 @@ sub calcBaseMargins {
 
     #------------------------------------
     # calc axisMarginBottom
-    my $xTitleHeight    = length $self->get('xTitle') == 0
+    my $xTitleHeight    = length $self->xTitle == 0
                         ? 0
                         : ( $self->im->QueryFontMetrics(
-                                text        => $self->get('xTitle'),
-                                font        => $self->get('xTitleFont'),
-                                pointsize   => $self->get('xTitleFontSize'),
+                                text        => $self->xTitle,
+                                font        => $self->xTitleFont,
+                                pointsize   => $self->xTitleFontSize,
                           ))[5]
                         ;
 
     my $axisMarginBottom = 
-        $self->get('xTitleBorderOffset') + $self->get('xTitleLabelOffset') 
-        + $self->get('xLabelTickOffset') + $self->get('xTickOutset') 
+        $self->xTitleBorderOffset + $self->xTitleLabelOffset 
+        + $self->xLabelTickOffset + $self->xTickOutset 
         + $xTitleHeight;
 
     $self->plotOption( 
@@ -1002,7 +1010,7 @@ sub calcTickWidth {
     # ... and then check that width against the minTickWidth treshold. Continue to expand the tick width with
     # base10-aligned factors until we have something suitable.
     for my $expand ( 1, 1.25, 2, 2.5, 5, 10, 20, 50, 100, 1000 ) {
-        return $tickWidth * $expand * $unit if ($approxPxPerTick * $expand) > $self->get('minTickWidth');
+        return $tickWidth * $expand * $unit if ($approxPxPerTick * $expand) > $self->minTickWidth;
     }
 
     return $tickWidth * $unit;
@@ -1021,9 +1029,9 @@ sub adjustXRange {
     my $min     = shift;
     my $max     = shift;
 
-    return ( $min, $max ) if $self->get('xNoAdjustRange') && !$self->get('xIncludeOrigin');
+    return ( $min, $max ) if $self->xNoAdjustRange && !$self->xIncludeOrigin;
 
-    return $self->extendRangeToOrigin( $min, $max, $self->get('xIncludeOrigin') );
+    return $self->extendRangeToOrigin( $min, $max, $self->xIncludeOrigin );
 }
 
 #--------------------------------------------------------------------
@@ -1039,9 +1047,9 @@ sub adjustYRange {
     my $min     = shift;
     my $max     = shift;
 
-    return ( $min, $max ) if $self->get('yNoAdjustRange') && !$self->get('yIncludeOrigin');
+    return ( $min, $max ) if $self->yNoAdjustRange && !$self->yIncludeOrigin;
 
-    return $self->extendRangeToOrigin( $min, $max, $self->get('yIncludeOrigin') );
+    return $self->extendRangeToOrigin( $min, $max, $self->yIncludeOrigin );
 }
 
 #--------------------------------------------------------------------
@@ -1137,17 +1145,18 @@ sub preprocessData {
     ($minX, $maxX, $minY, $maxY) = $self->optimizeMargins( $minX, $maxX, $minY, $maxY );
 
     # Store the calulated values in the object and generate the tick locations based on the tick width.
-    $self->set( 
-        yStop       => $maxY,
-        yStart      => $minY,
-        xStop       => $maxX,
-        xStart      => $minX,
-    );
-    unless ( defined $self->get('yTicks') ) {
-        $self->set( yTicks => $self->generateTicks( $minY, $maxY, $self->get( 'yTickWidth' ) ) );
+    # Setters
+    $self->yStop(  $maxY );
+    $self->yStart( $minY );
+    $self->xStop(  $maxX );
+    $self->xStart( $minX );
+
+    # TODO: Use predicates
+    unless ( defined $self->yTicks ) {
+        $self->yTicks( $self->generateTicks( $minY, $maxY, $self->yTickWidth ) );
     }
-    unless ( defined $self->get('xTicks') ) {
-        $self->set( xTicks => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ) );
+    unless ( defined $self->xTicks ) {
+        $self->xTicks( $self->generateTicks( $minX, $maxX, $self->xTickWidth ) );
     }
 
     $self->plotOption( 
@@ -1156,21 +1165,21 @@ sub preprocessData {
         xChartStop  => $maxX + $self->plotOption('xTickOffset'),
         xChartStart => $minX - $self->plotOption('xTickOffset'),
 
-#        chartAnchorX => $self->get('marginLeft') + $self->plotOption('axisMarginLeft'),
-#        chartAnchorY => $self->get('marginTop' ) + $self->plotOption('axisMarginTop' ), 
+#        chartAnchorX => $self->marginLeft + $self->plotOption('axisMarginLeft'),
+#        chartAnchorY => $self->marginTop + $self->plotOption('axisMarginTop' ), 
     );
 
     # Precalc toPx offsets.
     $self->plotOption( 'xPxOffset'  => 
           $self->plotOption('chartAnchorX') 
-        + $self->plotOption('xTickOffset') * $self->getPxPerXUnit
-        - $self->transformX( $self->get('xStart') ) * $self->getPxPerXUnit
+        + $self->plotOption('xTickOffset')   * $self->getPxPerXUnit
+        - $self->transformX( $self->xStart ) * $self->getPxPerXUnit
     );
     $self->plotOption( 'yPxOffset'  => 
         $self->plotOption('chartAnchorY') 
         + $self->getChartHeight 
-        - $self->plotOption('yTickOffset') * $self->getPxPerYUnit
-        + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
+        - $self->plotOption('yTickOffset')   * $self->getPxPerYUnit
+        + $self->transformY( $self->yStart ) * $self->getPxPerYUnit
     );
 
     return;
@@ -1187,7 +1196,7 @@ Returns the locations of the ticks on the x axis in chart x coordinates.
 sub getXTicks {
     my $self = shift;
    
-    return [ @{ $self->get('xTicks') || [] } ];
+    return [ @{ $self->xTicks || [] } ];
 }
 
 #---------------------------------------------
@@ -1240,7 +1249,7 @@ Returns an array ref containing the locations of the subticks on the x axis in c
 sub getXSubticks {
     my $self = shift;
 
-    return $self->generateSubticks( $self->getXTicks, $self->get('xSubtickCount') );
+    return $self->generateSubticks( $self->getXTicks, $self->xSubtickCount );
 }
 
 #---------------------------------------------
@@ -1254,7 +1263,7 @@ Returns an array ref containing the locations of the ticks on the y axis in char
 sub getYTicks {
     my $self = shift;
    
-    return [ @{ $self->get('yTicks') || []  } ];
+    return [ @{ $self->yTicks || []  } ];
 }
 
 #---------------------------------------------
@@ -1268,7 +1277,7 @@ Returns an array ref containing the locations of the subticks on the y axis in c
 sub getYSubticks {
     my $self = shift;
 
-    return $self->generateSubticks( $self->getYTicks, $self->get('ySubtickCount') );
+    return $self->generateSubticks( $self->getYTicks, $self->ySubtickCount );
 }
 
 sub coordInRange {
@@ -1276,8 +1285,8 @@ sub coordInRange {
     my $coord  = shift;
 
     return 
-           $coord->[ 0 ] >= $self->get('xStart') 
-        && $coord->[ 0 ] <= $self->get('xStop');
+           $coord->[ 0 ] >= $self->xStart 
+        && $coord->[ 0 ] <= $self->xStop;
 }
 
 sub valueInRange {
@@ -1285,8 +1294,8 @@ sub valueInRange {
     my $value = shift;
 
     return 
-        && $value->[ 0 ] >= $self->get('yStart')
-        && $value->[ 0 ] <= $self->get('yStop');
+        && $value->[ 0 ] >= $self->yStart
+        && $value->[ 0 ] <= $self->yStop;
 
 }
 
@@ -1305,13 +1314,13 @@ sub plotAxes {
     my $path    = q{};
 
     # Does the chart range include the x-axis?
-    if ( $self->get('yStart') * $self->get('yStop') <= 0 ) {
+    if ( $self->yStart * $self->yStop <= 0 ) {
         $path .= 
               " M " . $self->toPx( [ $self->plotOption( 'xChartStart' ) ], [ 0 ] )
             . " L " . $self->toPx( [ $self->plotOption( 'xChartStop'  ) ], [ 0 ] );
     }
     # Does the chart range include the y-axis?
-    if ( $self->get('xStart') * $self->get('xStop') <= 0 ) {
+    if ( $self->xStart * $self->xStop <= 0 ) {
         $path .= 
               " M " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStart' ) ] )
             . " L " . $self->toPx( [ 0 ], [ $self->plotOption( 'yChartStop'  ) ] );
@@ -1321,7 +1330,7 @@ sub plotAxes {
 
     $self->im->Draw(
         primitive   => 'Path',
-        stroke      => $self->get('axisColor'),
+        stroke      => $self->axisColor,
         points      => $path,
         fill        => 'none',
     );
@@ -1342,27 +1351,27 @@ sub plotAxisTitles {
 
     # X label
     $self->im->text(
-        text        => $self->get('xTitle'),
-        font        => $self->get('xTitleFont'),
-        pointsize   => $self->get('xTitleFontSize'),
-        fill        => $self->get('xTitleColor'),
+        text        => $self->xTitle,
+        font        => $self->xTitleFont,
+        pointsize   => $self->xTitleFontSize,
+        fill        => $self->xTitleColor,
         halign      => 'center',
         valign      => 'bottom',
-        x           => $self->getChartWidth / 2 + $self->get('marginLeft') + $self->plotOption('axisMarginLeft'), 
-        y           => $self->get('height') - $self->get('marginBottom') - $self->get('xTitleBorderOffset'),
+        x           => $self->getChartWidth / 2 + $self->marginLeft + $self->plotOption('axisMarginLeft'), 
+        y           => $self->height - $self->marginBottom - $self->xTitleBorderOffset,
         rotate      => 0,
     );
 
     # Y label
     $self->im->text(
-        text        => $self->get('yTitle'),
-        font        => $self->get('yTitleFont'),
-        pointsize   => $self->get('yTitleFontSize'),
-        fill        => $self->get('yTitleColor'),
+        text        => $self->yTitle,
+        font        => $self->yTitleFont,
+        pointsize   => $self->yTitleFontSize,
+        fill        => $self->yTitleColor,
         halign      => 'center',
         valign      => 'top',
-        x           => $self->get('marginLeft') + $self->get('yTitleBorderOffset'),
-        y           => $self->getChartHeight / 2 + $self->get('marginTop') + $self->plotOption('axisMarginTop'),
+        x           => $self->marginLeft + $self->yTitleBorderOffset,
+        y           => $self->getChartHeight / 2 + $self->marginTop + $self->plotOption('axisMarginTop'),
         rotate      => -90,
     );
 
@@ -1386,7 +1395,7 @@ sub plotBox {
     # Main axes
     $self->im->Draw(
         primitive   => 'Path',
-        stroke      => $self->get('boxColor'),
+        stroke      => $self->boxColor,
         points      =>
                " M $x1,$y1 L $x2,$y1 L $x2,$y2 L $x1,$y2 Z ",
         fill        => 'none',
@@ -1433,7 +1442,7 @@ sub drawRuler {
 
     $self->im->Draw(
         primitive   => 'Path',
-        stroke      => $color || $self->get('rulerColor'),
+        stroke      => $color || $self->rulerColor,
         points      => "M $from L $to",
         fill        => 'none',
     );
@@ -1454,35 +1463,35 @@ You'll probably never need to call this method manually.
 sub plotRulers {
     my $self = shift;
 
-    my $minY = $self->get('yStart');
-    my $maxY = $self->get('yStop');
+    my $minY = $self->yStart;
+    my $maxY = $self->yStop;
 
-    if ( $self->get('yShowRulers') ) {
+    if ( $self->yShowRulers ) {
         for my $tick ( @{ $self->getYSubticks } ) {
             next if $tick < $minY || $tick > $maxY;
 
-            $self->drawRuler( $tick, 0, $self->get('ySubrulerColor') );
+            $self->drawRuler( $tick, 0, $self->ySubrulerColor );
         }
         for my $tick ( @{ $self->getYTicks } ) {
             next if $tick < $minY || $tick > $maxY;
 
-            $self->drawRuler( $tick, 0, $self->get('yRulerColor') );
+            $self->drawRuler( $tick, 0, $self->yRulerColor );
         }
     }
 
-    my $minX = $self->get('xStart');
-    my $maxX = $self->get('xStop');
+    my $minX = $self->xStart;
+    my $maxX = $self->xStop;
 
-    if ( $self->get('xShowRulers') ) {
+    if ( $self->xShowRulers ) {
         for my $tick ( @{ $self->getXSubticks } ) {
             next if $tick < $minX || $tick > $maxX;
 
-            $self->drawRuler( $tick, 1, $self->get('xSubrulerColor') );
+            $self->drawRuler( $tick, 1, $self->xSubrulerColor );
         }
         for my $tick ( @{ $self->getXTicks } ) {
             next if $tick < $minX || $tick > $maxX;
 
-            $self->drawRuler( $tick, 1, $self->get('xRulerColor') );
+            $self->drawRuler( $tick, 1, $self->xRulerColor );
         }
     }
 
@@ -1528,24 +1537,25 @@ sub drawTick {
     my $name    = $isX ? 'x' : 'y';
     $name      .= $args->{ subtick } ? 'Subtick' : 'Tick';
 
-    my $inset   = $self->get( $name . 'Inset'  ); # / $scale;
-    my $outset  = $self->get( $name . 'Outset' ); # / $scale;
+    my ( $inset, $outset, $color ) = map { my $m = $name . $_; $self->$m } qw{ Inset Outset Color };
+####    my $inset   = $self->get( $name . 'Inset'  ); # / $scale;
+####    my $outset  = $self->get( $name . 'Outset' ); # / $scale;
 
     my ( $x1, $y1, $x2, $y2 );
     if ( $isX ) {
-        my $base    = ( $self->get('ticksOutside') || $self->get('yStop') < 0 || $self->get('yStart') > 0 ) ? $self->plotOption('yChartStart') : 0;
+        my $base    = ( $self->ticksOutside || $self->yStop < 0 || $self->yStart > 0 ) ? $self->plotOption('yChartStart') : 0;
         my ($x, $y) = $self->project( [ $tick ], [ $base ] );
         ($x1, $y1, $x2, $y2) = ( $x, $y + $outset, $x, $y - $inset );
     }
     else {
-        my $base    = ( $self->get('ticksOutside') || $self->get('xStop') < 0 || $self->get('xStart') > 0 ) ? $self->plotOption('xChartStart') : 0;
+        my $base    = ( $self->ticksOutside || $self->xStop < 0 || $self->xStart > 0 ) ? $self->plotOption('xChartStart') : 0;
         my ($x, $y) = $self->project( [ $base ], [ $tick ] );
         ($x1, $y1, $x2, $y2) = ( $x - $outset, $y, $x + $inset, $y );
     }    
  
     $self->im->Draw(
         primitive   => 'Path',
-        stroke      => $self->get( $name . 'Color' ),
+        stroke      => $color, #$self->get( $name . 'Color' ),
         points      => "M $x1,$y1 L $x2,$y2 ",
         fill        => 'none',
     );
@@ -1557,12 +1567,12 @@ sub drawTick {
         halign      => $args->{ halign } || $isX ? 'center' : 'right',
         valign      => $args->{ valign } || $isX ? 'top'    : 'center',
         align       => $args->{ align  } || $isX ? 'Center' : 'Right',
-        font        => $self->get('labelFont'),
-        pointsize   => $self->get('labelFontSize'),
+        font        => $self->labelFont,
+        pointsize   => $self->labelFontSize,
         style       => 'Normal',
-        fill        => $self->get('labelColor'),
-        x           => $isX ? $x1 : $x1 - $self->get('yLabelTickOffset'),
-        y           => $isX ? $y1 + $self->get('xLabelTickOffset') : $y1,
+        fill        => $self->labelColor,
+        x           => $isX ? $x1 : $x1 - $self->yLabelTickOffset,
+        y           => $isX ? $y1 + $self->xLabelTickOffset : $y1,
         wrapWidth   => $args->{ wrap },
     );
 
@@ -1582,8 +1592,8 @@ You'll probably never need to call this method manually.
 sub plotTicks {
     my $self = shift;
 
-    my $minY = $self->get('yStart');
-    my $maxY = $self->get('yStop');
+    my $minY = $self->yStart;
+    my $maxY = $self->yStop;
 
     # Y Ticks
     foreach my $tick ( @{ $self->getYTicks } ) {
@@ -1598,11 +1608,11 @@ sub plotTicks {
         $self->drawTick( { y => $tick, subtick => 1 } );
     }
 
-    my $minX = $self->get('xStart');
-    my $maxX = $self->get('xStop');
+    my $minX = $self->xStart;
+    my $maxX = $self->xStop;
 
     # X main ticks
-    my $wrap = $self->get('xTickWidth') * $self->plotOption( 'xPxPerUnit' );
+    my $wrap = $self->xTickWidth * $self->plotOption( 'xPxPerUnit' );
     foreach my $tick ( @{ $self->getXTicks } ) {
         next if $tick < $minX || $tick > $maxX;
 
@@ -1635,9 +1645,9 @@ sub plotFirst {
     $self->SUPER::plotFirst;
 
     $self->plotRulers;
-    $self->plotAxes if $self->get('showAxes');
+    $self->plotAxes if $self->showAxes;
     $self->plotTicks;
-    $self->plotBox if $self->get('showBox'); 
+    $self->plotBox if $self->showBox; 
 
     return;
 }
