@@ -81,7 +81,7 @@ sub inRange {
     my $self    = shift;
     my $coord   = shift;
 
-    return ( $coord->[0] >= $self->axis->get('xStart') && $coord->[0] <= $self->axis->get('xStop') );
+    return ( $coord->[0] >= $self->axis->xStart && $coord->[0] <= $self->axis->xStop );
 }
 
 
@@ -108,8 +108,8 @@ sub plot {
 
     my ( @paths, @coords );
 
-    my $xStart  = $self->axis->get('xStart');
-    my $xStop   = $self->axis->get('xStop');
+    my $xStart  = $self->axis->xStart;
+    my $xStop   = $self->axis->xStop;
 
     # Draw the graphs
     foreach my $x ( grep { $axis->coordInRange( $_ ) }  @{ $self->dataset->getCoords } ) {

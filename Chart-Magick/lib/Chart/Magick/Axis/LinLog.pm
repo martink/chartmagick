@@ -2,8 +2,9 @@ package Chart::Magick::Axis::LinLog;
 
 use strict;
 use warnings;
+use Moose;
 
-use base qw{ Chart::Magick::Axis::Log };
+extends 'Chart::Magick::Axis::Log';
 
 =head1 NAME
 
@@ -42,9 +43,7 @@ Draws the graph. See Chart::Magick::Axis for documentation.
 sub draw {
     my $self = shift;
 
-    $self->set( 
-        yExpandRange    => 0,
-    );
+    $self->yExpandRange( 0 );
     
     return $self->SUPER::draw( @_ );
 }

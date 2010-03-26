@@ -1,17 +1,40 @@
 package Chart::Magick::Axis::Log;
 
 use strict;
+use warnings;
+use Moose;
 
 use POSIX qw{ floor ceil };
 use Carp;
 
-use base qw{ Chart::Magick::Axis::Lin };
+extends 'Chart::Magick::Axis::Lin';
 
 =head1 NAME
 
 Chart::Magick::Axis::Log - A logarithmic coordinate system for the Chart::Magick class of modules.
 
 =head1 SYNOPSIS
+
+=head1 PROPERTIES
+
+In addition to properties available in Chart::Magick::Axis::Lin, this class provides the following properties:
+
+=head3 xExpandRange
+=head3 yExpandRange
+
+When set to true, the range of the x resp y axis will be expanded so that it will start and end on a power of 10. Defaults
+to true.
+
+=cut
+
+has xExpandRange => (
+	is		=> 'rw',
+	default => 1,
+);
+has yExpandRange => (
+	is		=> 'rw',
+	default => 1,
+);
 
 =head1 DESCRIPTION
 
@@ -47,33 +70,6 @@ sub adjustYRange {
 
 #--------------------------------------------------------------------
 
-=head2 definition ( )
-
-See Chart::Magick::Axis::Lin::definition.
-
-In addition to properties available in Chart::Magick::Axis::Lin, this class provides the following properties:
-
-=head3 xExpandRange
-=head3 yExpandRange
-
-When set to true, the range of the x resp y axis will be expanded so that it will start and end on a power of 10. Defaults
-to true.
-
-=cut
-
-sub definition {
-    my $self = shift;
-
-    my %definition = (
-        xExpandRange    => 1,
-        yExpandRange    => 1,
-    );
-
-    return { %{ $self->SUPER::definition }, %definition };
-}
-
-#--------------------------------------------------------------------
-
 =head2 draw ( )
 
 Draws the graph. See Chart::Magick::Axis for documentation.
@@ -83,10 +79,9 @@ Draws the graph. See Chart::Magick::Axis for documentation.
 sub draw {
     my $self = shift;
    
-    $self->set(
-        xExpandRange => 0,
-        yExpandRange => 0,
-    );
+    # TODO: Why are we doing this?
+    $self->xExpandRange( 0 );
+    $self->yExpandRange( 0 );
 
     return $self->SUPER::draw( @_ );
 }
@@ -136,8 +131,8 @@ sub getDataRange {
 
     my ($minX, $maxX, $minY, $maxY) = $self->SUPER::getDataRange( @_ );
 
-    my $expandX = $self->get('xExpandRange');
-    my $expandY = $self->get('yExpandRange');
+    my $expandX = $self->xExpandRange;
+    my $expandY = $self->yExpandRange;
     return (
         $expandX ? [ 10 ** ( floor $self->transformX( $minX->[0] ) ) ] : $minX,
         $expandX ? [ 10 ** ( ceil  $self->transformX( $maxX->[0] ) ) ] : $maxX,
@@ -157,7 +152,7 @@ See Chart::Magick::Axis::getXTicks.
 sub getXTicks {
     my $self = shift;
 
-    return $self->generateLogTicks( $self->get('xStart'), $self->get('xStop') );
+    return $self->generateLogTicks( $self->xStart, $self->xStop );
 }
 
 #--------------------------------------------------------------------
@@ -171,7 +166,7 @@ See Chart::Magick::Axis::getYTicks.
 sub getYTicks {
     my $self = shift;
 
-    return $self->generateLogTicks( $self->get('yStart'), $self->get('yStop') );
+    return $self->generateLogTicks( $self->yStart, $self->yStop );
 }
 
 #--------------------------------------------------------------------
@@ -219,7 +214,7 @@ sub transformX {
     my $logx    = $self->logTransform( $x );
     return $logx if defined $logx;
 
-    my $start = $self->get('xStart');
+    my $start = $self->xStart;
     carp "Cannot transform x value $x to a logarithmic scale. Using $start instead!";
 
     return $self->logTransform( $start ) || return 0;
@@ -240,7 +235,7 @@ sub transformY {
     my $logy    = $self->logTransform( $y );
     return $logy if defined $logy;
 
-    my $start = $self->get('yStart');
+    my $start = $self->yStart;
     carp "Cannot transform y value $y to a logarithmic scale. Using $start instead!";
 
     return $self->logTransform( $start ) || return 0;
