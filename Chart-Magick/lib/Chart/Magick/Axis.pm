@@ -11,6 +11,7 @@ use Data::Dumper;
 use Text::Wrap;
 use Chart::Magick::Legend;
 use Moose;
+use MooseX::SlaveAttribute;
 
 use constant pi => 3.14159265358979;
 
@@ -167,7 +168,7 @@ has minTitleMargin => (
 );
 
 # Label settings
-has labelFont => )
+has labelFont => (
     is      => 'rw',
     traits  => ['Slave'],
     master  => 'font',
