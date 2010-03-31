@@ -7,13 +7,23 @@ use Class::InsideOut qw{ :std };
 use Carp;
 use Data::Dumper;
 
-readonly data           => my %data;
-readonly labels         => my %labels;
-readonly coordDim       => my %coordDim;
-readonly datasetCount   => my %datasetCount;
-readonly datasetIndex   => my %datasetIndex;
-readonly datasetData    => my %datasetData;
-readonly globalData     => my %globalData;
+#readonly data           => my %data;
+has data => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+);
+#readonly labels         => my %labels;
+has labels => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+);
+#readonly coordDim       => my %coordDim;
+#readonly datasetCount   => my %datasetCount;
+#readonly datasetIndex   => my %datasetIndex;
+#readonly datasetData    => my %datasetData;
+#readonly globalData     => my %globalData;
 
 =head1 NAME
 
