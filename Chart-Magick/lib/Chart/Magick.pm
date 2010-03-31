@@ -385,6 +385,10 @@ For example:
 generates a canvas whith three charts of about 200x150 pixels above a chart of about 600x150 pixels. Note that
 there are margins between the charts so these dimension are slightly smaller.
 
+=head3 margin
+
+The space between graphs in pixels. If ommitted defaults to 20 pixels.
+
 =cut
 
 sub matrix {
@@ -392,8 +396,13 @@ sub matrix {
     my $width   = shift;
     my $height  = shift;
     my $layout  = shift;
+    my $margin  = shift || 20;
 
-    my $matrix  = Chart::Magick::Matrix->new( $width, $height, 20 );
+    my $matrix  = Chart::Magick::Matrix->new( {
+        width   => $width, 
+        height  => $height,
+        margin  => $margin,
+    } );
 
     foreach my $row (@$layout) {
         push @{ $matrix->rows }, [ map { [ $_->axis, 1 ] } @{ $row } ];

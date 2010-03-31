@@ -2,18 +2,50 @@ package Chart::Magick::Matrix;
 
 use strict;
 use warnings;
+use Moose;
+use Chart::Magick::Types;
 
 use Carp;
 use Image::Magick;
-use Class::InsideOut qw{ :std };
 use List::Util qw{ sum };
 
-readonly    width   => my %width;
-readonly    height  => my %height;
-readonly    margin  => my %margin;
-readonly    rows    => my %rows;
-readonly    im      => my %im;
-readonly    isDrawn => my %isDrawn;
+has width => (
+    is          => 'rw',
+    isa         => 'PositiveOrZeroInt',
+    required    => 1,
+);
+has height => (
+    is          => 'rw',
+    isa         => 'PositiveOrZeroInt',
+    required    => 1,
+);
+has margin => (
+    is          => 'rw',
+    isa         => 'PositiveOrZeroInt',
+    default     => 20,
+);
+has rows => (
+    is          => 'rw',
+    isa         => 'ArrayRef[ArrayRef]',
+    default     => sub { [] },
+);
+has im => (
+    is          => 'ro',
+    isa         => 'Image::Magick',
+    default     => sub { Image::Magick->new },
+);
+has isDrawn => (
+    is          => 'rw',
+    isa         => 'Bool',
+    default     => 0,
+);
+
+#readonly    width   => my %width;
+#readonly    height  => my %height;
+#readonly    margin  => my %margin;
+#readonly    rows    => my %rows;
+#readonly    im      => my %im;
+#readonly    isDrawn => my %isDrawn;
 
 =head1 NAME
 
@@ -33,7 +65,7 @@ Modulde to layout multple Chart::Magick::Axis objects onto a single canvas.
 
     $matrix->write( 'matrix1.png' );
 
-    # Yields thhe following layout
+    # Yields the following layout
     #|-----------------------|
     #|    ax1    |    ax2    |
     #|-----------------------|
@@ -110,42 +142,42 @@ sub getAxis {
     return;
 }
 
-=head2 new ( width, height, margin )
-
-Constructor.
-
-=head3 width
-
-The width of the matrix canvas in pixels.
-
-=head3 height
-
-The height of the matrix canvas in pixels.
-
-=head3 margin
-
-The width of the margin surrounding the individual axis cansvasses in pixels. Defaults to 20.
-
-=cut
-
-sub new {
-    my $class   = shift;
-    my $width   = shift || croak "No width passed to Chart::Magick::Marker->new";
-    my $height  = shift || croak "No height passed to Chart::Magick::Marker->new";
-    my $margin  = shift || 20;
-
-    my $self    = register $class;
-
-    my $id = id $self;
-
-    $width{ $id     } = $width;
-    $height{ $id    } = $height;
-    $margin{ $id    } = $margin;
-    $rows{ $id      } = [];
-    $im{ $id        } = Image::Magick->new;
-
-    return $self;
-};
+####=head2 new ( width, height, margin )
+####
+####Constructor.
+####
+####=head3 width
+####
+####The width of the matrix canvas in pixels.
+####
+####=head3 height
+####
+####The height of the matrix canvas in pixels.
+####
+####=head3 margin
+####
+####The width of the margin surrounding the individual axis cansvasses in pixels. Defaults to 20.
+####
+####=cut
+####
+####sub new {
+####    my $class   = shift;
+####    my $width   = shift || croak "No width passed to Chart::Magick::Marker->new";
+####    my $height  = shift || croak "No height passed to Chart::Magick::Marker->new";
+####    my $margin  = shift || 20;
+####
+####    my $self    = register $class;
+####
+####    my $id = id $self;
+####
+####    $width{ $id     } = $width;
+####    $height{ $id    } = $height;
+####    $margin{ $id    } = $margin;
+####    $rows{ $id      } = [];
+####    $im{ $id        } = Image::Magick->new;
+####
+####    return $self;
+####};
 
 =head2 draw ( )
 
@@ -157,7 +189,7 @@ sub draw {
     my $self = shift;
 
     # Delete any other canvases that are in the Image::Magick object.
-    @{ $im{ id $self } } = ();
+    @{ $self->im } = ();
 
     # Create a new canvas of the correct size.
     $self->im->Set(
@@ -199,7 +231,7 @@ sub draw {
         $y += $rowHeight + $self->margin;
     }
 
-    $isDrawn{ id $self } = 1;
+    $self->isDrawn( 1 );
 
     return $self;
 }
