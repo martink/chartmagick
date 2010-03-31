@@ -37,5 +37,5 @@ $axis->addChart( $bar );
 $axis->draw;
 
 # Write image to disk.
-$axis->im->Write( 'manual_bar.png' );
+$axis->im->Write( 'bar_manual.png' );
 

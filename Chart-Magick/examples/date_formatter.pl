@@ -28,7 +28,7 @@ Chart::Magick->bar(
         [ $dsx, $dsy3, 'Projected deficiency'   ],
     ],
     axis    => {
-        xLabelFormatter => sub { $xFormatter },
+        xLabelFormatter => $xFormatter,
 #        xLabelUnits     => 3600 * 24, # 1 day
     },
     legend  => {

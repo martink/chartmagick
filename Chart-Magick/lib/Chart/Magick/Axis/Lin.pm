@@ -272,15 +272,9 @@ has xLabelFormat => (
     default => '%s',
 );
 
-        #xLabelFormatter => sub { 
-        #    sub { 
-        #        my $format = $_[0]->xLabelFormat || '%s';
-        #        return sprintf $format, $_[1] / $_[2];
-        #    } 
-        #},
-#### TODO: Check if this works...
 has xLabelFormatter => (
     is      => 'rw',
+    isa     => 'CodeRef',
     default => sub { 
         sub { 
             my $format = $_[0]->xLabelFormat || '%s';
@@ -503,14 +497,10 @@ has yLabelFormat => (
     is      => 'rw',
     default => '%.1f',
 );
-        #yLabelFormatter => sub { 
-        #    sub { 
-        #        my $format = $_[0]->yLabelFormat || '%s';
-        #        return sprintf $format, $_[1] / $_[2] ;
-        #    } 
-        #},
+
 has yLabelFormatter => (
     is      => 'rw',
+    isa     => 'CodeRef',
     default => sub {
         sub { 
             my $format = $_[0]->yLabelFormat || '%s';
@@ -518,6 +508,7 @@ has yLabelFormatter => (
         } 
     },
 );
+
 has yLabelUnits => (
     is      => 'rw',
     default => 1,
