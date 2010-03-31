@@ -241,7 +241,7 @@ sub AUTOLOAD {
     }
 
     if ( $params{ palette } ) {
-        $chart->setPalette( $params{ palette } );
+        $chart->palette( $params{ palette } );
     }
 
     $axis->addChart( $chart );
