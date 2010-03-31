@@ -67,7 +67,7 @@ my $barChart = Chart::Magick->bar(
     ],
     chart   => {
         barWidth    => 10,
-        drawMode    => 'stacked',
+        drawMode    => 'cumulative',
     },
     axis    => {
         xTitle      => 'Period',

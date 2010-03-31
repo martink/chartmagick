@@ -258,11 +258,10 @@ sub drawLabels {
         $canvas->text(
             text            => $tick,
     #        undercolor      => 'black',
-                            # MOOSE: Axis getters
-            font            => $self->axis->get('labelFont'),
-            fill            => $self->axis->get('labelColor'),
+            font            => $self->axis->labelFont,
+            fill            => $self->axis->labelColor,
             style           => 'normal',
-            pointsize       => $self->axis->get('labelFontSize'),
+            pointsize       => $self->axis->labelFontSize,
             x               => $x,
             y               => $y,
             halign          => $halign, 
