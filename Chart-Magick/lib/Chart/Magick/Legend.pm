@@ -2,142 +2,42 @@ package Chart::Magick::Legend;
 
 use strict;
 use warnings;
+use Moose;
 
 use Carp;
 use List::Util qw{ max };
-use Class::InsideOut qw{ :std };
+use Moose::Util::TypeConstraints;
+use Chart::Magick::Types;
+#use Class::InsideOut qw{ :std };
 
 use Data::Dumper;
 
-use base qw{ Chart::Magick::Definition };
+#use base qw{ Chart::Magick::Definition };
 
-readonly items      => my %items;
-readonly precalc    => my %precalc;
-readonly axis       => my %axis;
+#readonly items      => my %items;
+has items => (
+    is          => 'rw',
+    isa         => 'ArrayRef',
+    default     => sub { [] },
+);
 
-#--------------------------------------------------------------------
+#readonly precalc    => my %precalc;
+has precalc => (
+    is          => 'rw',
+    isa         => 'HashRef',
+    default     => sub { {} },
+);
 
-=head1 Symbol definitions
-
-Each item in the legend has a symbol that corresponds to its representation in the chart. Eg. a line of a certain
-color with a marker.
-
-Each symbol is composed of different components and symbol definitions describe which components to use within a
-symbol. Such a definition is a hashref containing one or more of the following keys and values:
-
-=over 4
-
-=item block
-
-Adds a colored rectangle to the symbol. This is mainly used for charts that consist of areas rather than lines or
-points, such as bar charts. The value must be an instanciated Chart::Magick::Color object.
-
-=item line 
-
-Adds a line to the symbol. Used in eg. line charts. Value must be an instanciated Chart::Magick::Color object.
-
-=item marker
-
-Adds a marker to the symbol. Value must be an instanciated Chart::Magick::Marker object.
-
-=back
-
-=head3 Examples
-
-A legend item with only a line has the following definition
-
-    {
-        line    => $color,
-    }
-
-whereas a line with markers is defined as
-
-    {
-        line    => $color,
-        marker  => $marker,
-    }
-
-The variables $color and $marker are instanciated Chart::Magick::Color and ::Marker objects respectively.
-
-=head1 Methods
-
-The following methods are available from this class:
-
-=cut
+#readonly axis       => my %axis;
+has axis => (
+    is          => 'rw',
+    isa         => 'Chart::Magick::Axis',
+    required    => 1,
+);
 
 #--------------------------------------------------------------------
 
-=head2 addItem ( symbolType, label, color, marker )
-
-Adds an item to the legend.
-
-=head3 label
-
-The text label of this item.
-
-=head3 symbol
-
-The symbol definition for this item. See the Symbol definitions section above.
-
-=cut
-
-sub addItem {
-    my $self    = shift;
-    my $label   = shift;
-    my $symbol  = shift;
-
-    push @{ $items{ id $self } }, {
-        symbol  => $symbol,
-        label   => $label,
-    };
-}
-
-#--------------------------------------------------------------------
-
-=head2 getRequiredMargins ( );
-
-Returns an array containing the required margins that should be set in order for the legend not to overlap
-anything. The returned margins are based on the location of the legend and its orientatation.
-
-The array that is returned holds the required margins in the following order:
-
-    ( left, right, top, bottom )
-
-=cut
-
-sub getRequiredMargins {
-    my $self    = shift;
-
-    my @margins = ( 0, 0, 0, 0 );
-
-    return @margins unless @{ $self->items };
-
-    my $pos     = $self->get('position');
-    my $width   = $self->precalc->{ width   };
-    my $height  = $self->precalc->{ height  };
-
-    if ( $pos =~ m{ left }ix && !$self->isHorizontal ) {
-        $margins[0] = $width;
-    }
-
-    if ( $pos =~ m{ right }ix && !$self->isHorizontal ) {
-        $margins[1] = $width;
-    }
-
-    if ( $pos =~ m{ top }ix && $self->isHorizontal ) {
-        $margins[2] = $height;
-    }
-
-    if ( $pos =~ m{ bottom }ix && $self->isHorizontal ) {
-        $margins[3] = $height;
-    }
-
-    return @margins;
-}
-
-#--------------------------------------------------------------------
-
-=head2 definition ( )
+=head1 PRPOERTIES
 
 The following properties are settable:
 
@@ -229,28 +129,197 @@ The height of the symbols in pixels.
 
 =cut 
 
-sub definition {
-    my $self = shift;
+has position => (
+	is		=> 'rw',
+    isa     => 'LegendPosition',
+	default => 'top right',
+);
+has orientation => (
+	is		=> 'rw',
+    isa     => enum([ qw{ horizontal vertical auto } ]),
+	default => 'auto',
+);
+has drawBorder => (
+	is		=> 'rw',
+    isa     => 'Bool',
+	default => 1,
+);
+has backgroundColor => (
+	is		=> 'rw',
+    isa     => 'MagickColor',
+	default => 'white',
+);
+has borderColor => (
+	is		=> 'rw',
+    isa     => 'MagickColor',
+	default => 'black',
+);
+has margin => (
+	is		=> 'rw',
+	default => 10,
+);
+has padding => (
+	is		=> 'rw',
+	default => 10,
+);
+has spacing => (
+	is		=> 'rw',
+	default => 10,
+);
+has labelSpacing => (
+	is		=> 'rw',
+	default => 5,
+);
+has legendFont => (
+	is		=> 'rw',
+    isa     => 'MagickFont',
+    lazy    => 1,
+	default => sub { $_[0]->axis->labelFont },
+);
+has legendFontSize => (
+	is		=> 'rw',
+    lazy    => 1,
+	default => sub { $_[0]->axis->labelFontSize },
+);
+has legendColor => (
+	is		=> 'rw',
+    isa     => 'MagickColor',
+    lazy    => 1,
+	default => sub { $_[0]->axis->labelColor },
+);
+has symbolWidth => (
+	is		=> 'rw',
+	default => 20,
+);
+has symbolHeight => (
+	is		=> 'rw',
+	default => 10,
+);
 
-    my %definition = (
-        position        => 'top right',
-        orientation     => 'auto',
-        drawBorder      => 1,
-        backgroundColor => 'white',
-        borderColor     => 'black',
-        margin          => 10,
-        padding         => 10,
-        spacing         => 10,
-        labelSpacing    => 5,
-        legendFont      => sub { $_[0]->axis->labelFont },
-        legendFontSize  => sub { $_[0]->axis->labelFontSize },
-        legendColor     => sub { $_[0]->axis->labelColor },
-        symbolWidth     => 20,
-        symbolHeight    => 10,
-    );
 
-    return { %definition };
+
+
+#--------------------------------------------------------------------
+
+=head1 Symbol definitions
+
+Each item in the legend has a symbol that corresponds to its representation in the chart. Eg. a line of a certain
+color with a marker.
+
+Each symbol is composed of different components and symbol definitions describe which components to use within a
+symbol. Such a definition is a hashref containing one or more of the following keys and values:
+
+=over 4
+
+=item block
+
+Adds a colored rectangle to the symbol. This is mainly used for charts that consist of areas rather than lines or
+points, such as bar charts. The value must be an instanciated Chart::Magick::Color object.
+
+=item line 
+
+Adds a line to the symbol. Used in eg. line charts. Value must be an instanciated Chart::Magick::Color object.
+
+=item marker
+
+Adds a marker to the symbol. Value must be an instanciated Chart::Magick::Marker object.
+
+=back
+
+=head3 Examples
+
+A legend item with only a line has the following definition
+
+    {
+        line    => $color,
+    }
+
+whereas a line with markers is defined as
+
+    {
+        line    => $color,
+        marker  => $marker,
+    }
+
+The variables $color and $marker are instanciated Chart::Magick::Color and ::Marker objects respectively.
+
+=head1 Methods
+
+The following methods are available from this class:
+
+=cut
+
+#--------------------------------------------------------------------
+
+=head2 addItem ( symbolType, label, color, marker )
+
+Adds an item to the legend.
+
+=head3 label
+
+The text label of this item.
+
+=head3 symbol
+
+The symbol definition for this item. See the Symbol definitions section above.
+
+=cut
+
+sub addItem {
+    my $self    = shift;
+    my $label   = shift;
+    my $symbol  = shift;
+
+#    push @{ $items{ id $self } }, {
+    push @{ $self->items }, {
+        symbol  => $symbol,
+        label   => $label,
+    };
 }
+
+#--------------------------------------------------------------------
+
+=head2 getRequiredMargins ( );
+
+Returns an array containing the required margins that should be set in order for the legend not to overlap
+anything. The returned margins are based on the location of the legend and its orientatation.
+
+The array that is returned holds the required margins in the following order:
+
+    ( left, right, top, bottom )
+
+=cut
+
+sub getRequiredMargins {
+    my $self    = shift;
+
+    my @margins = ( 0, 0, 0, 0 );
+
+    return @margins unless @{ $self->items };
+
+    my $pos     = $self->position;
+    my $width   = $self->precalc->{ width   };
+    my $height  = $self->precalc->{ height  };
+
+    if ( $pos =~ m{ left }ix && !$self->isHorizontal ) {
+        $margins[0] = $width;
+    }
+
+    if ( $pos =~ m{ right }ix && !$self->isHorizontal ) {
+        $margins[1] = $width;
+    }
+
+    if ( $pos =~ m{ top }ix && $self->isHorizontal ) {
+        $margins[2] = $height;
+    }
+
+    if ( $pos =~ m{ bottom }ix && $self->isHorizontal ) {
+        $margins[3] = $height;
+    }
+
+    return @margins;
+}
+
 
 #--------------------------------------------------------------------
 
@@ -264,7 +333,7 @@ sub getAnchor {
     my $self = shift;
 
     my $axis    = $self->axis;
-    my $pos     = $self->get('position');
+    my $pos     = $self->position;
 
     my $x =
           $pos =~ m{ left   }ix     ? 0
@@ -299,7 +368,7 @@ sub draw {
 
     $self->preprocess;
 
-    my $margin      = $self->get('margin');
+    my $margin      = $self->margin;
     my $width   = $self->precalc->{ width }  - 2 * $margin;
     my $height  = $self->precalc->{ height } - 2 * $margin;
 
@@ -314,34 +383,34 @@ sub draw {
         primitive   => 'Rectangle',
         points      => "$x1,$y1 $x2,$y2",
         strokeWidth => 1,
-        fill        => $self->get('backgroundColor'),
-        stroke      => $self->get('borderColor'),
+        fill        => $self->backgroundColor,
+        stroke      => $self->borderColor,
     );
 
     # Calc  offset of first item
-    $x1 += $self->get('padding');
-    $y1 += $self->get('padding') + $self->precalc->{ itemHeight } / 2;
+    $x1 += $self->padding;
+    $y1 += $self->padding + $self->precalc->{ itemHeight } / 2;
 
     foreach my $item ( @{ $self->items } ) {
         $self->drawSymbol( $x1, $y1, $item->{ symbol } );
 
         $self->im->text( 
             text        => $item->{ label },
-            x           => $x1 + $self->get('symbolWidth') + $self->get('labelSpacing'),
+            x           => $x1 + $self->symbolWidth + $self->labelSpacing,
             y           => $y1,
             halign      => 'left',
             valign      => 'center',
             align       => 'Left',
-            font        => $self->get('legendFont'),
-            pointsize   => $self->get('legendFontSize'),
-            color       => $self->get('legendColor'),
+            font        => $self->legendFont,
+            pointsize   => $self->legendFontSize,
+            color       => $self->legendColor,
         );
 
         if ( $self->isHorizontal ) {
-            $x1 += $self->precalc->{ itemWidth } + $self->get('spacing');
+            $x1 += $self->precalc->{ itemWidth } + $self->spacing;
         }
         else {
-            $y1 += $self->precalc->{ itemHeight } + $self->get('spacing');
+            $y1 += $self->precalc->{ itemHeight } + $self->spacing;
         }
     }
 
@@ -374,9 +443,9 @@ sub drawSymbol {
     my $symbol    = shift;
 
     my $x1      = $x;
-    my $y1      = int( $y - $self->get('symbolHeight') / 2 );
-    my $x2      = $x + $self->get('symbolWidth');
-    my $y2      = int( $y + $self->get('symbolHeight') / 2 );
+    my $y1      = int( $y - $self->symbolHeight / 2 );
+    my $x2      = $x + $self->symbolWidth;
+    my $y2      = int( $y + $self->symbolHeight / 2 );
 
     if ( exists $symbol->{ block } && $symbol->{ block } ) {
         $self->im->Draw(
@@ -412,45 +481,45 @@ Return a true value if the legend is being drawn horizontally. Returns false for
 sub isHorizontal {
     my $self = shift;
 
-    return 1 if $self->get('orientation') eq 'horizontal';
-    return 0 if $self->get('orientation') eq 'vertical';
+    return 1 if $self->orientation eq 'horizontal';
+    return 0 if $self->orientation eq 'vertical';
 
-    return $self->get('position') =~ m{ center }ix;
+    return $self->position =~ m{ center }ix;
 }
 
-#--------------------------------------------------------------------
-
-=head2 new ( axis, [ properties ] )
-
-Constructor.
-
-=head3 axis
-
-An instanciated Chart::Magick::Axis object on which the legend must be drawn.
-
-=head3 properties
-
-Optional hashref that containing values for the properties defined in the definition method.
-
-=cut
-
-sub new {
-    my $class       = shift;
-    my $axis        = shift || croak "No axis passed";
-    my $properties  = shift || {};
-    my $self        = bless {}, $class;
-
-    register $self;
-
-    my $id  = id $self;
-    $items{ $id     } = [];
-    $precalc{ $id   } = {};
-    $axis{ $id      } = $axis;
-
-    $self->initializeProperties( $properties );
-
-    return $self;
-}
+#####--------------------------------------------------------------------
+####
+####=head2 new ( axis, [ properties ] )
+####
+####Constructor.
+####
+####=head3 axis
+####
+####An instanciated Chart::Magick::Axis object on which the legend must be drawn.
+####
+####=head3 properties
+####
+####Optional hashref that containing values for the properties defined in the definition method.
+####
+####=cut
+####
+####sub new {
+####    my $class       = shift;
+####    my $axis        = shift || croak "No axis passed";
+####    my $properties  = shift || {};
+####    my $self        = bless {}, $class;
+####
+####    register $self;
+####
+####    my $id  = id $self;
+#####    $items{ $id     } = [];
+#####    $precalc{ $id   } = {};
+#####    $axis{ $id      } = $axis;
+####
+####    $self->initializeProperties( $properties );
+####
+####    return $self;
+####}
 
 #--------------------------------------------------------------------
 
@@ -466,20 +535,20 @@ sub preprocess {
     my @labelDimensions = map { [ 
         ( $self->im->QueryFontMetrics( 
             text        => $_->{ label },
-            font        => $self->get('legendFont'),
-            pointsize   => $self->get('legendFontSize'),
+            font        => $self->legendFont,
+            pointsize   => $self->legendFontSize,
         ) )[ 4, 5 ]
     ] } @{ $self->items };
 
     my $maxLabelWidth  = max( map { $_->[0] } @labelDimensions ) || 0;
     my $maxLabelHeight = max( map { $_->[1] } @labelDimensions ) || 0;
 
-    my $itemWidth   = $self->get('symbolWidth') + $self->get('labelSpacing') + $maxLabelWidth;
-    my $itemHeight  = max $self->get('symbolHeight'), $maxLabelHeight;
+    my $itemWidth   = $self->symbolWidth + $self->labelSpacing + $maxLabelWidth;
+    my $itemHeight  = max $self->symbolHeight, $maxLabelHeight;
 
-    my $spacing     = $self->get('spacing');
-    my $margin      = $self->get('margin');
-    my $padding     = $self->get('padding');
+    my $spacing     = $self->spacing;
+    my $margin      = $self->margin;
+    my $padding     = $self->padding;
     my $width       
         = $self->isHorizontal
             ? scalar( @{ $self->items } ) * ( $itemWidth + $spacing ) - $spacing

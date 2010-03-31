@@ -57,7 +57,7 @@ has axisLabels => (
 has legend => (
     is      => 'rw',
     isa     => 'Chart::Magick::Legend',
-    default => sub { Chart::Magick::Legend->new( shift ) },
+    default => sub { Chart::Magick::Legend->new( { axis => shift } ) },
 );
 
 # TODO: Turn this ro.

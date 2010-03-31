@@ -22,3 +22,23 @@ type 'MagickFont'
         . "path it is likely that your fonts.xml file is corrupt. "
     };
 
+sub _isProperPosition {
+    my @pos = split /\s+/, shift;
+
+    my @horiz   = grep { { left => 1, center => 1, right  => 1 }->{ $_ } } @pos;      
+    my @vert    = grep { { top  => 1, middle => 1, bottom => 1 }->{ $_ } } @pos;
+
+    return 
+          @horiz > 1 || @vert > 1 || @pos > 2           ? 0
+        : @pos == 2 && ( @horiz == 1 && @vert == 1 )    ? 1
+        : @pos == 1 && ( @horiz == 1 || @vert == 1 )    ? 1
+        :                                                 0
+        ;
+}
+subtype 'LegendPosition'
+    => as       'Str',
+    => where    { _isProperPosition( $_ ) },
+    => message  { 
+          "The legend position must consist of either 'left', 'center' or 'right' for horizontal "
+        . "postioning and 'top', 'middle', or 'bottom' for vertical positioning. "
+    };
