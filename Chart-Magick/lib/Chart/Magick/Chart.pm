@@ -540,7 +540,8 @@ sub setMarker {
 #    };
 #
 #    $markers{ id $self }->[ $index ] = $def;
-    $self->markers->[ $index ] = Chart::Magick::Marker->new( $marker, $size );
+#    $self->markers->[ $index ] = Chart::Magick::Marker->new( $marker, $size );
+    $self->markers->[ $index ] = Chart::Magick::Marker->new( { marker => $marker, size => $size } );
 
     return;
 }

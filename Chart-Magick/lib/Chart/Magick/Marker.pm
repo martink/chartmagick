@@ -2,19 +2,49 @@ package Chart::Magick::Marker;
 
 use strict;
 use warnings;
+use Moose;
 
-use Class::InsideOut qw{ :std };
+#use Class::InsideOut qw{ :std };
 use Carp;
 use List::Util qw{ max };
 use Scalar::Util qw{ blessed };
 use Chart::Magick::ImageMagick;
 
-readonly im         => my %im;
-readonly direct     => my %direct;
-readonly size       => my %size;
-readonly anchorX    => my %anchorX;
-readonly anchorY    => my %anchorY;
-readonly color      => my %color;
+has marker => (
+    is      => 'rw',
+);
+#readonly im         => my %im;
+has im => (
+    is      => 'rw',
+    isa     => 'Image::Magick',
+);
+#readonly direct     => my %direct;
+has vector => (
+    is          => 'rw',
+    isa         => 'HashRef',
+    predicate   => 'isVector',
+);
+#readonly size       => my %size;
+has size => (
+    is      => 'rw',
+    isa     => 'Int',
+    default => 6,
+);
+#readonly anchorX    => my %anchorX;
+has anchorX => (
+    is      => 'rw',
+    default => 0,
+);
+#readonly anchorY    => my %anchorY;
+has anchorY => (
+    is      => 'rw',
+    default => 0,
+);
+#readonly color      => my %color;
+has color => (
+    is      => 'rw',
+    isa     => 'Chart::Magick::Color',
+);
 
 =head1 NAME
 
@@ -132,32 +162,52 @@ TODO: Do we still need these?
 
 =cut
 
-sub new {
-    my $class   = shift;
-    my $marker  = shift || q{};
-    my $size    = shift || 6;
-    my $args    = shift || {};
-    
-    my $self    = bless {}, $class;
-    register $self;
+#sub new {
+#    my $class   = shift;
+#    my $marker  = shift || q{};
+#    my $size    = shift || 6;
+#    my $args    = shift || {};
+#    
+#    my $self    = bless {}, $class;
+#    register $self;
+#
+#    my $id = id $self;
+#
+#    $size{ $id }    = $size;
+#    $im{ $id }  = 
+#          ( $self->isDefaultMarker( $marker ) ) ? 
+#            $self->createMarkerFromDefault( $marker, $args->{ strokeColor }, $args->{ fillColor } )
+#
+#        : ( blessed( $marker ) && $marker->isa('Image::Magick') ) ? 
+#            $self->createMarkerFromIM( $marker )
+#
+#        : ( -e $marker ) ? 
+#            $self->createMarkerFromFile( $marker )
+#
+#        : croak "Chart::Magick::Marker->new requires either a predefined marker, an image file path or an Image::Magick object";
+#
+#    return $self;
+#}
 
-    my $id = id $self;
+sub BUILD {
+    my $self    = shift;
+    my $marker  = $self->marker;
 
-    $size{ $id }    = $size;
-    $im{ $id }  = 
-          ( $self->isDefaultMarker( $marker ) ) ? 
-            $self->createMarkerFromDefault( $marker, $args->{ strokeColor }, $args->{ fillColor } )
+    if ( $self->isDefaultMarker( $marker ) ) {
+        $self->createMarkerFromDefault( $marker );
+    }
+    elsif ( blessed( $marker ) && $marker->isa('Image::Magick') ) {
+        $self->createMarkerFromIM( $marker );
+    }
+    elsif ( -e $marker ) {
+        $self->createMarkerFromFile( $marker )
+    }
+    else {
+        croak "Chart::Magick::Marker->new requires either a predefined marker, an image file path or an Image::Magick object";
+    }
 
-        : ( blessed( $marker ) && $marker->isa('Image::Magick') ) ? 
-            $self->createMarkerFromIM( $marker )
-
-        : ( -e $marker ) ? 
-            $self->createMarkerFromFile( $marker )
-
-        : croak "Chart::Magick::Marker->new requires either a predefined marker, an image file path or an Image::Magick object";
-
-    return $self;
-}
+    return;
+};
 
 #---------------------------------------------
 
@@ -191,13 +241,13 @@ sub draw {
     my $im      = shift;
     my $override= shift || {};
 
-    my $direct = $direct{ id $self };
-    if ($direct) {
+    if ( $self->isVector ) {
+        my %vector = %{ $self->vector };
         if ( $self->color ) {
-            $direct->{ stroke } = $self->color->getStrokeColor;
+            $vector{ stroke } = $self->color->getStrokeColor;
         }
         $im->Draw(
-            %$direct,
+            %vector,
             %$override,
             x   => $x,
             y   => $y,
@@ -233,10 +283,14 @@ sub createMarkerFromIM {
     my $im      = shift;
     my $id      = id $self;
 
-    $anchorX{ $id } = $im->get('width')  / 2;
-    $anchorY{ $id } = $im->get('height') / 2;
+##### TODO: gaat niet werken!
 
-    return $im;
+    $self->anchorX( $im->get('width')  / 2 );
+    $self->anchorY( $im->get('height') / 2 );
+
+    $self->im( $im );
+
+    return;
 }
 
 #---------------------------------------------
@@ -254,7 +308,7 @@ The file that should be used as marker.
 sub createMarkerFromFile {
     my $self        = shift;
     my $filename    = shift || croak 'getMarkerFromFile requires a filename.';
-    my $id          = id $self;
+#    my $id          = id $self;
 
     # open image
     my $im      = Chart::Magick::ImageMagick->new;
@@ -262,7 +316,7 @@ sub createMarkerFromFile {
     croak "getMarkerFromFile could not open file $filename because $error" if $error;
 
     # scale image
-    my $size = $size{ $id };
+    my $size = $self->size;
 
     if ( $size ) {
         my $maxDimension = max( $im->Get('width'), $im->get('height') );
@@ -274,10 +328,12 @@ sub createMarkerFromFile {
         );
     }
 
-    $anchorX{ $id } = $im->get('width')  / 2;
-    $anchorY{ $id } = $im->get('height') / 2;
+    $self->anchorX( $im->get('width')  / 2 );
+    $self->anchorY( $im->get('height') / 2 );
 
-    return $im;
+    $self->im( $im );
+
+    return;
 }
 
 #-------------------------------------------
@@ -314,37 +370,37 @@ sub createMarkerFromDefault {
     my $scale   = $self->size / $marker->{ size };
     my $path    = sprintf $marker->{ shape }, map { $_ * $scale } @{ $marker->{ points } };
 
-    $direct{ id $self }  = {
+    $self->vector( {
         primitive    => 'Path',
         stroke       => $strokeColor,
         strokewidth  => $strokeWidth,
         points       => $path,
         fill         => $fillColor,
         antialias    => 'true',
-    },
+    } );
 
     return;
 }    
 
-#-------------------------------------------
-
-=head2 setColor ( color )
-
-Sets the color to draw default markers with.
-
-=head3 color
-
-A Chart::Magick::Color object.
-
-=cut
-
-sub setColor {
-    my $self    = shift;
-    my $color   = shift;
-    $color{ id $self } = $color;
-
-    return $self;
-}
+##-------------------------------------------
+#
+#=head2 setColor ( color )
+#
+#Sets the color to draw default markers with.
+#
+#=head3 color
+#
+#A Chart::Magick::Color object.
+#
+#=cut
+#
+#sub setColor {
+#    my $self    = shift;
+#    my $color   = shift;
+#    $color{ id $self } = $color;
+#
+#    return $self;
+#}
 
 1;
 
