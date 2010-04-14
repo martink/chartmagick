@@ -2,8 +2,9 @@ package Chart::Magick::Data;
 
 use strict;
 use warnings;
+use Moose;
 
-use Class::InsideOut qw{ :std };
+####use Class::InsideOut qw{ :std };
 use Carp;
 use Data::Dumper;
 
@@ -11,19 +12,45 @@ use Data::Dumper;
 has data => (
     is      => 'rw',
     isa     => 'ArrayRef',
+    traits  => ['Array'],
     default => sub { [] },
+    handles => {
+        datasetCount    => 'count',
+    }
 );
 #readonly labels         => my %labels;
 has labels => (
     is      => 'rw',
     isa     => 'ArrayRef',
+    traits  => ['Array'],
     default => sub { [] },
+    handles => {
+        setLabel        => 'set',
+    },
 );
 #readonly coordDim       => my %coordDim;
-#readonly datasetCount   => my %datasetCount;
+has coordDim => (
+    is      => 'rw',
+    isa     => 'Int',
+);
+####readonly datasetCount   => my %datasetCount;
 #readonly datasetIndex   => my %datasetIndex;
+has datasetIndex => (
+    is      => 'rw',
+    default => 0,
+);
 #readonly datasetData    => my %datasetData;
+has datasetData => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+);
 #readonly globalData     => my %globalData;
+has globalData => (
+    is      => 'rw',
+    isa     => 'HashRef',
+    default => sub { {} },
+);
 
 =head1 NAME
 
@@ -43,48 +70,48 @@ The following methods are available from this class:
 
 #---------------------------------------------------------------
 
-=head2 new ( )
-
-Consructor.
-
-=cut 
-
-sub new {
-    my $class   = shift;
-    my $self    = {};
-
-    bless       $self, $class;
-    register    $self;
-
-    my $id = id $self;
-    $data{ $id          } = [];
-    $datasetCount{ $id  } = 0;
-    $coordDim{ $id      } = 0;
-    $datasetIndex{ $id  } = 0;
-    $datasetData{ $id   } = [];
-    $globalData{ $id    } = {};
-    $labels{ $id        } = [];
-
-    return $self;
-}
+####=head2 new ( )
+####
+####Consructor.
+####
+####=cut 
+####
+####sub new {
+####    my $class   = shift;
+####    my $self    = {};
+####
+####    bless       $self, $class;
+####    register    $self;
+####
+####    my $id = id $self;
+########    $data{ $id          } = [];
+########    $datasetCount{ $id  } = 0;
+########    $coordDim{ $id      } = 0;
+########    $datasetIndex{ $id  } = 0;
+########    $datasetData{ $id   } = [];
+########    $globalData{ $id    } = {};
+########    $labels{ $id        } = [];
+####
+####    return $self;
+####}
 
 #---------------------------------------------------------------
 
 =head2 addDataPoint ( coord, value, [ dataset ] )
 
-Adds a datapoint at C<coord> with value C<value> to dataset C<dataset>
+adds a datapoint at C<coord> with value C<value> to dataset C<dataset>
 
 =head3 coord
 
-The coordinate of the data. Pass as an array ref. If the coordinate is 1-dimensional you can also pass a scalar.
+the coordinate of the data. Pass as an array ref. If the coordinate is 1-dimensional you can also pass a scalar.
 
 =head3 value 
 
-The value that belong to the coordinate
+the value that belong to the coordinate
 
 =head3 dataset
 
-The index of the dataset the data point should be added to. If omitted the current dataset will be used.
+the index of the dataset the data point should be added to. If omitted the current dataset will be used.
 
 =cut
 
@@ -94,9 +121,9 @@ sub addDataPoint {
     my $value   = shift;
     my $dataset = shift || $self->datasetIndex;
     
-    if ($self->datasetCount == 0) {
-        $datasetCount{ id $self } = 1;
-    }
+####    if ($self->datasetCount == 0) {
+####        $datasetCount{ id $self } = 1;
+####    }
     # Wrap singular coordinates into an array ref.
     unless ( ref $coords eq 'ARRAY' ) {
         $coords = [ $coords ];
@@ -105,11 +132,12 @@ sub addDataPoint {
         $value  = [ $value  ];
     }
 
-    croak "Cannot add data with " . @$coords ." dimensional coords to a dataset with ". $coordDim{ id $self }. " dimensional coords." 
+    croak "Cannot add data with " . @$coords ." dimensional coords to a dataset with ". $self->coordDim. " dimensional coords." 
         unless $self->checkCoords( $coords );
 
     # Goto the location of the coords in the data hashref
-    my $data = $data{ id $self };
+#    my $data = $data{ id $self };
+    my $data = $self->data;
 
     my $key = join '_', @{ $coords };
 ##########    $data->[ $dataset  ]->{ $key }->{ value } = $value;
@@ -125,16 +153,16 @@ sub addDataPoint {
 
 =head2 addDataset ( coords values )
 
-Adds a dataset. Multidimensional coords are always array refs, one dimensional coords may be either scalrs of array
+adds a dataset. Multidimensional coords are always array refs, one dimensional coords may be either scalrs of array
 refs with one element. The same goes for values.
 
 =head3 coords
 
-Array ref of coords.
+array ref of coords.
 
 =head3 values
 
-Array ref of values.
+array ref of values.
 
 =cut
 
@@ -147,14 +175,15 @@ sub addDataset {
     croak "Number of coordinates and values doesn't match" unless scalar @{ $coords } eq scalar @{ $values };
 
     # $datsetIndex starts at 0 for the first dataset.
-    my $datasetIndex = $datasetCount{ id $self }++;
+    my $datasetIndex = $self->datasetCount; ####$datasetCount{ id $self }++;
 
     for my $index ( 0 .. scalar @{ $coords } - 1 ) {
         $self->addDataPoint( $coords->[ $index ], $values->[ $index ], $datasetIndex );
     }
 
     # Set dataset name
-    $labels{ id $self }->[ $datasetIndex ] = $label if $label;
+    $self->setLabel( $datasetIndex, $label ) if $label;
+####    $labels{ id $self }->[ $datasetIndex ] = $label if $label;
 
     return;
 }
@@ -163,14 +192,14 @@ sub addDataset {
 
 =head2 checkCoords ( coord )
 
-Checks whether the passed coord is compatible with the other coords in the data object. The required dimension is
+checks whether the passed coord is compatible with the other coords in the data object. The required dimension is
 set by the first coord passed to this method.
 
-Note: coords (even one dimensional) must be array refs.
+note: coords (even one dimensional) must be array refs.
 
 =head3 coord
 
-The coord you want to check.
+the coord you want to check.
 
 =cut
 
@@ -183,7 +212,7 @@ sub checkCoords {
         return 0;
     }
     
-    $coordDim{ id $self } = scalar @{ $coords };
+    $self->coordDim( scalar @{ $coords } );
 
     return 1;
 }
@@ -192,9 +221,9 @@ sub checkCoords {
 
 =head2 dumpData ( )
 
-Debug method. Dumps the raw data in the object and the statistics both per dataset and global.
+debug method. Dumps the raw data in the object and the statistics both per dataset and global.
 
-Requires Data::Dumper to be installed.
+requires Data::Dumper to be installed.
 
 =cut
 
@@ -206,34 +235,35 @@ sub dumpData {
 
     return 
          "\n------------- DATA --------------------------\n"
-        . Dumper( $data{ id $self } )
+        . Dumper( $self->data )
         ."\n------------- PERDATASET --------------------\n"
-        . Dumper( $datasetData{ id $self } )
+        . Dumper( $self->datasetData )
         ."\n------------- GLOBAL ------------------------\n"
-        . Dumper( $globalData{ id $self } );
+        . Dumper( $self->globalData );
 }
 
 #---------------------------------------------------------------
 
 =head2 memUsage ( )
 
-Debug method. Returns memory usage stats for this object. Note that data is aquired by Devel::Sizev::total_size and
+debug method. Returns memory usage stats for this object. Note that data is aquired by Devel::Sizev::total_size and
 thus these numbers are not the total amount of used memory. Please read the documentation of Devel::Size for more
 information.
 
-Requires Devel::Size
+requires Devel::Size
 
 =cut
 
 sub memUsage {
+    my $self = shift;
     my $ok = eval { require Devel::Size; Devel::Size->import( 'total_size' ); 1 };
     return "Cannot display mem usage since require Devel::Size failed.\nError message:\n $@\n" if !$ok || $@;
 
     return 
          "\n------------- MEMORY USAGE ------------------\n"
-        . "Data set     : " . total_size( \%data )       . " bytes\n"
-        . "Global stats : " . total_size( \%globalData ) . " bytes\n"
-        . "DS stats     : " . total_size( \%datasetData ). " bytes\n";
+        . "Data set     : " . total_size( $self->data )       . " bytes\n"
+        . "Global stats : " . total_size( $self->globalData ) . " bytes\n"
+        . "DS stats     : " . total_size( $self->datasetData ). " bytes\n";
 
 }
 #---------------------------------------------------------------
@@ -254,7 +284,7 @@ sub getCoords {
     my $self    = shift;
     my $dataset = shift;
 
-    my $data    = $data{ id $self };
+    my $data    = $self->data;
 
     my $coords  = defined $dataset 
                 ? $data->[ $dataset ]
@@ -290,7 +320,8 @@ sub getDataPoint {
     my $self    = shift;
     my $coords  = shift;
     my $dataset = shift || $self->datasetIndex;
-    my $data    = $data{ id $self }->[ $dataset ];
+    #### TODO: getDataset
+    my $data    = $self->data->[ $dataset ];
 
     $coords = [ $coords ] if ( ref $coords ne 'ARRAY' );
 
@@ -326,12 +357,12 @@ sub updateStats {
     my $coords      = shift;
     my $value       = shift;
     my $dataset     = shift;
-    my $id          = id $self;
+#    my $id          = id $self;
 
     # process value
 #    for my $data ( $destination, $datasetData{ $id }->[ $dataset ], $globalData{ $id } ) {
      # Update stats per dataset and globally.
-     for my $data ( $datasetData{ $id }->[ $dataset ], $globalData{ $id } ) {
+     for my $data ( $self->datasetData->[ $dataset ], $self->globalData ) {
         # process value
         my $i = 0;
         foreach ( @{ $value } ) {
