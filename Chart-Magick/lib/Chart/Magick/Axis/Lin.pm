@@ -892,6 +892,14 @@ sub preprocessData {
         $self->set( xTicks => $self->generateTicks( $minX, $maxX, $self->get( 'xTickWidth' ) ) );
     }
 
+    no strict 'refs';
+    my $xppu = $self->plotOption('xPxPerUnit');
+    *{ __PACKAGE__ . '::getPxPerXUnit' } = sub { return $xppu };
+
+    my $yppu = $self->plotOption('yPxPerUnit');
+    *{ __PACKAGE__ . '::getPxPerYUnit' } = sub { return $yppu };
+    use strict 'refs';
+
     $self->plotOption( 
         yChartStop  => $maxY + $self->plotOption('yTickOffset'),
         yChartStart => $minY - $self->plotOption('yTickOffset'),
@@ -914,6 +922,17 @@ sub preprocessData {
         - $self->plotOption('yTickOffset') * $self->getPxPerYUnit
         + $self->transformY( $self->get('yStart') ) * $self->getPxPerYUnit
     );
+
+    no strict 'refs';
+    my $xpo = $self->plotOption( 'xPxOffset' );
+    *{ __PACKAGE__ . "::toPxX" } = sub {
+        return int( $xpo + $_[0]->transformX( $_[1] ) * $xppu );
+    };
+    my $ypo = $self->plotOption( 'yPxOffset' );
+    *{ __PACKAGE__ . "::toPxX" } = sub {
+        return int( $ypo - $_[0]->transformY( $_[1] ) * $yppu );
+    };
+    use strict 'refs';
 
     return;
 }
