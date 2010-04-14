@@ -2,9 +2,10 @@ package Chart::Magick::Color;
 
 use strict;
 use warnings;
+use Moose;
 
 #use Color::Calc;
-use Class::InsideOut qw{ :std };
+#use Class::InsideOut qw{ :std };
 
 sub _checkTriplet {
     my $triplet = shift;
@@ -30,10 +31,27 @@ sub _checkAlpha {
     return 'ff';
 }
 
-public  strokeTriplet   => my %strokeTriplet;
-public  strokeAlpha     => my %strokeAlpha;
-public  fillTriplet     => my %fillTriplet;
-public  fillAlpha       => my %fillAlpha;
+# TODO: Create subtypes for these attributes.
+#public  strokeTriplet   => my %strokeTriplet;
+has strokeTriplet => (
+    is      => 'rw',
+    default => '000000',
+);
+#public  strokeAlpha     => my %strokeAlpha;
+has strokeAlpha => (
+    is      => 'rw',
+    default => 'ff',
+);
+#public  fillTriplet     => my %fillTriplet;
+has fillTriplet => (
+    is      => 'rw',
+    default => '000000',
+);
+#public  fillAlpha       => my %fillAlpha;
+has fillAlpha   => (
+    is      => 'rw',
+    default => 'ff',
+);
 
 =head1 NAME
 
@@ -151,57 +169,57 @@ sub getStrokeColor {
 	return '#' . $self->strokeTriplet . $self->strokeAlpha;
 }
 
-#-------------------------------------------------------------------
-
-=head2 new ( properties )
-
-Constructor for this class.
-
-=head3 properties
-
-A hashref containing configuration options to set this object to. All are also
-available through methods.
-
-=head4 fillTriplet
-
-The RGB triplet for the fill color. See setFillTriplet.
-
-=head4 fillAlpha
-
-The alpha value for the fill color. See setFillAlpha.
-
-=head4 strokeTriplet
-
-The RGB triplet for the stroke color. See setStrokeTriplet.
-
-=head4 strokeAlpha
-
-The alpha value for the stroke color. See setStrokeAlpha.
-
-=cut
-
-sub new {
-	my $class       = shift;
-	my $properties  = shift || {};
-    my $self        = {};
-
-    bless    $self, $class;
-    register $self;
-
-    my $id = id $self;
-
-#	$fillTriplet{ $id }     => $properties->{ fillTriplet   } || '#000000';
-#	$fillAlpha{ $id }       => $properties->{ fillAlpha     } || '00';
-#	$strokeTriplet{ $id }   => $properties->{ strokeTriplet } || '#000000';
-#	$strokeAlpha{ $id }     => $properties->{ strokeAlpha   } || '00';
-
-	$self->fillTriplet(   _checkTriplet( $properties->{ fillTriplet   } ) );# || '000000'  );
-	$self->fillAlpha(     _checkAlpha(   $properties->{ fillAlpha     } ) );# || 'ff'      );
-	$self->strokeTriplet( _checkTriplet( $properties->{ strokeTriplet } ) );# || '000000'  );
-	$self->strokeAlpha(   _checkAlpha(   $properties->{ strokeAlpha   } ) );# || 'ff'      );
-		
-    return $self;
-}
+##-------------------------------------------------------------------
+#
+#=head2 new ( properties )
+#
+#Constructor for this class.
+#
+#=head3 properties
+#
+#A hashref containing configuration options to set this object to. All are also
+#available through methods.
+#
+#=head4 fillTriplet
+#
+#The RGB triplet for the fill color. See setFillTriplet.
+#
+#=head4 fillAlpha
+#
+#The alpha value for the fill color. See setFillAlpha.
+#
+#=head4 strokeTriplet
+#
+#The RGB triplet for the stroke color. See setStrokeTriplet.
+#
+#=head4 strokeAlpha
+#
+#The alpha value for the stroke color. See setStrokeAlpha.
+#
+#=cut
+#
+#sub new {
+#	my $class       = shift;
+#	my $properties  = shift || {};
+#    my $self        = {};
+#
+#    bless    $self, $class;
+#    register $self;
+#
+#    my $id = id $self;
+#
+##	$fillTriplet{ $id }     => $properties->{ fillTriplet   } || '#000000';
+##	$fillAlpha{ $id }       => $properties->{ fillAlpha     } || '00';
+##	$strokeTriplet{ $id }   => $properties->{ strokeTriplet } || '#000000';
+##	$strokeAlpha{ $id }     => $properties->{ strokeAlpha   } || '00';
+#
+#	$self->fillTriplet(   _checkTriplet( $properties->{ fillTriplet   } ) );# || '000000'  );
+#	$self->fillAlpha(     _checkAlpha(   $properties->{ fillAlpha     } ) );# || 'ff'      );
+#	$self->strokeTriplet( _checkTriplet( $properties->{ strokeTriplet } ) );# || '000000'  );
+#	$self->strokeAlpha(   _checkAlpha(   $properties->{ strokeAlpha   } ) );# || 'ff'      );
+#		
+#    return $self;
+#}
 
 #sub setFillColor {
 #	my $self = shift;
