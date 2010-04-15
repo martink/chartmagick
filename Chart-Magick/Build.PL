@@ -8,8 +8,9 @@ my $builder = Module::Build->new(
     dist_author         => 'Martin Kamerbeek <martin@oqapi.nl>',
     dist_version_from   => 'lib/Chart/Magick.pm',
     requires            => {
-        'Image::Magick'     => 0,
-        'Class::InsideOut'  => '1.09',
+        'Image::Magick'             => 0,
+        'Class::InsideOut'          => '1.09',
+        'MooseX::SlaveAttribute'    => 0
     },
     build_requires      => {
         'Test::More'        => 0,

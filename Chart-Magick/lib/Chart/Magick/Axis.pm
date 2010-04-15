@@ -10,7 +10,6 @@ use Data::Dumper;
 use Text::Wrap;
 use Chart::Magick::Legend;
 use Moose;
-use MooseX::SlaveAttribute;
 
 use constant pi => 3.14159265358979;
 
