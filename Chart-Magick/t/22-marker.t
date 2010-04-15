@@ -42,25 +42,25 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
     eval { $marker = Chart::Magick::Marker->new };
     ok( $@, 'new dies when no markername is passed' );
 
-    eval { $marker = Chart::Magick::Marker->new( 'wrong_marker' ) };
+    eval { $marker = Chart::Magick::Marker->new( marker => 'wrong_marker' ) };
     ok( $@, 'new dies when a non-existant marker is passed' );
 
     # default markers
-    eval { $marker = Chart::Magick::Marker->new( $VALID_DEFAULT ); };
+    eval { $marker = Chart::Magick::Marker->new( marker => $VALID_DEFAULT ); };
     ok( !$@, 'new accepts default markers' );
     isa_ok( $marker, 'Chart::Magick::Marker', 'new invoked with a default returns the correct object' );
 
     # image magick objects
     my $magick = Image::Magick->new( size => '1x1' );
     $magick->Read('xc:white');
-    eval { $marker = Chart::Magick::Marker->new( $magick ); };
+    eval { $marker = Chart::Magick::Marker->new( marker => $magick ); };
     ok( !$@, 'new accepts image magick objects' );
     isa_ok( $marker, 'Chart::Magick::Marker', 'new invoked with an Image::Magick object returns the correct object' );
 
     # file objects
     SKIP: {
         skip( q{'.' must be an existing file for these tests}, 2 ) unless -e 'bestanie';
-        eval { $marker = Chart::Magick::Marker->new( '.' ); };
+        eval { $marker = Chart::Magick::Marker->new( marker => '.' ); };
         ok( !$@, 'new accepts image file names' );
         isa_ok( $marker, 'Chart::Magick::Marker', 'new invoked with a filename returns the correct object' );
     }
@@ -81,7 +81,7 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
     local *Image::Magick::Composite = sub { $im = shift; %args = @_; $comp_called = 'called' }; 
 
     my $axis    = Chart::Magick::Axis->new;
-    my $marker  = Chart::Magick::Marker->new( $VALID_DEFAULT, 5, $axis );
+    my $marker  = Chart::Magick::Marker->new( marker => $VALID_DEFAULT, size => 5, axis => $axis );
     my $canvas  = Image::Magick->new(size => "100x100");
     $canvas->Read('xc:white');
 
@@ -107,7 +107,7 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
 
     my $image   = Image::Magick->new(size => "10x10");
     $image->Read('xc:white');
-    $marker     = Chart::Magick::Marker->new( $image, 5, $axis );
+    $marker     = Chart::Magick::Marker->new( marker => $image, size => 5, axis => $axis );
 
     $marker->draw( 1, 2, $canvas );
     is( $comp_called,   'called',   'draw uses compositing to draw image markers' );
@@ -131,13 +131,13 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
 #
 #####################################################################
 {
-    my $marker = Chart::Magick::Marker->new( $VALID_DEFAULT );
+    my $marker = Chart::Magick::Marker->new( marker => $VALID_DEFAULT );
 
     my $newMarker = Image::Magick->new( size => '1x1' );
     $newMarker->Read('xc:white');
     my $generatedMarker = $marker->createMarkerFromIM( $newMarker );
 
-    is( $generatedMarker, $newMarker, 'createMarkerFromIM returns the IM object that is passed to it' );
+    is( $marker->im, $newMarker, 'createMarkerFromIM sets the im attribute to the object that is passed to it' );
 }
 
 #####################################################################
@@ -146,13 +146,13 @@ my ($VALID_DEFAULT) = keys %Chart::Magick::Marker::DEFAULT_MARKERS;
 #
 #####################################################################
 {
-    my $marker  = Chart::Magick::Marker->new( $VALID_DEFAULT );
+    my $marker  = Chart::Magick::Marker->new( marker => $VALID_DEFAULT );
     my $im      = $marker->im;
     my $new     = $marker->createMarkerFromDefault( $VALID_DEFAULT, '#123456', '#987654' );
     
-    is( $marker->direct->{ stroke }, '#123456', 'createMarkerFormDefault correctly applies stroke color' );
-    is( $marker->direct->{ fill   }, '#987654', 'createMarkerFormDefault correctly applies fill color' );
-    is( $marker->direct->{ primitive }, 'Path', 'createMarkerFormDefault uses SVG Path definitions to draw' );
+    is( $marker->vector->{ stroke }, '#123456', 'createMarkerFormDefault correctly applies stroke color' );
+    is( $marker->vector->{ fill   }, '#987654', 'createMarkerFormDefault correctly applies fill color' );
+    is( $marker->vector->{ primitive }, 'Path', 'createMarkerFormDefault uses SVG Path definitions to draw' );
     # TODO: potentially check strokewidth, and somehow path.
 }
 
