@@ -36,7 +36,7 @@ BEGIN {
 {
     my $axis = Chart::Magick::Axis->new( { width => 1234, height => 4321 } );
 
-    my $ok = $axis->get('width') == 1234 && $axis->get('height') == 4321;
+    my $ok = $axis->width == 1234 && $axis->height == 4321;
     ok( $ok, 'new accepts values for properties' );
 }
 
