@@ -153,51 +153,51 @@ my $col5 = Chart::Magick::Color->new( { fillTriplet => '000005' } );
     ok( $colorsOk, 'addColor does not change the other colors in the palette.' );
 }
 
+######################################################################
+##
+## getColorIndex
+##
+######################################################################
+#{
+#    my $palette = Chart::Magick::Palette->new( [ $col1, $col2, $col3, $col4 ] );
+#
+#    # Lookup out of order to be sure that query order does not influence the result.
+#    my $indexOk = 
+#        $palette->getColorIndex( $col1 ) == 0
+#        && $palette->getColorIndex( $col3 ) == 2
+#        && $palette->getColorIndex( $col2 ) == 1
+#        && $palette->getColorIndex( $col4 ) == 3;
+#
+#    ok( $indexOk, 'getColorIndex returns the correct index for each color' );
+#    ok( !defined $palette->getColorIndex( $col5 ), 'getColorIndex returns undef for colors not in the palette' );
+#}
+
 #####################################################################
 #
-# getColorIndex
-#
-#####################################################################
-{
-    my $palette = Chart::Magick::Palette->new( [ $col1, $col2, $col3, $col4 ] );
-
-    # Lookup out of order to be sure that query order does not influence the result.
-    my $indexOk = 
-        $palette->getColorIndex( $col1 ) == 0
-        && $palette->getColorIndex( $col3 ) == 2
-        && $palette->getColorIndex( $col2 ) == 1
-        && $palette->getColorIndex( $col4 ) == 3;
-
-    ok( $indexOk, 'getColorIndex returns the correct index for each color' );
-    ok( !defined $palette->getColorIndex( $col5 ), 'getColorIndex returns undef for colors not in the palette' );
-}
-
-#####################################################################
-#
-# getColorsInPalette
+# getColors
 #
 #####################################################################
 {
     my $palette = Chart::Magick::Palette->new( [ $col1, $col2, $col3 ] );    
-    my $colors  = $palette->getColorsInPalette;
+    my @colors  = $palette->getColors;
 
-    is( ref $colors, 'ARRAY', 'getColorsInPalette returns array ref' );
+#    is( ref $colors, 'ARRAY', 'getColors returns array ref' );
     
     my $expect = [ $col1, $col2, $col3 ];
     cmp_deeply(
-        $colors,
+        \@colors,
         $expect,
-        'getColorsInPalette returns correct colors',
+        'getColors returns correct colors',
     );
 
-    # Try to change a color via the array ref...
-    $colors->[1] = $col4;
-
-    cmp_deeply(
-        $palette->getColorsInPalette,
-        $expect,
-        'getColorsInPalette returns a safe copy of the internal color array',
-    );
+#    # Try to change a color via the array ref...
+#    $colors[1] = $col4;
+#
+#    cmp_deeply(
+#        [ $palette->getColors ],
+#        $expect,
+#        'getColorsInPalette returns a safe copy of the internal color array',
+#    );
 }
 
 #####################################################################
@@ -257,8 +257,8 @@ my $col5 = Chart::Magick::Color->new( { fillTriplet => '000005' } );
     my $palette = Chart::Magick::Palette->new( [ $col1, $col2, $col3, $col4, $col5 ] );
 
     $palette->removeColor( 2 );
-    my $colors = $palette->getColorsInPalette;
-    my $expect = [ $col1, $col2, $col4, $col5 ];
+    my $colors = [ $palette->getColors          ];
+    my $expect = [ $col1, $col2, $col4, $col5   ];
     cmp_deeply(
         [ map { refaddr $_ } @$colors    ],
         [ map { refaddr $_ } @$expect   ],
@@ -267,30 +267,30 @@ my $col5 = Chart::Magick::Color->new( { fillTriplet => '000005' } );
     
     # array is now [ 1 2 4 5 ];
     $palette->removeColor;
-    $colors = $palette->getColorsInPalette;
-    $expect = [ $col1, $col2, $col4, $col5 ];
+    $colors = [ $palette->getColors         ];
+    $expect = [ $col1, $col2, $col4, $col5  ];
     cmp_deeply(
-        [ map { refaddr $_ } @$colors    ],
+        [ map { refaddr $_ } @$colors   ],
         [ map { refaddr $_ } @$expect   ],
         'removeColor without index removes no color',
     );
 
     # array is still [ 1 2 4 5 ];
     $palette->removeColor( 4 );
-    $colors = $palette->getColorsInPalette;
-    $expect = [ $col1, $col2, $col4, $col5 ];
+    $colors = [ $palette->getColors         ];
+    $expect = [ $col1, $col2, $col4, $col5  ];
     cmp_deeply(
-        [ map { refaddr $_ } @$colors    ],
+        [ map { refaddr $_ } @$colors   ],
         [ map { refaddr $_ } @$expect   ],
         'removeColor with out of ranges index removes no color',
     );
 
     # array is still [ 1 2 4 5 ];
     $palette->removeColor( -1 );
-    $colors = $palette->getColorsInPalette;
-    $expect = [ $col1, $col2, $col4, $col5 ];
+    $colors = [ $palette->getColors         ];
+    $expect = [ $col1, $col2, $col4, $col5  ];
     cmp_deeply(
-        [ map { refaddr $_ } @$colors    ],
+        [ map { refaddr $_ } @$colors   ],
         [ map { refaddr $_ } @$expect   ],
         'removeColor with negative index removes no color',
     );
