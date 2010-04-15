@@ -15,10 +15,8 @@ my $axis    = Chart::Magick::Axis::Lin->new( {
     height  => 300
 } );
 
-$axis->legend->set( {
-    backgroundColor => 'none',
-    position        => 'bottom center',
-} );
+$axis->legend->backgroundColor( 'none' );
+$axis->legend->position( 'bottom center' );
 
 # Instanciate and setup Bar chart.
 my $bar     = Chart::Magick::Chart::Bar->new;
