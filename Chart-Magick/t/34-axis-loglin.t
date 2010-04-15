@@ -34,9 +34,7 @@ BEGIN {
 {
     my $axis = Chart::Magick::Axis::LogLin->new;
 
-    $axis->set(
-        xIncludeOrigin  => 1,
-    );
+    $axis->xIncludeOrigin( 1 );
 
     cmp_deeply(
         [ $axis->adjustXRange( 1, 2 ) ],
@@ -56,13 +54,11 @@ BEGIN {
     my $state;  
     local *Chart::Magick::Axis::Lin::draw = sub { 
         my $self = shift;
-        $state = $self->get('xExpandRange');
+        $state = $self->xExpandRange;
     };
 
     my $axis = Chart::Magick::Axis::LogLin->new;
-    $axis->set(
-        xExpandRange => 1,
-    );
+    $axis->xExpandRange( 1 );
 
     $axis->draw;
 

@@ -7,7 +7,7 @@ use Scalar::Util qw{ refaddr };
 
 use Chart::Magick::Axis::Lin;
 
-use Test::More tests => 52 + 1;
+use Test::More tests => 49 + 1;
 use Test::NoWarnings;
 use Test::Warn;
 BEGIN {
@@ -29,44 +29,14 @@ BEGIN {
 
 #####################################################################
 #
-# definition
-#
-#####################################################################
-{
-    my $axis = Chart::Magick::Axis::Log->new;
-   
-    my $def = $axis->definition;
-    is( ref $def, 'HASH', 'definition returns a hash ref' );
-
-    my $superDef    = Chart::Magick::Axis::Lin->new->definition;
-    cmp_deeply(
-        [ keys %{ $def } ],
-        superbagof( keys %{ $superDef }  ),
-        'definition includes all properties from super class' 
-    );
-
-    cmp_deeply(
-        $def,
-        superhashof( {
-            xExpandRange    => ignore(),
-            yExpandRange    => ignore(),
-        } ),
-        'definition adds the correct properties',
-    );
-}
-
-#####################################################################
-#
 # adjustXRangeToOrigin / adjustYRangeToOrigin
 #
 #####################################################################
 {
     my $axis = Chart::Magick::Axis::Log->new;
 
-    $axis->set(
-        xIncludeOrigin  => 1,
-        yIncludeOrigin  => 1,
-    );
+    $axis->xIncludeOrigin( 1 );
+    $axis->yIncludeOrigin( 1 );
 
     cmp_deeply(
         [ $axis->adjustXRange( 1, 2 ) ],
@@ -91,15 +61,13 @@ BEGIN {
     my $state = {}; 
     local *Chart::Magick::Axis::Lin::draw = sub { 
         my $self = shift;
-        $state->{ x } = $self->get('xExpandRange');
-        $state->{ y } = $self->get('yExpandRange');
+        $state->{ x } = $self->xExpandRange;
+        $state->{ y } = $self->yExpandRange;
     };
 
     my $axis = Chart::Magick::Axis::Log->new;
-    $axis->set(
-        xExpandRange => 1,
-        yExpandRange => 1,
-    );
+    $axis->xExpandRange( 1 );
+    $axis->yExpandRange( 1 );
 
     $axis->draw;
 
@@ -173,28 +141,32 @@ BEGIN {
     $chart->setDataRange( [ 0.3 ], [ 5 ], [ 0.5 ], [ 11 ] );
     $axis->addChart( $chart );
 
-    $axis->set( xExpandRange => 0, yExpandRange    => 0 );
+    $axis->xExpandRange( 0 );
+    $axis->yExpandRange( 0 );
     cmp_deeply(
         [ $axis->getDataRange ],
         [ [ 0.3 ], [ 5 ], [ 0.5 ], [ 11 ] ],
         'getDataRange returns correct result with no range expansion',
     );
 
-    $axis->set( xExpandRange => 1, yExpandRange    => 0 );
+    $axis->xExpandRange( 1 );
+    $axis->yExpandRange( 0 );
     cmp_deeply(
         [ $axis->getDataRange ],
         [ [ 0.1 ], [ 10 ], [ 0.5 ], [ 11 ] ],
         'getDataRange returns correct result with x range expansion',
     );
 
-    $axis->set( xExpandRange => 0, yExpandRange    => 1 );
+    $axis->xExpandRange( 0 );
+    $axis->yExpandRange( 1 );
     cmp_deeply(
         [ $axis->getDataRange ],
         [ [ 0.3 ], [ 5 ], [ 0.1 ], [ 100 ] ],
         'getDataRange returns correct result with y range expansion',
     );
 
-    $axis->set( xExpandRange => 1, yExpandRange    => 1 );
+    $axis->xExpandRange( 1 );
+    $axis->yExpandRange( 1 );
     cmp_deeply(
         [ $axis->getDataRange ],
         [ [ 0.1 ], [ 10 ], [ 0.1 ], [ 100 ] ],
@@ -214,21 +186,19 @@ BEGIN {
 
     local *Chart::Magick::Axis::Log::generateLogTicks = sub { return [ "__$_[1]", "__$_[2]" ] };
  
-    $axis->set(
-        xStart  => 'xStart',
-        xStop   => 'xStop',
-        yStart  => 'yStart',
-        yStop   => 'yStop',
-    );
+    $axis->xStart( 1 );
+    $axis->xStop( 2 );
+    $axis->yStart( 3 );
+    $axis->yStop( 4 );
 
     cmp_deeply(
         $axis->getXTicks,
-        [ '__xStart', '__xStop' ],
+        [ '__1', '__2' ],
         'getXTicks uses generateLogTicks with correct values to generate ticks',
     );
     cmp_deeply(
         $axis->getYTicks,
-        [ '__yStart', '__yStop' ],
+        [ '__3', '__4' ],
         'getYTicks uses generateLogTicks with correct values to generate ticks',
     );
 }   
@@ -260,7 +230,8 @@ BEGIN {
 {
     #TODO: Test carps!
     my $axis = Chart::Magick::Axis::Log->new;
-    $axis->set( xStart => 0.1, yStart => 0.01 );
+    $axis->xStart( 0.1 );
+    $axis->yStart( 0.01 );
 
     my $result;
 
@@ -279,7 +250,7 @@ BEGIN {
         'transformX carps for negative input';
     cmp_ok( $result, '==', -1, 'transformX transform xStart for negative input' );
 
-    $axis->set( xStart => 0 );
+    $axis->xStart( 0 );
     warning_is 
         { $result = $axis->transformX( 0  ) }
         { carped => 'Cannot transform x value 0 to a logarithmic scale. Using 0 instead!' },
@@ -306,7 +277,7 @@ BEGIN {
         'transformY carps for negative input';
     cmp_ok( $result, '==', -2, 'transformY transforms yStart for negative input' );
 
-    $axis->set( yStart => 0 );
+    $axis->yStart( 0 );
     warning_is 
         { $result = $axis->transformY( 0  ) }
         { carped => 'Cannot transform y value 0 to a logarithmic scale. Using 0 instead!' },
