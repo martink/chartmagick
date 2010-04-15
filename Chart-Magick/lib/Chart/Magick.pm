@@ -250,14 +250,9 @@ sub AUTOLOAD {
     }
 
     $axis->addChart( $chart );
-####    $axis->width(  $params{ width } );
-####    $axis->height( $params{ height } );
 
     # Apply settings to chart, axis and legend.
-####    $chart->set(        $params{ chart  } || {} );
-####    $axis->set(         $params{ axis   } || {} );
     $axis->legend( Chart::Magick::Legend->new({ %{ $params{ legend } || {} }, axis => $axis }) );
-#    $axis->legend->set( $params{ legend } || {} ); 
 
     # Add labels to axis.
     my @labels  = @{ $params{labels} || [] };
