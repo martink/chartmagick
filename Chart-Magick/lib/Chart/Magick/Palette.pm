@@ -16,7 +16,7 @@ has colors => (
         getColors           => 'elements',
         addColor            => 'push',
         getNumberOfColors   => 'count',
-        removeColor         => 'delete',
+#        removeColor         => 'delete',
 #        setColor            => 'set',
     },
 );
@@ -126,6 +126,36 @@ sub getPreviousColor {
 	$self->setPaletteIndex( $index - 1);
 
 	return $self->getColor;
+}
+
+#-------------------------------------------------------------------
+
+=head2 removeColor ( index )
+
+Removes color at index.
+
+=head3 index
+
+The index of the color you want to remove. If not given nothing will happen.
+
+=cut
+
+sub removeColor {
+	my $self    = shift;
+	my $index   = shift;
+
+    # Check index
+	return if !defined $index || $index < 0 || $index >= $self->getNumberOfColors;
+	
+    # Remove color from array
+	splice @{ $self->colors }, $index, 1;
+
+    # Adjust palette index if necessary.
+    if ( $self->getNumberOfColors <= $self->getPaletteIndex ) {
+        $self->setPaletteIndex( $self->getNumberOfColors - 1 );
+    }
+
+    return;
 }
 
 #-------------------------------------------------------------------
