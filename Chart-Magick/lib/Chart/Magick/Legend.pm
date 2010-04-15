@@ -8,27 +8,21 @@ use Carp;
 use List::Util qw{ max };
 use Moose::Util::TypeConstraints;
 use Chart::Magick::Types;
-#use Class::InsideOut qw{ :std };
 
 use Data::Dumper;
 
-#use base qw{ Chart::Magick::Definition };
-
-#readonly items      => my %items;
 has items => (
     is          => 'rw',
     isa         => 'ArrayRef',
     default     => sub { [] },
 );
 
-#readonly precalc    => my %precalc;
 has precalc => (
     is          => 'rw',
     isa         => 'HashRef',
     default     => sub { {} },
 );
 
-#readonly axis       => my %axis;
 has axis => (
     is          => 'rw',
     isa         => 'Chart::Magick::Axis',
@@ -486,40 +480,6 @@ sub isHorizontal {
 
     return $self->position =~ m{ center }ix;
 }
-
-#####--------------------------------------------------------------------
-####
-####=head2 new ( axis, [ properties ] )
-####
-####Constructor.
-####
-####=head3 axis
-####
-####An instanciated Chart::Magick::Axis object on which the legend must be drawn.
-####
-####=head3 properties
-####
-####Optional hashref that containing values for the properties defined in the definition method.
-####
-####=cut
-####
-####sub new {
-####    my $class       = shift;
-####    my $axis        = shift || croak "No axis passed";
-####    my $properties  = shift || {};
-####    my $self        = bless {}, $class;
-####
-####    register $self;
-####
-####    my $id  = id $self;
-#####    $items{ $id     } = [];
-#####    $precalc{ $id   } = {};
-#####    $axis{ $id      } = $axis;
-####
-####    $self->initializeProperties( $properties );
-####
-####    return $self;
-####}
 
 #--------------------------------------------------------------------
 

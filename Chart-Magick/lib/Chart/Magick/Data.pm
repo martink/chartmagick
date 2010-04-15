@@ -4,11 +4,9 @@ use strict;
 use warnings;
 use Moose;
 
-####use Class::InsideOut qw{ :std };
 use Carp;
 use Data::Dumper;
 
-#readonly data           => my %data;
 has data => (
     is      => 'rw',
     isa     => 'ArrayRef',
@@ -18,7 +16,7 @@ has data => (
         datasetCount    => 'count',
     }
 );
-#readonly labels         => my %labels;
+
 has labels => (
     is      => 'rw',
     isa     => 'ArrayRef',
@@ -28,24 +26,23 @@ has labels => (
         setLabel        => 'set',
     },
 );
-#readonly coordDim       => my %coordDim;
+
 has coordDim => (
     is      => 'rw',
     isa     => 'Int',
 );
-####readonly datasetCount   => my %datasetCount;
-#readonly datasetIndex   => my %datasetIndex;
+
 has datasetIndex => (
     is      => 'rw',
     default => 0,
 );
-#readonly datasetData    => my %datasetData;
+
 has datasetData => (
     is      => 'rw',
     isa     => 'ArrayRef',
     default => sub { [] },
 );
-#readonly globalData     => my %globalData;
+
 has globalData => (
     is      => 'rw',
     isa     => 'HashRef',
@@ -67,33 +64,6 @@ individual charting plugin to decide how to handle these coordinates and values.
 The following methods are available from this class:
 
 =cut
-
-#---------------------------------------------------------------
-
-####=head2 new ( )
-####
-####Consructor.
-####
-####=cut 
-####
-####sub new {
-####    my $class   = shift;
-####    my $self    = {};
-####
-####    bless       $self, $class;
-####    register    $self;
-####
-####    my $id = id $self;
-########    $data{ $id          } = [];
-########    $datasetCount{ $id  } = 0;
-########    $coordDim{ $id      } = 0;
-########    $datasetIndex{ $id  } = 0;
-########    $datasetData{ $id   } = [];
-########    $globalData{ $id    } = {};
-########    $labels{ $id        } = [];
-####
-####    return $self;
-####}
 
 #---------------------------------------------------------------
 
@@ -121,9 +91,6 @@ sub addDataPoint {
     my $value   = shift;
     my $dataset = shift || $self->datasetIndex;
     
-####    if ($self->datasetCount == 0) {
-####        $datasetCount{ id $self } = 1;
-####    }
     # Wrap singular coordinates into an array ref.
     unless ( ref $coords eq 'ARRAY' ) {
         $coords = [ $coords ];
@@ -136,7 +103,6 @@ sub addDataPoint {
         unless $self->checkCoords( $coords );
 
     # Goto the location of the coords in the data hashref
-#    my $data = $data{ id $self };
     my $data = $self->data;
 
     my $key = join '_', @{ $coords };
@@ -183,7 +149,6 @@ sub addDataset {
 
     # Set dataset name
     $self->setLabel( $datasetIndex, $label ) if $label;
-####    $labels{ id $self }->[ $datasetIndex ] = $label if $label;
 
     return;
 }
@@ -327,8 +292,6 @@ sub getDataPoint {
 
     my $key = join '_', @{ $coords };
     return exists $data->{ $key } ? $data->{ $key } : undef;
-##########
-#    return exists $data->{ $key } ? $data->{ $key }->{ value } : undef;
 }
 
 #---------------------------------------------------------------
@@ -353,14 +316,11 @@ The index of the dataset this datapoint belongs to.
 
 sub updateStats {
     my $self        = shift;
-#   my $destination = shift;
     my $coords      = shift;
     my $value       = shift;
     my $dataset     = shift;
-#    my $id          = id $self;
 
     # process value
-#    for my $data ( $destination, $datasetData{ $id }->[ $dataset ], $globalData{ $id } ) {
      # Update stats per dataset and globally.
      for my $data ( $self->datasetData->[ $dataset ], $self->globalData ) {
         # process value
@@ -375,9 +335,6 @@ sub updateStats {
 
             $i++;
         }
-
-        # Don't process coords for $desitination;
-#        next if $data eq $destination;
 
         $data->{ coordCount }++;
 

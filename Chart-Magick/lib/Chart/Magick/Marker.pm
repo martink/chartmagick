@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use Moose;
 
-#use Class::InsideOut qw{ :std };
 use Carp;
 use List::Util qw{ max };
 use Scalar::Util qw{ blessed };
@@ -13,34 +12,34 @@ use Chart::Magick::ImageMagick;
 has marker => (
     is      => 'rw',
 );
-#readonly im         => my %im;
+
 has im => (
     is      => 'rw',
     isa     => 'Image::Magick',
 );
-#readonly direct     => my %direct;
+
 has vector => (
     is          => 'rw',
     isa         => 'HashRef',
     predicate   => 'isVector',
 );
-#readonly size       => my %size;
+
 has size => (
     is      => 'rw',
     isa     => 'Int',
     default => 6,
 );
-#readonly anchorX    => my %anchorX;
+
 has anchorX => (
     is      => 'rw',
     default => 0,
 );
-#readonly anchorY    => my %anchorY;
+
 has anchorY => (
     is      => 'rw',
     default => 0,
 );
-#readonly color      => my %color;
+
 has color => (
     is      => 'rw',
     isa     => 'Chart::Magick::Color',
@@ -162,33 +161,6 @@ TODO: Do we still need these?
 
 =cut
 
-#sub new {
-#    my $class   = shift;
-#    my $marker  = shift || q{};
-#    my $size    = shift || 6;
-#    my $args    = shift || {};
-#    
-#    my $self    = bless {}, $class;
-#    register $self;
-#
-#    my $id = id $self;
-#
-#    $size{ $id }    = $size;
-#    $im{ $id }  = 
-#          ( $self->isDefaultMarker( $marker ) ) ? 
-#            $self->createMarkerFromDefault( $marker, $args->{ strokeColor }, $args->{ fillColor } )
-#
-#        : ( blessed( $marker ) && $marker->isa('Image::Magick') ) ? 
-#            $self->createMarkerFromIM( $marker )
-#
-#        : ( -e $marker ) ? 
-#            $self->createMarkerFromFile( $marker )
-#
-#        : croak "Chart::Magick::Marker->new requires either a predefined marker, an image file path or an Image::Magick object";
-#
-#    return $self;
-#}
-
 sub BUILD {
     my $self    = shift;
     my $marker  = $self->marker;
@@ -283,8 +255,6 @@ sub createMarkerFromIM {
     my $im      = shift;
     my $id      = id $self;
 
-##### TODO: gaat niet werken!
-
     $self->anchorX( $im->get('width')  / 2 );
     $self->anchorY( $im->get('height') / 2 );
 
@@ -308,7 +278,6 @@ The file that should be used as marker.
 sub createMarkerFromFile {
     my $self        = shift;
     my $filename    = shift || croak 'getMarkerFromFile requires a filename.';
-#    my $id          = id $self;
 
     # open image
     my $im      = Chart::Magick::ImageMagick->new;
@@ -381,26 +350,6 @@ sub createMarkerFromDefault {
 
     return;
 }    
-
-##-------------------------------------------
-#
-#=head2 setColor ( color )
-#
-#Sets the color to draw default markers with.
-#
-#=head3 color
-#
-#A Chart::Magick::Color object.
-#
-#=cut
-#
-#sub setColor {
-#    my $self    = shift;
-#    my $color   = shift;
-#    $color{ id $self } = $color;
-#
-#    return $self;
-#}
 
 1;
 

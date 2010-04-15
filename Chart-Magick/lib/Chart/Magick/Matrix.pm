@@ -40,13 +40,6 @@ has isDrawn => (
     default     => 0,
 );
 
-#readonly    width   => my %width;
-#readonly    height  => my %height;
-#readonly    margin  => my %margin;
-#readonly    rows    => my %rows;
-#readonly    im      => my %im;
-#readonly    isDrawn => my %isDrawn;
-
 =head1 NAME
 
 Chart::Magick::Matrix
@@ -141,43 +134,6 @@ sub getAxis {
     carp "No axis is set on row $row at index $col";
     return;
 }
-
-####=head2 new ( width, height, margin )
-####
-####Constructor.
-####
-####=head3 width
-####
-####The width of the matrix canvas in pixels.
-####
-####=head3 height
-####
-####The height of the matrix canvas in pixels.
-####
-####=head3 margin
-####
-####The width of the margin surrounding the individual axis cansvasses in pixels. Defaults to 20.
-####
-####=cut
-####
-####sub new {
-####    my $class   = shift;
-####    my $width   = shift || croak "No width passed to Chart::Magick::Marker->new";
-####    my $height  = shift || croak "No height passed to Chart::Magick::Marker->new";
-####    my $margin  = shift || 20;
-####
-####    my $self    = register $class;
-####
-####    my $id = id $self;
-####
-####    $width{ $id     } = $width;
-####    $height{ $id    } = $height;
-####    $margin{ $id    } = $margin;
-####    $rows{ $id      } = [];
-####    $im{ $id        } = Image::Magick->new;
-####
-####    return $self;
-####};
 
 =head2 draw ( )
 

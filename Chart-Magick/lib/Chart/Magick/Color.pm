@@ -5,7 +5,6 @@ use warnings;
 use Moose;
 
 #use Color::Calc;
-#use Class::InsideOut qw{ :std };
 
 sub _checkTriplet {
     my $triplet = shift;
@@ -32,22 +31,18 @@ sub _checkAlpha {
 }
 
 # TODO: Create subtypes for these attributes.
-#public  strokeTriplet   => my %strokeTriplet;
 has strokeTriplet => (
     is      => 'rw',
     default => '000000',
 );
-#public  strokeAlpha     => my %strokeAlpha;
 has strokeAlpha => (
     is      => 'rw',
     default => 'ff',
 );
-#public  fillTriplet     => my %fillTriplet;
 has fillTriplet => (
     is      => 'rw',
     default => '000000',
 );
-#public  fillAlpha       => my %fillAlpha;
 has fillAlpha   => (
     is      => 'rw',
     default => 'ff',
@@ -105,18 +100,6 @@ sub copy {
     } );
 }
 
-##TODO: Get inphasen en de losse methods eruit.
-#sub get {
-#    my $self = shift;
-#
-#    return {
-#        fillTriplet     => $self->fillTriplet,
-#        fillAlpha       => $self->fillAlpha,
-#        strokeTriplet   => $self->strokeTriplet,
-#        strokeAlpha     => $self->strokeAlpha,
-#    };
-#}
-
 #-------------------------------------------------------------------
 
 =head2 darken ( )
@@ -131,6 +114,7 @@ sub darken {
 	
 	my $newColor = $self->copy;
 
+    # TODO: Make this work again.
 #	my $c = Color::Calc->new(OutputFormat => 'hex');
 #	
 #	$newColor->fillTriplet(   $c->dark( $self->fillTriplet )    );
@@ -168,70 +152,6 @@ sub getStrokeColor {
 	
 	return '#' . $self->strokeTriplet . $self->strokeAlpha;
 }
-
-##-------------------------------------------------------------------
-#
-#=head2 new ( properties )
-#
-#Constructor for this class.
-#
-#=head3 properties
-#
-#A hashref containing configuration options to set this object to. All are also
-#available through methods.
-#
-#=head4 fillTriplet
-#
-#The RGB triplet for the fill color. See setFillTriplet.
-#
-#=head4 fillAlpha
-#
-#The alpha value for the fill color. See setFillAlpha.
-#
-#=head4 strokeTriplet
-#
-#The RGB triplet for the stroke color. See setStrokeTriplet.
-#
-#=head4 strokeAlpha
-#
-#The alpha value for the stroke color. See setStrokeAlpha.
-#
-#=cut
-#
-#sub new {
-#	my $class       = shift;
-#	my $properties  = shift || {};
-#    my $self        = {};
-#
-#    bless    $self, $class;
-#    register $self;
-#
-#    my $id = id $self;
-#
-##	$fillTriplet{ $id }     => $properties->{ fillTriplet   } || '#000000';
-##	$fillAlpha{ $id }       => $properties->{ fillAlpha     } || '00';
-##	$strokeTriplet{ $id }   => $properties->{ strokeTriplet } || '#000000';
-##	$strokeAlpha{ $id }     => $properties->{ strokeAlpha   } || '00';
-#
-#	$self->fillTriplet(   _checkTriplet( $properties->{ fillTriplet   } ) );# || '000000'  );
-#	$self->fillAlpha(     _checkAlpha(   $properties->{ fillAlpha     } ) );# || 'ff'      );
-#	$self->strokeTriplet( _checkTriplet( $properties->{ strokeTriplet } ) );# || '000000'  );
-#	$self->strokeAlpha(   _checkAlpha(   $properties->{ strokeAlpha   } ) );# || 'ff'      );
-#		
-#    return $self;
-#}
-
-#sub setFillColor {
-#	my $self = shift;
-#	my $color = shift;
-#
-#	if ($color =~ m/^(#[\da-f]{6})([\da-f]{2})?$/i) {
-#		$self->setFillTriplet($1);
-#		$self->setFillAlpha($2 || '00');
-#	} else {
-#		$self->session->errorHandler->fatal("Invalid fill color: ($color)");
-#	}
-#}
 
 1;
 

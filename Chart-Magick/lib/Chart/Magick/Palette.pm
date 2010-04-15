@@ -5,10 +5,8 @@ use warnings;
 use Moose;
 
 use Chart::Magick::Color;
-#use Class::InsideOut qw{ :std };
 use Carp;
 
-#private     colors          => my %colors;
 has colors => (
     is      => 'rw',
     isa     => 'ArrayRef[Chart::Magick::Color]',
@@ -22,32 +20,29 @@ has colors => (
 #        setColor            => 'set',
     },
 );
-#public      paletteIndex    => my %paletteIndex;
+
 has paletteIndex => (
     is      => 'rw',
     default => undef,
 );
 
 #-------------------------------------------------------------------
+around BUILDARGS => sub {
+    my $orig    = shift;
+    my $class   = shift;
+    my @params  = @_;
 
-#=head2 addColor ( color )
-#
-#Adds a color to the end of the palette.
-#
-#=head3 color
-#
-#The Chart::Magick::Color object that should be added.
-#
-#=cut
-#
-#sub addColor {
-#	my $self    = shift;
-#	my $color   = shift;
-#	
-#	push @{ $colors{ id $self } }, $color;
-#
-#    return;
-#}
+    if ( @params == 1 && ref $params[0] eq 'ARRAY' ) {
+        my @colors = 
+            map     { ref $_ eq 'HASH' ? Chart::Magick::Color->new( $_ ) : $_ }
+                    @{ $params[0] }
+            ;
+
+        return $class->$orig( { colors => \@colors } );
+    }
+    
+    return $class->$orig( @_ );
+};
 
 #-------------------------------------------------------------------
 
@@ -67,50 +62,6 @@ sub getColor {
 
 	return ( $self->getColors )[ $index ];
 }
-
-##-------------------------------------------------------------------
-#
-#=head2 getColorIndex ( color )
-#
-#Returns the index of color. If the color is not in the palette it will return
-#undef.
-#
-#=head3 color
-#
-#A Chart::Magick::Color object.
-#
-#=cut
-#
-#
-##### TODO: Do we need this anyway?
-#sub getColorIndex {
-#	my $self    = shift;
-#	my $color   = shift;
-#	
-#	my @palette = @{ $self->getColorsInPalette };
-#	
-#    #### TODO: Possibly 
-#	for my $index (0 .. scalar( @palette ) - 1) {
-#		return $index if ( $self->getColor( $index ) eq $color );
-#	}
-#
-#	return;
-#}
-
-##-------------------------------------------------------------------
-#
-#=head2 getColorsInPalette ( )
-#
-#Returns a arrayref containing all color objects in the palette.
-#
-#=cut
-#
-#sub getColorsInPalette {
-#	my $self = shift;
-#
-#	# Copy ref so people cannot overwrite 
-#	return [ @{ $colors{ id $self } } ];
-#}
 
 #-------------------------------------------------------------------
 
@@ -134,20 +85,6 @@ sub getNextColor {
 	return $self->getColor;
 }
 
-##-------------------------------------------------------------------
-#
-#=head2 getNumberOfColors ( )
-#
-#Returns the number of colors in the palette.
-#
-#=cut
-#
-#sub getNumberOfColors {
-#	my $self = shift;
-#
-#	return scalar @{ $colors{ id $self } };
-#}
-
 #-------------------------------------------------------------------
 
 =head2 getPaletteIndex ( )
@@ -168,7 +105,6 @@ sub getPaletteIndex {
 }
 
 #-------------------------------------------------------------------
-
 
 =head2 getPreviousColor ( )
 
@@ -191,78 +127,6 @@ sub getPreviousColor {
 
 	return $self->getColor;
 }
-
-around BUILDARGS => sub {
-    my $orig    = shift;
-    my $class   = shift;
-    my @params  = @_;
-
-    if ( @params == 1 && ref $params[0] eq 'ARRAY' ) {
-        my @colors = 
-            map     { ref $_ eq 'HASH' ? Chart::Magick::Color->new( $_ ) : $_ }
-                    @{ $params[0] }
-            ;
-
-        return $class->$orig( { colors => \@colors } );
-    }
-    
-    return $class->$orig( @_ );
-};
-
-##-------------------------------------------------------------------
-#
-#=head2 new ( )
-#
-#Constructor for this class. 
-#
-#=cut
-#
-#sub new {
-#	my $class   = shift;
-#    my $colors  = shift || [];
-#    
-#    my $self    = {};
-#    bless $self, $class;
-#
-#    register( $self );
-#
-#    $colors{ id $self }         = [
-#        map { ref $_ eq 'HASH' ? Chart::Magick::Color->new( $_ ) : $_ } @{ $colors }
-#    ];
-#    $paletteIndex{ id $self }   = undef;
-#
-#    return $self;
-#}
-
-##-------------------------------------------------------------------
-#
-#=head2 removeColor ( index )
-#
-#Removes color at index.
-#
-#=head3 index
-#
-#The index of the color you want to remove. If not given nothing will happen.
-#
-#=cut
-#
-#sub removeColor {
-#	my $self    = shift;
-#	my $index   = shift;
-#
-#    # Check index
-#	return if !defined $index || $index < 0 || $index >= $self->getNumberOfColors;
-#	
-#    # Remove color from array
-#	splice @{ $colors{ id $self } }, $index, 1;
-#
-#    # Adjust palette index if necessary.
-#    if ( $self->getNumberOfColors <= $self->getPaletteIndex ) {
-#        $self->setPaletteIndex( $self->getNumberOfColors - 1 );
-#    }
-#
-#    return;
-#}
 
 #-------------------------------------------------------------------
 
@@ -294,12 +158,10 @@ sub setColor {
 	return unless defined $color;
 
     $self->colors->[ $index ] = $color;
-#	$colors{ id $self }->[ $index ] = $color;
 
     return;
 }
 
-#### TODO: Sanitiy checks
 #-------------------------------------------------------------------
 
 =head2 setPaletteIndex ( index )
