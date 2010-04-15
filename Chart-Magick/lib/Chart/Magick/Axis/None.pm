@@ -5,7 +5,6 @@ use warnings;
 use Moose;
 
 extends 'Chart::Magick::Axis';
-####use base qw{ Chart::Magick::Axis };
 
 =head2 getCoordDimension ( )
 

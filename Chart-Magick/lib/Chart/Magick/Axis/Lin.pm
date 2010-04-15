@@ -581,11 +581,6 @@ has boxColor => (
     default => 'black',
 );
 
-
-
-
-
-
 #---------------------------------------------
 
 =head2 applyLayoutHints ( hints )
@@ -757,8 +752,6 @@ Iteratively tries to get the optimal sizes for margin and graph widths and heigh
 sub optimizeMargins {
     my ( $self, @params ) = @_;
 
-    #my $baseWidth   = $self->plotOption( 'axisWidth' )  - $self->plotOption( 'axisMarginLeft' ) - $self->plotOption( 'axisMarginRight'  );
-    #my $baseHeight  = $self->plotOption( 'axisHeight' ) - $self->plotOption( 'axisMarginTop'  ) - $self->plotOption( 'axisMarginBottom' );
     my $baseWidth           = $self->plotOption( 'chartWidth'   );
     my $baseHeight          = $self->plotOption( 'chartHeight'  );
     my $yLabelWidth         = 0;
@@ -853,8 +846,6 @@ sub optimizeMargins {
 
     return;
 }
-
-
 
 #---------------------------------------------
 
@@ -1072,15 +1063,15 @@ of the following criteria is met:
 
 =item * 
     
-    The override parameter is true
+The override parameter is true
 
 =item *
 
-    The range has zero length (ie. the minimum of the range is equal to its maximum).
+The range has zero length (ie. the minimum of the range is equal to its maximum).
 
 =item *
 
-    The range is large compared to its distance to the origin.
+The range is large compared to its distance to the origin.
 
 =back
 
@@ -1173,9 +1164,6 @@ sub preprocessData {
         yChartStart => $minY - $self->plotOption('yTickOffset'),
         xChartStop  => $maxX + $self->plotOption('xTickOffset'),
         xChartStart => $minX - $self->plotOption('xTickOffset'),
-
-#        chartAnchorX => $self->marginLeft + $self->plotOption('axisMarginLeft'),
-#        chartAnchorY => $self->marginTop + $self->plotOption('axisMarginTop' ), 
     );
 
     # Precalc toPx offsets.
@@ -1522,15 +1510,15 @@ Hashref containing the properties to draw this tick. The following properties ar
 
 =item x
 
-    The location of the tick base for x ticks. This should be in chart coordinates, not pixels.
+The location of the tick base for x ticks. This should be in chart coordinates, not pixels.
 
 =item y
 
-    The location of the tick base for y ticks. This should be in chart coordinates, not pixels.
+The location of the tick base for y ticks. This should be in chart coordinates, not pixels.
 
 =item subtick
 
-    If set to a true value the tick will be drawn as a subtick.
+If set to a true value the tick will be drawn as a subtick.
 
 =back
 
@@ -1547,8 +1535,6 @@ sub drawTick {
     $name      .= $args->{ subtick } ? 'Subtick' : 'Tick';
 
     my ( $inset, $outset, $color ) = map { my $m = $name . $_; $self->$m } qw{ Inset Outset Color };
-####    my $inset   = $self->get( $name . 'Inset'  ); # / $scale;
-####    my $outset  = $self->get( $name . 'Outset' ); # / $scale;
 
     my ( $x1, $y1, $x2, $y2 );
     if ( $isX ) {

@@ -3,7 +3,6 @@ package Chart::Magick::Axis;
 use strict;
 use warnings;
 
-####use Class::InsideOut qw{ :std };
 use Chart::Magick::ImageMagick;
 use List::Util qw{ min max };
 use Carp;
@@ -14,9 +13,6 @@ use Moose;
 use MooseX::SlaveAttribute;
 
 use constant pi => 3.14159265358979;
-
-####use base qw{ Chart::Magick::Definition };
-
 
 sub _setupMagickObject {
     my $image = Chart::Magick::ImageMagick->new( size => '1x1' );
@@ -246,44 +242,11 @@ has drawLegend => (
     default => 1,
 );
 
-
-
-
-
-
-
-
 =head1 METHODS
 
 These methods are available from this class:
 
 =cut
-
-#----------------------------------------------
-
-####sub _buildObject {
-####    my $class       = shift;
-####    my $self        = {};
-####
-####    bless       $self, $class;
-####    register    $self;
-####
-####    my $id = id $self;
-####
-####    # We need to explicitly read an image for QueryFontMetrics and friends to work...
-####    # This temp image is deleted and replaced with the right canvas size in draw().
-#####    my $image = Chart::Magick::ImageMagick->new( size=>'1x1' );
-#####    $image->Read('xc:white');
-####
-#####    $magick{ $id        } = $image;
-#####    $charts{ $id        } = [ ];
-#####    $axisLabels{ $id    } = [ ];
-#####    $legend{ $id        } = Chart::Magick::Legend->new( $self );
-#####    $isDrawn{ $id       } = 0;
-####
-#####    $self->{ _plotOptions } = {};
-####    return $self;
-####}
 
 #----------------------------------------------
 
@@ -504,52 +467,6 @@ this object has not been associated with one.
 
 =cut
 
-#####----------------------------------------------
-####
-####=head2 new ( [ properties ] )
-####
-####Constructor for this class.
-####
-####=head3 properties
-####
-####Properties to initially configure the object. For available properties, see C<definition()>
-####
-####=cut
-####
-####sub new {
-####    my $class       = shift;
-####    my $properties  = shift || {};
-####   
-####    my $self = $class->_buildObject;
-####    $self->initializeProperties( $properties );
-####
-####    return $self;
-####}
-
-#####---------------------------------------------
-####
-####=head2 addChart ( chart, [ chart, [ chart, ... ] ] )
-####
-####Adds one or more chart(s) to this axis.
-####
-####=head3 chart
-####
-####An instantiated Chart::Magick::Chart object.
-####
-####=cut
-####
-####sub addChart {
-####    my $self    = shift;
-####
-####    while ( my $chart = shift ) {
-####        croak "Cannot add a chart of class $chart to an Axis. All charts mus be isa('Chart::Magick::Chart')." 
-####            unless $chart->isa('Chart::Magick::Chart');
-####        push @{ $charts{ id $self } }, $chart;
-####    }
-####
-####    return;
-####}
-
 #---------------------------------------------
 
 =head2 applyLayoutHints ( hints )
@@ -601,7 +518,6 @@ sub getValueDimension {
     return 0;
 }
 
-
 #---------------------------------------------
 
 =head2 draw ( )
@@ -612,10 +528,9 @@ Draws the axis and all charts that are put onto it.
 
 sub draw {
     my $self    = shift;
-####    my $charts  = $charts{ id $self };
     my $charts  = $self->charts;
 
-    # Save state.
+    # TODO: See what to do with this. Save state.
 #    my $config          = $self->getRaw;
 #    my $legendConfig    = $self->legend->getRaw;
 
@@ -780,20 +695,6 @@ prior to drawing the axis. Extend this method if your module needs some data mas
 sub preprocessData {
     my $self = shift;
 
-    # Check if the fonts are actually findable. If not IM slows down incredibly and will not draw labels so bail
-    # out in that case.
-    for ( qw{ titleFont labelFont } ) { 
-# Getter gaat mis hierrrr!! Maar dit moet naar een type!
-#        my $font = $self->resolveFont( $self->$_ );
-#
-#        croak "Font $font (property $_) does not exist or is defined incorrect in the ImageMagick configuration file." 
-#            unless $font;
-#
-#        # Replace the possible font name with its full path. This speeds up annotating significantly!
-# Setter gaat ook mis.
-#        $self->$_($font );
-    }
-   
     # Calc title height
     my $minTitleMargin  = $self->minTitleMargin;
     my $titleHeight = $self->title
