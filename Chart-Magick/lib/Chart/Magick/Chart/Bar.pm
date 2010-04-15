@@ -77,20 +77,6 @@ has drawMode => (
     isa     => enum([ qw{ sideBySide cumulative } ]),
 );
 
-#sub definition {
-#    my $self    = shift;
-#    my %options = %{ $self->SUPER::definition };
-#
-#    my %overrides = (
-#        barWidth    => 20,
-#        barSpacing  => 0.05,
-#        groupSpacing=> sub { abs $_[0]->get('barSpacing') * 3 },
-#        drawMode    => 'sideBySide',
-#    );  
-#
-#    return { %options, %overrides };
-#}
-
 #--------------------------------------------------------------------------
 
 =head2 drawBar ( $canvas, color, width, length, coord, coordOffset, bottom )
@@ -183,8 +169,6 @@ sub getDataRange {
     }
 
     return ( $global->{ minCoord }, $global->{ maxCoord }, [ $maxNeg ], [ $maxPos ] );
-
-#    return ( [ $global->{ minCoord }->[ 0 ] - 0.5 ], [ $global->{ maxCoord }->[0] + 0.5 ], [ $maxNeg ], [ $maxPos ] );
 }
 
 #--------------------------------------------------------------------
@@ -249,21 +233,11 @@ sub plot {
         map         { my $t = $a; $a = $_->[0]; abs( $_->[0] - $t ) }
         @coords;
 
-#    foreach ( @{ $self->dataset->getCoords } ) {
-#        if ( defined $p ) {
-#            my $spacing = 
-#            $minSpacing = abs( $_->[0] - $p ) if !$minSpacing || abs( $_->[0] - $p ) < $minSpacing;
-#        }
-#           
-#        $p = $_->[0];
-#    }
-
     my $groupWidth      = $minSpacing;
     my $groupSpacing    = $groupWidth * $self->groupSpacing;
     my $barSpacing      = $groupWidth * $self->barSpacing;
 
     my $barWidth        = ( $groupWidth  - $groupSpacing ) / $groupCount - $barSpacing ;
-#    $barWidth *= 0.5;
 
     foreach my $coord ( @{ $self->dataset->getCoords } ) {
         my $positiveVerticalOffset = 0;
@@ -302,37 +276,7 @@ sub plot {
     }
 }
 
-##--------------------------------------------------------------------------
-#
-#=head2 preprocessData ( )
-#
-#See Chart::Magick::Chart::preprocessData.
-#
-#Please note the following:
-#
-#=over 4
-#
-#=item *
-#
-#Sets the xTickOffset axis property to 1, unless it has been set to something else already.
-#
-#=item *
-#
-#Forces the xTickCount axis property to the number of bar(group)s. Even when xTickCount has been set already.
-#
-#=back
-#
-#=cut
-#
-#sub preprocessData {
-#    my $self = shift;
-#    my $axis = $self->axis;
-#
-#    $self->SUPER::preprocessData;
-#
-##   $axis->set('xTickOffset', 0 ) unless $axis->get('xTickOffset');
-##   $axis->set('xTickCount', scalar @{ $self->dataset->getCoords } ); # unless $axis->get('xTickCount');
-#}
+#--------------------------------------------------------------------------
 
 =head2 layoutHints ( )
 
@@ -341,10 +285,12 @@ Returns the layout hints for this plugin. Hints that:
 =over 4
 
 =item *
-    coordPadding should be ( half a tick width ) to make room for the first and last bars. 
+
+coordPadding should be ( half a tick width ) to make room for the first and last bars. 
 
 =item *
-    tickWidth should be the smallest interval between two adjecent x coordinates in the data set.
+
+tickWidth should be the smallest interval between two adjecent x coordinates in the data set.
 
 =back
 

@@ -147,14 +147,6 @@ has needleType => (
     isa     => enum([ qw{ simple fancy compass } ]), 
 );
 
-
-
-
-
-
-
-
-
 #---------------------------------------------------------------------
 
 =head2 getNeedlePath ( name, size )
@@ -257,7 +249,6 @@ sub drawLabels {
 
         $canvas->text(
             text            => $tick,
-    #        undercolor      => 'black',
             font            => $self->axis->labelFont,
             fill            => $self->axis->labelColor,
             style           => 'normal',
@@ -542,10 +533,6 @@ sub autoRange {
 #    );
 
     return;
-
-
-
-
 }
 
 #--------------------------------------------------------------------
@@ -568,7 +555,6 @@ sub project {
         [  $radius * cos( $direction * $angle ) ],
         [ -$radius * sin( $direction * $angle ) ],
     );
-
 }
 
 #--------------------------------------------------------------------
@@ -587,9 +573,9 @@ sub transform {
     my $valueRange  = $self->scaleStop - $self->scaleStart;
     my $scaleAngle  = $self->stopAngle - $self->startAngle;
     my $angle       = 
-          $value / $valueRange * $scaleAngle        # angle of the value wrt. to the scale
-        + $self->startAngle                  # offset with angle between scale start and 0 deg
-        - $direction * 90                           # and make sure that 0 deg is pointing down, not right.
+          $value / $valueRange * $scaleAngle    # angle of the value wrt. to the scale
+        + $self->startAngle                     # offset with angle between scale start and 0 deg
+        - $direction * 90                       # and make sure that 0 deg is pointing down, not right.
     ;
     
     return $angle;

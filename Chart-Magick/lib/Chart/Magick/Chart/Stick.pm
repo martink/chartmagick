@@ -112,7 +112,6 @@ sub plot {
                 stroke      => $stroke,
                 strokewidth => 1,
                 points      => "$x1,$y1 $x2,$y2",
-            #    antialias   => 0,
             );
 
             next unless $drawMarkers && $self->markers->[ $ds ];

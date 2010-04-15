@@ -2,8 +2,6 @@ package Chart::Magick::Chart;
 
 use strict;
 use warnings;
-
-####use Class::InsideOut    qw{ :std };
 use Moose;
 
 use List::Util          qw{ min max };
@@ -12,14 +10,6 @@ use Chart::Magick::Color;
 use Chart::Magick::Data;
 use Chart::Magick::Marker;
 use Carp;
-
-####use base qw{ Chart::Magick::Definition };
-
-####readonly palette    => my %palette;
-####readonly dataset    => my %dataset;
-####readonly markers    => my %markers;
-####readonly axis       => my %axis;
-####readonly colors     => my %colors;
 
 # TODO: handle coercion etc.
 has palette => (
@@ -145,52 +135,6 @@ sub autoRange {
     return;
 }
 
-#####-------------------------------------------------------------------
-####
-####=head2 definition 
-####
-####Defines the properties of your plugin as well as their default values.
-####
-####=cut
-#####TODO: More verbose docs overhere.
-####
-####sub definition {
-####    return {
-####        markerSize      => 6,
-####    };
-####}
-
-#####-------------------------------------------------------------------
-####
-####=head2 getAxis ( )
-####
-####Returns the Axis object this Chart is set to draw on.
-####
-####=cut
-####
-####sub getAxis {
-####    my $self    = shift;
-####
-####    my $axis    = $axis{ id $self };
-####
-####    croak "Cannot call getAxis when no Axis has been set" unless $axis;
-####    return $axis;
-####}
-
-#####-------------------------------------------------------------------
-####
-####=head2 getData ( )
-####
-####Returns the Data object the plugin should chart.
-####
-####=cut
-####
-####sub getData {
-####    my $self    = shift;
-####
-####    return $dataset{ id $self };
-####}
-
 #-------------------------------------------------------------------
 
 =head2 getDataRange ( )
@@ -226,6 +170,13 @@ sub getHeight {
     return $self->axis->getChartHeight;
 }
 
+#-------------------------------------------------------------------
+
+=head2 defaultPalette ( )
+
+Returns the default palette.
+
+=cut
 
 sub defaultPalette {
     my $self    = shift;
@@ -242,40 +193,6 @@ sub defaultPalette {
 
     return $palette;
 }
-
-
-#####-------------------------------------------------------------------
-####
-####=head2 getPalette ( )
-####
-####Returns the Chart::Magick::Palette object associated with this plugin. If none is set, will create a default
-####palette and return that.
-####
-####=cut
-####
-####sub getPalette {
-####    my $self    = shift;
-####    my $id      = id $self;
-####
-####    # If a palette has been set, return it
-####    return $palette{ $id } if $palette{ $id };
-####
-####    # Otherwise generate a default palette
-####    my @colors = (
-####        { fillTriplet => '7ebfe5', fillAlpha => '77', strokeTriplet => '7ebfe5', strokeAlpha => 'ff' },
-####        { fillTriplet => '43EC43', fillAlpha => '77', strokeTriplet => '43EC43', strokeAlpha => 'ff' },
-####        { fillTriplet => 'EC9843', fillAlpha => '77', strokeTriplet => 'EC9843', strokeAlpha => 'ff' },
-####        { fillTriplet => 'E036E6', fillAlpha => '77', strokeTriplet => 'E036E6', strokeAlpha => 'ff' },
-####        { fillTriplet => 'F3EB27', fillAlpha => '77', strokeTriplet => 'F3EB27', strokeAlpha => 'ff' },
-####    );
-####
-####    my $palette = Chart::Magick::Palette->new;
-####    $palette->addColor( Chart::Magick::Color->new( $_ ) ) for @colors;
-####    
-####    $palette{ $id } = $palette;
-####
-####    return $palette;
-####}
 
 #-------------------------------------------------------------------
 
@@ -360,32 +277,6 @@ sub layoutHints {
 
 #-------------------------------------------------------------------
 
-####=head2 new ( )
-####
-####Constructor.
-####
-####=cut
-####
-####sub new {
-####    my $class       = shift;
-####    my $properties  = shift || {};
-####    my $self        = {};
-####
-####    bless       $self, $class;
-####    register    $self;
-####
-####    my $id            = id $self;
-####    $dataset{ $id   } = Chart::Magick::Data->new;
-####    $markers{ $id   } = [];
-####    $colors{ $id    } = [];
-####
-####    $self->initializeProperties( $properties );
-####
-####    return $self;
-####}
-
-#-------------------------------------------------------------------
-
 =head2 preprocessData ( )
 
 Override this method to do any preprocessing before the drawing phase begins.
@@ -401,15 +292,6 @@ sub preprocessData {
         my $color = $self->palette->getNextColor;
 
         push @{ $self->colors }, $color;
-
-#        if ( exists $self->markers->[ $ds ] ) {
-#            my ($name, $size) = @{ $self->markers->[ $ds ] }{ qw(name size) };
-#            $size ||= $markerSize;
-#
-#            $self->markers->[ $ds ] = Chart::Magick::Marker->new( $name, $size, {
-#                strokeColor => $color->getStrokeColor,
-#            } );
-#        }
     }
 
     return;
@@ -429,30 +311,6 @@ sub project {
     return $self->axis->project( @params );
 }
 
-#####-------------------------------------------------------------------
-####
-####=head2 setAxis ( axis )
-####
-####Set the axis objcet the chart should be drawn on.
-####
-####=head3 axis
-####
-####An instanciated Chart::Magick::Axis:: object.
-####
-####=cut
-####
-####sub setAxis {
-####    my $self = shift;
-####    my $axis = shift;
-####
-####    croak "setAxis requires a Chart::Magick::Axis object to be passed" 
-####        unless $axis && $axis->isa( 'Chart::Magick::Axis' );
-####
-####    $axis{ id $self } = $axis;
-####
-####    return;
-####}
-
 #-------------------------------------------------------------------
 
 =head2 toPx ( coords, values )
@@ -467,30 +325,6 @@ sub toPx {
 
     return join ',', $self->project( @params );
 }
-
-#####-------------------------------------------------------------------
-####
-####=head2 setData ( dataset )
-####
-####Set the dataset object the plugin should chart.
-####
-####=head3 dataset
-####
-####An instanciated Chart::Magick::Data object.
-####
-####=cut
-####
-####sub setData {
-####    my $self = shift;
-####    my $data = shift;
-####
-####    croak "setData requires a Chart::Magick::Data object to be passed" 
-####        unless $data && $data->isa( 'Chart::Magick::Data' );
-####
-####    $dataset{ id $self } = $data;
-####
-####    return;
-####}
 
 #-------------------------------------------------------------------
 
@@ -534,41 +368,10 @@ sub setMarker {
     my $marker  = shift || croak "Need a marker";
     my $size    = shift || $self->markerSize;
 
-#    my $def = { 
-#        name    => $marker,
-#        size    => $size 
-#    };
-#
-#    $markers{ id $self }->[ $index ] = $def;
-#    $self->markers->[ $index ] = Chart::Magick::Marker->new( $marker, $size );
     $self->markers->[ $index ] = Chart::Magick::Marker->new( { marker => $marker, size => $size } );
 
     return;
 }
-
-#####-------------------------------------------------------------------
-####
-####=head2 setPalette ( palette )
-####
-####Set the palette to use for drawing the chart.
-####
-####=head3 palette
-####
-####An instanciated Chart::Magick::Palette object.
-####
-####=cut
-####
-####sub setPalette {
-####    my $self    = shift;
-####    my $palette = shift;
-####
-####    croak "setPalette requires a palette to be passed" unless $palette;
-####    croak "Palette must be a Chart::Magick::Palette" unless $palette->isa( 'Chart::Magick::Palette' );
-####
-####    $palette{ id $self } = $palette;
-####
-####    return;
-####}
 
 1;
 

@@ -84,8 +84,6 @@ sub inRange {
     return ( $coord->[0] >= $self->axis->xStart && $coord->[0] <= $self->axis->xStop );
 }
 
-
-
 #--------------------------------------------------------------------
 
 =head2 plot
