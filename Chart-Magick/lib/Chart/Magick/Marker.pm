@@ -10,7 +10,8 @@ use Scalar::Util qw{ blessed };
 use Chart::Magick::ImageMagick;
 
 has marker => (
-    is      => 'rw',
+    is          => 'rw',
+    required    => 1,
 );
 
 has im => (
@@ -253,7 +254,6 @@ An Image::Magick object that should be used as marker.
 sub createMarkerFromIM {
     my $self    = shift;
     my $im      = shift;
-    my $id      = id $self;
 
     $self->anchorX( $im->get('width')  / 2 );
     $self->anchorY( $im->get('height') / 2 );
