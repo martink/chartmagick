@@ -6,7 +6,7 @@ use Test::Deep;
 use Chart::Magick::Color;
 use Scalar::Util qw{ refaddr };
 
-use Test::More tests => 37 + 1;
+use Test::More tests => 33 + 1;
 use Test::NoWarnings;
 BEGIN {
     use_ok( 'Chart::Magick::Palette', 'Chart::Magick::Palette can be used' );
